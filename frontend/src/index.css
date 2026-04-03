@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #131313;
+  --color-surface-container-low: #171717;
+  --color-surface-container-high: #232323;
+  --color-on-surface: #e5e2da;
+  --color-primary: #f2ca50;
+  --color-on-primary: #352700;
+  --color-secondary: #9fe2ff;
+  --color-error-container: #7b1620;
+  --color-on-error-container: #ffd8dd;
+  --font-headline: "Newsreader", serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Space Grotesk", sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: var(--font-body);
+  background:
+    radial-gradient(circle at top left, rgba(242, 202, 80, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(159, 226, 255, 0.12), transparent 22%),
+    #131313;
+  color: var(--color-on-surface);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.font-headline { font-family: var(--font-headline); }
+.font-label { font-family: var(--font-label); }
+.bg-background { background-color: #131313; }
+.bg-surface-container-low { background-color: #171717; }
+.bg-surface-container-high { background-color: #232323; }
+.text-on-surface { color: #e5e2da; }
+.text-primary { color: #f2ca50; }
+.text-secondary { color: #9fe2ff; }
+.bg-primary { background-color: #f2ca50; }
+.text-on-primary { color: #352700; }
+.bg-error-container { background-color: #7b1620; }
+.text-on-error-container { color: #ffd8dd; }
+.border-primary\/40 { border-color: rgba(242, 202, 80, 0.4); }
+.border-error\/40 { border-color: rgba(255, 120, 135, 0.35); }
+.border-error\/30 { border-color: rgba(255, 120, 135, 0.25); }
+
+.panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.18));
+  backdrop-filter: blur(18px);
+  border-radius: 2rem;
+  padding: 1.5rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+.panel-glow {
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(242, 202, 80, 0.08);
+}
+
+.orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(110px);
+  opacity: 0.6;
+}
+
+.orb-primary {
+  right: -8rem;
+  top: 4rem;
+  height: 26rem;
+  width: 26rem;
+  background: rgba(242, 202, 80, 0.13);
+}
+
+.orb-secondary {
+  bottom: -10rem;
+  left: -6rem;
+  height: 22rem;
+  width: 22rem;
+  background: rgba(159, 226, 255, 0.12);
+}
+
+.grid-mask {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+}
+
+.reveal {
+  animation: fade-up 0.7s ease both;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 767px) {
+  .panel {
+    border-radius: 1.5rem;
+    padding: 1.1rem;
+  }
+}

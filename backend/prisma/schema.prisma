@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  walletAddress String?  @unique
+  isVerified    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model OtpSession {
+  id        Int      @id @default(autoincrement())
+  email     String
+  otpCode   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Log {
+  id          Int      @id @default(autoincrement())
+  action      String
+  description String
+  timestamp   DateTime @default(now())
+}
