@@ -192,4 +192,27 @@ contract VotingSystem {
     function hasUserVoted(uint256 electionId, address user) external view validElection(electionId) returns (bool) {
         return hasVoted[electionId][user];
     }
+
+    function getWinner(uint256 electionId) external view validElection(electionId) returns (uint256 winnerId, string memory winnerName, uint256 maxVotes) {
+        Election memory election = elections[electionId];
+        require(!election.isActive, "Election is still active");
+
+        uint256 maxVoteCount = 0;
+        uint256 winnerCandidateId = 0;
+
+        for (uint256 i = 1; i <= election.candidateCount; i++) {
+            uint256 voteCount = candidates[electionId][i].voteCount;
+            if (voteCount > maxVoteCount) {
+                maxVoteCount = voteCount;
+                winnerCandidateId = i;
+            }
+        }
+
+        if (winnerCandidateId == 0) {
+            return (0, "", 0); // No votes
+        }
+
+        Candidate memory winner = candidates[electionId][winnerCandidateId];
+        return (winner.id, winner.name, winner.voteCount);
+    }
 }
