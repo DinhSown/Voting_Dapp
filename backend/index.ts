@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
-import { PrismaMssql } from '@prisma/adapter-mssql';
 import nodemailer from 'nodemailer';
 
 dotenv.config();
@@ -14,9 +13,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const DATABASE_URL = process.env['DATABASE_URL'] || '';
-const prismaAdapter = new PrismaMssql(DATABASE_URL);
-const prisma = new PrismaClient({ adapter: prismaAdapter });
+const DATABASE_URL = process.env['DATABASE_URL'] || 'file:./dev.db';
+const prisma = new PrismaClient();
 
 const RPC_URL = process.env['RPC_URL'] || 'http://127.0.0.1:8545';
 const PRIVATE_KEY = process.env['PRIVATE_KEY'] || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
@@ -182,7 +180,7 @@ app.get('/health', async (_req: Request, res: Response) => {
     await prisma.$queryRaw`SELECT 1 AS ok`;
     res.json({
       status: 'ok',
-      database: 'sqlserver',
+      database: 'sqlite',
       contract: CONTRACT_ADDR || 'NOT SET',
       mailer: SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock',
     });
@@ -190,7 +188,7 @@ app.get('/health', async (_req: Request, res: Response) => {
     const message = err instanceof Error ? err.message : String(err);
     res.status(500).json({
       status: 'error',
-      database: 'sqlserver',
+      database: 'sqlite',
       contract: CONTRACT_ADDR || 'NOT SET',
       mailer: SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock',
       details: message,
