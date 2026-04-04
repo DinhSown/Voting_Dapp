@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
 import nodemailer from 'nodemailer';
 
 dotenv.config();
@@ -14,7 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 const DATABASE_URL = process.env['DATABASE_URL'] || 'file:./dev.db';
-const prisma = new PrismaClient();
+const adapter = new PrismaLibSql({ url: DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 const RPC_URL = process.env['RPC_URL'] || 'http://127.0.0.1:8545';
 const PRIVATE_KEY = process.env['PRIVATE_KEY'] || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
@@ -31,7 +33,7 @@ const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 const ARTIFACT_PATH = path.resolve(
   __dirname,
-  '../../artifacts/contracts/VotingSystem.sol/VotingSystem.json'
+  '../artifacts/contracts/VotingSystem.sol/VotingSystem.json'
 );
 
 let contractABI: unknown[] = [];
