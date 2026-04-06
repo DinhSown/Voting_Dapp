@@ -26,38 +26,38 @@ const categories: Category[] = [
   {
     id: 1,
     candidateId: 1,
-    title: 'Nhan vat truyen cam hung',
-    label: 'Inspiration',
-    summary: 'Ton vinh nhung guong mat truyen cam hung va tao tac dong xa hoi.',
+    title: 'Nhân vật đầu đàn tài năng',
+    label: 'Lãnh đạo tài năng',
+    summary: 'Bình chọn cho những cá nhân có khả năng lãnh đạo, tài năng xuất sắc và có tầm nhìn xa.',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBlmFTG6kzrezYtMw39PsX3zglt6pml7t5td_bOicD8cHeWjnZc8dRtD9AUiBEN88e86wctCr-bAJ8j_iX5ZZfb1S6E_bkBNZLuT5oczZfmcxnGBaVKZHdxEYa3jWqIz8IU9ytn6SPe2lxVMyKflNMj_JVSHDuIwwpQiiS_0dnQODpoeVRxWlUvETFD6ok1oXFKRFcMyCmWULRzXc90pGYc6wDlN7dhbDF5Nlb0sbmhjyMuQQ8iFBDwoc7KdALiDMmzIykEfwhjhXjE',
-    nominees: ['Mai An / Open Classroom', 'Khanh Linh / Community Builder'],
+    nominees: ['Ứng viên 1: Người tiên phong công nghệ blockchain', 'Ứng viên 2: Doanh nhân tầm nhìn toàn cầu'],
   },
   {
     id: 2,
     candidateId: 2,
-    title: 'Du an vi cong dong',
-    label: 'Community',
-    summary: 'Nhom du an co tac dong xa hoi ro rang, minh bach va co kha nang mo rong.',
+    title: 'Dự án đóng góp cộng đồng',
+    label: 'Dự án cộng đồng',
+    summary: 'Những dự án có tác động tích cực đến cộng đồng, bền vững và có tiềm năng phát triển lâu dài.',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDssEXWOFJZcdzlxp28is5AzKtAKPPwryVB6ibFXD72SYUiScOIg7sc-fqERQIGn3sF0-blrL23RznWiI2gGwfheHNUOMzgGvTGgFxA7UfmXo3zTaHrhpYLUC-Ai17Mj-v9K_Rt3A9n97Ijf-5s8mnc06hg2WQZBARxBTViB-rXIYRgUgYuMVm66h9_kXrFm9nUAomqOzATH9o1tj-fDRNUdoUMqrlyHY6PRPQXyscaQKNBMQf8GIw4d0i_azi4ZyQPwCK2753NNew5',
-    nominees: ['Green Route / Climate action', 'BridgeHub / Accessibility'],
+    nominees: ['Dự án Green blockchain', 'Dự án Tiếp cận công bằng Web3'],
   },
   {
     id: 3,
     candidateId: 3,
-    title: 'GenZ tieu bieu',
-    label: 'New Generation',
-    summary: 'Nhung guong mat tre dai dien cho tinh than dam lam va co nang luc lan toa.',
+    title: 'Thế hệ đổi mới kỹ thuật số',
+    label: 'Thế hệ mới',
+    summary: 'Các nhân vật trẻ có bản lĩnh đổi mới, năng lực phi thường và khát vọng thay đổi thế giới.',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBLfbyirMWeNcxb3U4UK_s0NDGOEJIX88nhYSAlRrQQ38um5p5qAJXOJtPSozEYN677xEkg9whOGhUCda6D5FQBZ4nbUt1rnQ8BeU1ocoHYzv6EbOVgPU_ef35I7r5XEhBiUGe-Mqd0DS9hehBAeO2WOCNLIPw6R-oysnLTPS7BTPBzfybaOErUViPCFEaBngzUjnWSenuGFOHt_llp_Q0tn7H-x50eZqnRX0Og-cnbbkMkrTJdNx0ytHinyYpERww4uR-cM0txrPUV',
-    nominees: ['Bao Minh / Youth advocate', 'Le Vy / Product maker'],
+    nominees: ['Anh/chị X: Chuyên gia blockchain Gen Z', 'Anh/chị Y: Giáo dục Web3'],
   },
   {
     id: 4,
     candidateId: 4,
-    title: 'Nghe si dot pha',
-    label: 'Arts',
-    summary: 'Ton vinh tac gia, nghe si va nha san xuat van hoa co cach tiep can moi.',
+    title: 'Nhà sáng tạo nội dung Web3',
+    label: 'Sáng tạo nội dung',
+    summary: 'Những nhân vật sáng tạo nội dung chất lượng cao, lan tỏa kiến thức blockchain và ứng dụng thực tiễn.',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIMNr-Pq52k1vn4-IBj1GdQRtlEUkveoEvFD61725r8WcXDmKW5CUQuS6TAOeGk6PatPrTmDaBzyDJNZZ3Lj4GNDva_BpFFigIonjr6f4cTGvI1sea4NT4vtfdiSoOrmsV65BGKx-qC76TBux7XJx6YUHjN9QCDMtkum_4BPAVb7pp5SIS5M0_iyKB1B6KgPRjrNhydFRRVdcbUq3RzLBVM3pEVx6cAxCHRDusKuXylzLZta2zDZhFTYCix05OM9GYsb_ADEx0ZYLa',
-    nominees: ['Studio Nhan / Visual collective', 'Tran Kha / Performance artist'],
+    nominees: ['Nhà sáng tạo video blockchain', 'Nhà phân tích Web3 hàng đầu'],
   },
 ];
 
@@ -83,7 +83,7 @@ function App() {
   const [contractStatus, setContractStatus] = useState('unknown');
   const [results, setResults] = useState<{ name: string; votes: number }[]>([]);
   const [totalVotes, setTotalVotes] = useState(0);
-  const [logs, setLogs] = useState(['Frontend shell ready', 'OTP + whitelist flow wired', 'MetaMask voting flow active']);
+  const [logs, setLogs] = useState(['Hệ thống bình chọn khởi động', 'Kết nối MetaMask thành công', 'Sẵn sàng gửi phiếu bình chọn on-chain']);
 
   const notify = (msg: string, type: Toast['type'] = 'info') => {
     setToast({ msg, type });
@@ -142,7 +142,7 @@ function App() {
     load();
   }, [voted]);
 
-  const shortAddr = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Connect Wallet';
+  const shortAddr = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Kết nối Ví';
   const wrongNetwork = walletAddress && chainId !== HARDHAT_CHAIN_ID;
 
   const switchToHardhat = async () => {
@@ -152,7 +152,7 @@ function App() {
       await ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: HARDHAT_CHAIN_ID_HEX }] });
     } catch (error: any) {
       if (error.code === 4902) {
-        await ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: HARDHAT_CHAIN_ID_HEX, chainName: 'Hardhat Local', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: [HARDHAT_RPC] }] });
+        await ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: HARDHAT_CHAIN_ID_HEX, chainName: 'Hardhat Local Testnet', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: [HARDHAT_RPC] }] });
       } else {
         throw error;
       }
@@ -161,7 +161,7 @@ function App() {
 
   const connectWallet = async () => {
     const ethereum = (window as Window & { ethereum?: any }).ethereum;
-    if (!ethereum) return notify('Can cai MetaMask truoc.', 'error');
+    if (!ethereum) return notify('Vui lòng cài đặt MetaMask để bình chọn on-chain.', 'error');
     try {
       setWalletLoading(true);
       await switchToHardhat();
@@ -170,54 +170,54 @@ function App() {
       const network = await provider.getNetwork();
       setWalletAddress(accounts[0]);
       setChainId(Number(network.chainId));
-      pushLog(`Wallet connected: ${accounts[0]}`);
-      notify('Da ket noi vi.', 'success');
+      pushLog(`Ví blockchain: ${accounts[0]} được kết nối`);
+      notify('Ví Web3 kết nối thành công! Bạn có thể bình chọn ngay.', 'success');
     } catch (error: any) {
-      notify(error.message || 'Khong the ket noi vi.', 'error');
+      notify(error.message || 'Không thể kết nối ví. Vui lòng thử lại.', 'error');
     } finally {
       setWalletLoading(false);
     }
   };
 
   const sendOtp = async () => {
-    if (!email) return notify('Nhap email truoc.', 'error');
+    if (!email) return notify('Nhập địa chỉ email để xác minh danh tính.', 'error');
     try {
       setBusy(true);
       await axios.post(`${BACKEND_URL}/api/auth/send-otp`, { email });
       setStep('OTP_SENT');
-      pushLog(`OTP sent to ${email}`);
-      notify('OTP da gui. Kiem tra terminal backend.', 'success');
+      pushLog(`Gửi mã OTP đến: ${email}`);
+      notify('Mã OTP đã gửi! Kiểm tra email của bạn.', 'success');
     } catch (error: any) {
-      notify(error.response?.data?.error || 'Gui OTP that bai.', 'error');
+      notify(error.response?.data?.error || 'Gửi OTP thất bại. Vui lòng thử lại.', 'error');
     } finally {
       setBusy(false);
     }
   };
 
   const verifyOtp = async () => {
-    if (!walletAddress) return notify('Can ket noi vi truoc.', 'error');
-    if (otp.length < 6) return notify('Nhap OTP hop le.', 'error');
+    if (!walletAddress) return notify('Kết nối MetaMask trước khi xác minh.', 'error');
+    if (otp.length < 6) return notify('Mã OTP phải có 6 chữ số.', 'error');
     try {
       setBusy(true);
       await axios.post(`${BACKEND_URL}/api/auth/verify-otp`, { email, otpCode: otp, walletAddress, electionId: ELECTION_ID });
       setStep('VERIFIED');
-      pushLog(`Whitelisted ${walletAddress}`);
-      notify('Xac minh thanh cong.', 'success');
+      pushLog(`Danh sách trắng: ${walletAddress} được xác nhận`);
+      notify('Bạn đã được xác minh! Sẵn sàng bình chọn on-chain.', 'success');
     } catch (error: any) {
-      notify(error.response?.data?.error || 'OTP khong hop le.', 'error');
+      notify(error.response?.data?.error || 'Mã OTP không đúng. Vui lòng thử lại.', 'error');
     } finally {
       setBusy(false);
     }
   };
 
   const castVote = async (category: Category) => {
-    if (!walletAddress) return notify('Can ket noi MetaMask.', 'error');
+    if (!walletAddress) return notify('Kết nối MetaMask để bình chọn on-chain.', 'error');
     if (wrongNetwork) {
       await switchToHardhat();
-      return notify('Da yeu cau chuyen network.', 'info');
+      return notify('Vui lòng chuyển sang mạng Hardhat để bình chọn.', 'info');
     }
-    if (step !== 'VERIFIED') return notify('Can verify email + whitelist truoc.', 'error');
-    if (voted.has(category.id)) return notify('Ban da vote hang muc nay.', 'error');
+    if (step !== 'VERIFIED') return notify('Xác minh Email + Ví trước khi bình chọn.', 'error');
+    if (voted.has(category.id)) return notify('Bạn đã bình chọn hạng mục này rồi (chống gian lận).', 'error');
     try {
       setVotingFor(category.id);
       const provider = new ethers.BrowserProvider((window as Window & { ethereum?: any }).ethereum);
@@ -226,20 +226,20 @@ function App() {
       const tx = await contract.vote(ELECTION_ID, category.candidateId);
       await tx.wait();
       setVoted((current) => new Set(current).add(category.id));
-      pushLog(`Vote confirmed for ${category.title}`);
-      notify(`Da vote cho ${category.title}.`, 'success');
+      pushLog(`Phiếu bình chọn cho "${category.title}" được ghi trên blockchain`);
+      notify(`Bình chọn cho ${category.title} đã được xác nhận on-chain!`, 'success');
     } catch (error: any) {
-      notify(error.reason || error.message || 'Vote that bai.', 'error');
+      notify(error.reason || error.message || 'Bình chọn on-chain thất bại.', 'error');
     } finally {
       setVotingFor(null);
     }
   };
 
   const statusCards = useMemo(() => [
-    { label: 'Wallet', value: walletAddress ? 'Connected' : 'Waiting', icon: Wallet },
-    { label: 'Verification', value: step, icon: Mail },
-    { label: 'Backend', value: health, icon: Cpu },
-    { label: 'Chain', value: wrongNetwork ? 'Wrong network' : 'Hardhat local', icon: Blocks },
+    { label: 'Ví', value: walletAddress ? `${walletAddress.slice(0, 6)}...` : 'Chờ', icon: Wallet },
+    { label: 'Xác minh', value: step === 'VERIFIED' ? 'OK' : step === 'OTP_SENT' ? 'OTP' : 'Chờ', icon: Mail },
+    { label: 'Backend', value: health === 'online' ? 'Online' : 'Offline', icon: Cpu },
+    { label: 'Mạng', value: wrongNetwork ? 'Sai' : 'Hardhat', icon: Blocks },
   ], [health, step, walletAddress, wrongNetwork]);
 
   const topResults = [...results].sort((a, b) => b.votes - a.votes);
@@ -250,18 +250,18 @@ function App() {
       {toast && <div className={`fixed right-6 top-24 z-50 rounded-full border px-5 py-3 font-label text-[11px] uppercase tracking-[0.24em] ${toast.type === 'success' ? 'border-primary/40 bg-primary text-on-primary' : toast.type === 'error' ? 'border-error/40 bg-error-container text-on-error-container' : 'border-white/10 bg-surface-container-high text-on-surface'}`}>{toast.msg}</div>}
       <header className="sticky top-0 z-40 border-b border-white/8 bg-background/75 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 md:px-8">
-          <button onClick={() => go('home')} className="font-label text-lg font-bold uppercase tracking-[0.38em] text-primary">meChoice</button>
-          <nav className="hidden gap-2 md:flex">{(['home', 'vote', 'results', 'admin'] as Route[]).map((item) => <button key={item} onClick={() => go(item)} className={`rounded-full px-4 py-2 font-label text-[11px] uppercase tracking-[0.22em] ${route === item ? 'bg-primary text-on-primary' : 'text-on-surface/65 hover:text-primary'}`}>{item}</button>)}</nav>
-          <div className="flex gap-2">{wrongNetwork && <button onClick={switchToHardhat} className="rounded-full border border-error/30 bg-error-container px-4 py-3 font-label text-[10px] uppercase tracking-[0.18em] text-on-error-container">Switch</button>}<button onClick={connectWallet} disabled={walletLoading} className="rounded-full bg-primary px-5 py-3 font-label text-[11px] font-bold uppercase tracking-[0.22em] text-on-primary">{walletLoading ? 'Connecting' : shortAddr}</button></div>
+          <button onClick={() => go('home')} className="font-label text-lg font-bold uppercase tracking-[0.38em] text-primary cursor-pointer">meChoice</button>
+          <nav className="hidden gap-2 md:flex">{(['home', 'vote', 'results', 'admin'] as Route[]).map((item) => <button key={item} onClick={() => go(item)} className={`rounded-full px-4 py-2 font-label text-[11px] uppercase tracking-[0.22em] cursor-pointer ${route === item ? 'bg-primary text-on-primary' : 'text-on-surface/65 hover:text-primary'}`}>{item === 'home' ? 'Trang chủ' : item === 'vote' ? 'Bình chọn' : item === 'results' ? 'Kết quả' : 'Quản lý'}</button>)}</nav>
+          <div className="flex gap-2">{wrongNetwork && <button onClick={switchToHardhat} className="rounded-full border border-error/30 bg-error-container px-4 py-3 font-label text-[10px] uppercase tracking-[0.18em] text-on-error-container cursor-pointer">Chuyển mạng</button>}<button onClick={connectWallet} disabled={walletLoading} className="rounded-full bg-primary px-5 py-3 font-label text-[11px] font-bold uppercase tracking-[0.22em] text-on-primary cursor-pointer disabled:cursor-not-allowed">{walletLoading ? 'Kết nối...' : shortAddr}</button></div>
         </div>
       </header>
       <main className="relative z-10">
-        {route === 'home' && <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[1.1fr_0.9fr]"><div className="space-y-8 reveal"><p className="font-label text-xs uppercase tracking-[0.4em] text-primary">Voting + admin + MetaMask shell</p><h1 className="font-headline text-6xl leading-[0.88] md:text-8xl">Frontend cho voting dApp da du cac man chinh.</h1><p className="max-w-2xl text-base leading-8 text-on-surface/70">Toi da thiet ke va code them cac trang FE can thiet cho flow ban dang lam: landing, voting explorer, wallet + OTP whitelist, results transparency, va admin dashboard.</p><div className="flex flex-wrap gap-4"><button onClick={() => go('vote')} className="inline-flex items-center gap-3 rounded-full bg-primary px-7 py-4 font-label text-xs font-bold uppercase tracking-[0.24em] text-on-primary">Open Vote <ArrowRight size={16} /></button><button onClick={() => go('admin')} className="inline-flex items-center gap-3 rounded-full border border-white/10 px-7 py-4 font-label text-xs font-bold uppercase tracking-[0.24em] text-on-surface/80">Open Admin <LayoutDashboard size={16} /></button></div><div className="grid gap-4 md:grid-cols-4">{statusCards.map(({ label, value, icon: Icon }) => <article key={label} className="panel"><div className="mb-5 flex items-center justify-between"><span className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">{label}</span><Icon size={16} className="text-primary" /></div><p className="font-headline text-3xl">{value}</p></article>)}</div></div><div className="panel panel-glow reveal"><p className="font-label text-xs uppercase tracking-[0.32em] text-primary">Suggested split</p><h2 className="mt-4 font-headline text-5xl">Team co the chia viec ro ngay bay gio.</h2><div className="mt-8 space-y-3">{['FE: vote UI + admin + MetaMask', 'BE: email OTP + admin API + whitelist trigger', 'DB: users + otp + metadata + logs', 'DApp: contract vote + anti-double-vote + whitelist'].map((item) => <div key={item} className="flex items-start gap-3 rounded-[1.6rem] border border-white/8 bg-black/20 px-4 py-4"><Check size={16} className="mt-1 text-primary" /><p className="text-sm leading-7 text-on-surface/75">{item}</p></div>)}</div><div className="mt-8 rounded-[1.8rem] border border-primary/20 bg-primary/10 p-5"><p className="font-label text-[10px] uppercase tracking-[0.22em] text-primary">Backend contract</p><p className="mt-3 break-all text-sm leading-7 text-on-surface/70">{contractStatus}</p></div></div></section>}
-        {route === 'vote' && <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[1.05fr_0.95fr]"><div className="space-y-6 reveal"><p className="font-label text-xs uppercase tracking-[0.38em] text-primary">Voting Explorer</p><h1 className="font-headline text-5xl leading-[0.9] md:text-7xl">Chon hang muc, xem nominee, roi vote on-chain.</h1><div className="grid gap-5 md:grid-cols-2">{categories.map((category) => <article key={category.id} className="panel group"><div className="relative overflow-hidden rounded-[1.6rem]"><img src={category.image} alt={category.title} className="h-72 w-full object-cover grayscale transition duration-700 group-hover:scale-105 group-hover:grayscale-0" /><div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" /><div className="absolute left-4 top-4 rounded-full border border-white/12 bg-black/30 px-3 py-2 font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/75">{category.label}</div></div><div className="mt-6"><h2 className="font-headline text-3xl">{category.title}</h2><p className="mt-3 text-sm leading-7 text-on-surface/65">{category.summary}</p></div><div className="mt-6 flex gap-3"><button onClick={() => setSelected(category)} className="rounded-full border border-white/10 px-4 py-3 font-label text-[10px] uppercase tracking-[0.2em] text-on-surface/70">Detail</button><button onClick={() => castVote(category)} disabled={voted.has(category.id) || votingFor === category.id} className="rounded-full bg-primary px-4 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary disabled:border disabled:border-white/10 disabled:bg-transparent disabled:text-on-surface/35">{votingFor === category.id ? 'Processing' : voted.has(category.id) ? 'Voted' : 'Vote now'}</button></div></article>)}</div></div><div className="space-y-6"><div className="panel panel-glow reveal"><div className="mb-6 flex items-center justify-between"><div><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Verification Center</p><h2 className="mt-3 font-headline text-4xl">Wallet + OTP whitelist</h2></div><ShieldCheck size={18} className="text-secondary" /></div><div className="grid gap-3 md:grid-cols-3">{['Connect wallet', 'Receive OTP', 'Whitelist voter'].map((item, index) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4"><p className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface/45">{item}</p><p className="mt-3 text-sm text-on-surface/65">{index === 0 ? (walletAddress ? 'Done' : 'Pending') : index === 1 ? (step !== 'IDLE' ? 'Done' : 'Pending') : (step === 'VERIFIED' ? 'Done' : 'Pending')}</p></div>)}</div><div className="mt-5 space-y-4"><div className="rounded-[1.6rem] border border-white/8 bg-black/18 p-5"><label className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">Email</label><input value={email} onChange={(e) => setEmail(e.target.value)} className="mt-3 w-full border-b border-white/10 bg-transparent pb-3 text-base outline-none" placeholder="ban@example.com" /><button onClick={sendOtp} disabled={busy || !email} className="mt-5 rounded-full border border-primary/40 px-5 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-primary disabled:opacity-40">Send OTP</button></div><div className="rounded-[1.6rem] border border-white/8 bg-black/18 p-5"><label className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">OTP</label><input value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} className="mt-3 w-full border-b border-white/10 bg-transparent pb-3 text-base tracking-[0.4em] text-primary outline-none" placeholder="123456" /><div className="mt-5 flex gap-3"><button onClick={verifyOtp} disabled={busy || otp.length < 6} className="rounded-full bg-primary px-5 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary disabled:opacity-40">Verify</button><button onClick={() => { setStep('IDLE'); setOtp(''); }} className="rounded-full border border-white/10 px-5 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/65">Reset</button></div></div></div></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Nominee Detail</p><h2 className="mt-3 font-headline text-4xl">{selected.title}</h2><p className="mt-4 text-sm leading-7 text-on-surface/65">{selected.summary}</p><div className="mt-6 space-y-3">{selected.nominees.map((name) => <div key={name} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm text-on-surface/75">{name}</div>)}</div></div></div></section>}
-        {route === 'results' && <section className="mx-auto max-w-7xl px-5 py-12 md:px-8"><div className="mb-10 reveal"><p className="font-label text-xs uppercase tracking-[0.38em] text-primary">Transparency</p><h1 className="mt-4 font-headline text-5xl leading-[0.9] md:text-7xl">Ket qua on-chain va bang xep hang.</h1></div><div className="grid gap-5 md:grid-cols-4">{[{ label: 'Total votes', value: String(totalVotes) }, { label: 'Candidates', value: String(results.length || categories.length) }, { label: 'Backend', value: health }, { label: 'Contract', value: contractStatus === 'backend offline' ? 'offline' : 'ready' }].map((item) => <article key={item.label} className="panel"><p className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">{item.label}</p><p className="mt-5 font-headline text-4xl">{item.value}</p></article>)}</div><div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Leaderboard</p><div className="mt-6 space-y-4">{topResults.map((item, index) => <div key={`${item.name}-${index}`} className="rounded-[1.6rem] border border-white/8 bg-black/18 p-5"><div className="mb-4 flex items-center justify-between"><div><p className="font-label text-[10px] uppercase tracking-[0.2em] text-primary">#{index + 1}</p><h3 className="mt-2 font-headline text-2xl">{item.name}</h3></div><p className="text-2xl font-semibold text-primary">{item.votes}</p></div><div className="h-3 overflow-hidden rounded-full bg-white/6"><div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${Math.max(item.votes * 20, 8)}%` }} /></div></div>)}</div></div><div className="space-y-6"><div className="panel panel-glow reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Why this page</p><div className="mt-5 space-y-3">{['Cho demo tinh minh bach', 'Doc duoc tong phieu tu contract neu san sang', 'Fallback duoc neu local session moi chi co FE'].map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Recent logs</p><div className="mt-5 space-y-3">{logs.slice(0, 5).map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div></div></div></section>}
-        {route === 'admin' && <section className="mx-auto max-w-7xl px-5 py-12 md:px-8"><div className="mb-10 reveal"><p className="font-label text-xs uppercase tracking-[0.38em] text-primary">Admin Dashboard</p><h1 className="mt-4 font-headline text-5xl leading-[0.9] md:text-7xl">Monitor OTP, whitelist, va readiness.</h1></div><div className="grid gap-5 md:grid-cols-4">{[{ label: 'API health', value: health }, { label: 'Whitelist state', value: step }, { label: 'Session votes', value: String(voted.size) }, { label: 'Chain id', value: chainId ? String(chainId) : 'N/A' }].map((item) => <article key={item.label} className="panel"><p className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">{item.label}</p><p className="mt-5 font-headline text-4xl">{item.value}</p></article>)}</div><div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]"><div className="space-y-6"><div className="panel panel-glow reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Delivery board</p><div className="mt-5 space-y-3">{['FE: implemented all key screens', 'BE: health + OTP verify live', 'DB: users + otp + logs in Prisma', 'DApp: vote flow integrated'].map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Checklist</p><div className="mt-5 space-y-3">{['Set frontend .env contract address', 'Run backend localhost:3001', 'Deploy contract on Hardhat', 'Bo sung admin list APIs cho users/logs'].map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div></div><div className="space-y-6"><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Activity logs</p><div className="mt-5 space-y-3">{logs.map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div><div className="grid gap-5 md:grid-cols-2"><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Current voter</p><p className="mt-4 text-sm leading-7 text-on-surface/72">Wallet: {walletAddress || 'none'}<br />Email: {email || 'none'}<br />Step: {step}</p></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Contract</p><p className="mt-4 break-all text-sm leading-7 text-on-surface/72">{contractStatus}</p></div></div></div></div></section>}
+        {route === 'home' && <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[1.1fr_0.9fr]"><div className="space-y-8 reveal"><p className="font-label text-xs uppercase tracking-[0.4em] text-primary">Bình chọn phi tập trung • Xác minh Web3 • Smart Contract</p><h1 className="font-headline text-6xl leading-[0.88] md:text-8xl">Hệ thống bình chọn blockchain an toàn và minh bạch.</h1><p className="max-w-2xl text-base leading-8 text-on-surface/70">Sử dụng MetaMask để bình chọn on-chain. Mỗi phiếu được mã hóa an toàn, xác minh danh tính qua OTP, và ghi lại bất biến trên blockchain. Chống gian lận 100%, kết quả toàn cầu có thể kiểm chứng.</p><div className="flex flex-wrap gap-4"><button onClick={() => go('vote')} className="inline-flex items-center gap-3 rounded-full bg-primary px-7 py-4 font-label text-xs font-bold uppercase tracking-[0.24em] text-on-primary cursor-pointer">Bình chọn ngay <ArrowRight size={16} /></button><button onClick={() => go('admin')} className="inline-flex items-center gap-3 rounded-full border border-white/10 px-7 py-4 font-label text-xs font-bold uppercase tracking-[0.24em] text-on-surface/80 cursor-pointer">Bảng điều hành <LayoutDashboard size={16} /></button></div><div className="grid gap-4 md:grid-cols-4">{statusCards.map(({ label, value, icon: Icon }) => <article key={label} className="panel"><div className="mb-5 flex items-center justify-between"><span className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">{label}</span><Icon size={16} className="text-primary" /></div><p className="font-headline text-3xl">{value}</p></article>)}</div></div><div className="panel panel-glow reveal"><p className="font-label text-xs uppercase tracking-[0.32em] text-primary">Quy trình bình chọn an toàn</p><h2 className="mt-4 font-headline text-5xl">Ba bước xác minh danh tính.</h2><div className="mt-8 space-y-3">{['Kết nối MetaMask: Liên kết ví blockchain của bạn', 'Xác minh Email: Nhận mã OTP để chống gian lận', 'Bình chọn On-Chain: Gửi phiếu được ký trên blockchain'].map((item) => <div key={item} className="flex items-start gap-3 rounded-[1.6rem] border border-white/8 bg-black/20 px-4 py-4"><Check size={16} className="mt-1 text-primary" /><p className="text-sm leading-7 text-on-surface/75">{item}</p></div>)}</div><div className="mt-8 rounded-[1.8rem] border border-primary/20 bg-primary/10 p-5"><p className="font-label text-[10px] uppercase tracking-[0.22em] text-primary">Trạng thái hợp đồng thông minh</p><p className="mt-3 break-all text-sm leading-7 text-on-surface/70">{contractStatus}</p></div></div></section>}
+        {route === 'vote' && <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[1.05fr_0.95fr]"><div className="space-y-6 reveal"><p className="font-label text-xs uppercase tracking-[0.38em] text-primary">Khám phá danh sách ứng viên</p><h1 className="font-headline text-5xl leading-[0.9] md:text-7xl">Chọn danh mục, xem chi tiết, bình chọn on-chain.</h1><div className="grid gap-5 md:grid-cols-2">{categories.map((category) => <article key={category.id} className="panel group"><div className="relative overflow-hidden rounded-[1.6rem]"><img src={category.image} alt={category.title} className="h-72 w-full object-cover grayscale transition duration-700 group-hover:scale-105 group-hover:grayscale-0" /><div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" /><div className="absolute left-4 top-4 rounded-full border border-white/12 bg-black/30 px-3 py-2 font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/75">{category.label}</div></div><div className="mt-6"><h2 className="font-headline text-3xl">{category.title}</h2><p className="mt-3 text-sm leading-7 text-on-surface/65">{category.summary}</p></div><div className="mt-6 flex gap-3"><button onClick={() => setSelected(category)} className="rounded-full border border-white/10 px-4 py-3 font-label text-[10px] uppercase tracking-[0.2em] text-on-surface/70 cursor-pointer">Chi tiết</button><button onClick={() => castVote(category)} disabled={voted.has(category.id) || votingFor === category.id} className="rounded-full bg-primary px-4 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary disabled:border disabled:border-white/10 disabled:bg-transparent disabled:text-on-surface/35 cursor-pointer disabled:cursor-not-allowed">{votingFor === category.id ? 'Gửi tx...' : voted.has(category.id) ? 'Đã vote!' : 'Vote now'}</button></div></article>)}</div></div><div className="space-y-6"><div className="panel panel-glow reveal"><div className="mb-6 flex items-center justify-between"><div><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Xác minh danh tính Web3</p><h2 className="mt-3 font-headline text-4xl">MetaMask + OTP + Blockchain</h2></div><ShieldCheck size={18} className="text-secondary" /></div><div className="grid gap-3 md:grid-cols-3">{['Kết nối ví MetaMask', 'Nhập mã OTP 6 số', 'Danh sách trắng blockchain'].map((item, index) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4"><p className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface/45">{item}</p><p className="mt-3 text-sm text-on-surface/65">{index === 0 ? (walletAddress ? 'Hoàn thành' : 'Chờ') : index === 1 ? (step !== 'IDLE' ? 'Hoàn thành' : 'Chờ') : (step === 'VERIFIED' ? 'Hoàn thành' : 'Chờ')}</p></div>)}</div><div className="mt-5 space-y-4"><div className="rounded-[1.6rem] border border-white/8 bg-black/18 p-5"><label className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">Email (xác minh danh tính)</label><input value={email} onChange={(e) => setEmail(e.target.value)} className="mt-3 w-full border-b border-white/10 bg-transparent pb-3 text-base outline-none cursor-pointer" placeholder="your.email@example.com" /><button onClick={sendOtp} disabled={busy || !email} className="mt-5 rounded-full border border-primary/40 px-5 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-primary disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Gửi mã OTP</button></div><div className="rounded-[1.6rem] border border-white/8 bg-black/18 p-5"><label className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">Nhập mã OTP</label><input value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} className="mt-3 w-full border-b border-white/10 bg-transparent pb-3 text-base tracking-[0.4em] text-primary outline-none cursor-pointer" placeholder="000000" /><div className="mt-5 flex gap-3"><button onClick={verifyOtp} disabled={busy || otp.length < 6} className="rounded-full bg-primary px-5 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Xác minh</button><button onClick={() => { setStep('IDLE'); setOtp(''); }} className="rounded-full border border-white/10 px-5 py-3 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/65 cursor-pointer">Làm lại</button></div></div></div></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Thông tin ứng viên</p><h2 className="mt-3 font-headline text-4xl">{selected.title}</h2><p className="mt-4 text-sm leading-7 text-on-surface/65">{selected.summary}</p><div className="mt-6 space-y-3">{selected.nominees.map((name) => <div key={name} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm text-on-surface/75">{name}</div>)}</div></div></div></section>}
+        {route === 'results' && <section className="mx-auto max-w-7xl px-5 py-12 md:px-8"><div className="mb-10 reveal"><p className="font-label text-xs uppercase tracking-[0.38em] text-primary">Kết quả minh bạch on-chain</p><h1 className="mt-4 font-headline text-5xl leading-[0.9] md:text-7xl">Dữ liệu bình chọn được mã hóa trên blockchain.</h1></div><div className="grid gap-5 md:grid-cols-4">{[{ label: 'Tổng phiếu', value: String(totalVotes) }, { label: 'Ứng viên', value: String(results.length || categories.length) }, { label: 'Backend', value: health }, { label: 'Smart contract', value: contractStatus === 'backend offline' ? 'Offline' : 'Hoạt động' }].map((item) => <article key={item.label} className="panel"><p className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">{item.label}</p><p className="mt-5 font-headline text-4xl">{item.value}</p></article>)}</div><div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Bảng xếp hạng real-time</p><div className="mt-6 space-y-4">{topResults.map((item, index) => <div key={`${item.name}-${index}`} className="rounded-[1.6rem] border border-white/8 bg-black/18 p-5"><div className="mb-4 flex items-center justify-between"><div><p className="font-label text-[10px] uppercase tracking-[0.2em] text-primary">{index + 1}</p><h3 className="mt-2 font-headline text-2xl">{item.name}</h3></div><p className="text-2xl font-semibold text-primary">{item.votes}</p></div><div className="h-3 overflow-hidden rounded-full bg-white/6"><div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${Math.max(item.votes * 20, 8)}%` }} /></div></div>)}</div></div><div className="space-y-6"><div className="panel panel-glow reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Về trang này</p><div className="mt-5 space-y-3">{['Dữ liệu real-time từ smart contract', 'Mỗi phiếu được xác thực bằng chữ ký số', 'Transparent & không thể chỉnh sửa'].map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Nhật ký hoạt động</p><div className="mt-5 space-y-3">{logs.slice(0, 5).map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div></div></div></section>}
+        {route === 'admin' && <section className="mx-auto max-w-7xl px-5 py-12 md:px-8"><div className="mb-10 reveal"><p className="font-label text-xs uppercase tracking-[0.38em] text-primary">Bảng điều hành hệ thống</p><h1 className="mt-4 font-headline text-5xl leading-[0.9] md:text-7xl">Giám sát xác minh, danh sách trắng, on-chain.</h1></div><div className="grid gap-5 md:grid-cols-4">{[{ label: 'API Health', value: health }, { label: 'Xác minh', value: step }, { label: 'Phiếu phiên', value: String(voted.size) }, { label: 'Chain ID', value: chainId ? String(chainId) : 'N/A' }].map((item) => <article key={item.label} className="panel"><p className="font-label text-[10px] uppercase tracking-[0.22em] text-on-surface/45">{item.label}</p><p className="mt-5 font-headline text-4xl">{item.value}</p></article>)}</div><div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]"><div className="space-y-6"><div className="panel panel-glow reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Tiến độ triển khai</p><div className="mt-5 space-y-3">{['Frontend: Giao diện + Web3 wallet tích hợp', 'Backend: API OTP + danh sách trắng sẵn sàng', 'Database: Prisma + logs bình chọn', 'Smart Contract: Voting + chống gian lận'].map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Checklist triển khai</p><div className="mt-5 space-y-3">{['Cấu hình contract address trong .env', 'Khởi động backend (localhost:3001)', 'Deploy contract lên Hardhat local', 'Cập nhật danh sách trắng cho cử tri'].map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div></div><div className="space-y-6"><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Nhật ký hoạt động toàn hệ thống</p><div className="mt-5 space-y-3">{logs.map((item) => <div key={item} className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm leading-7 text-on-surface/72">{item}</div>)}</div></div><div className="grid gap-5 md:grid-cols-2"><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Cử tri hiện tại</p><p className="mt-4 text-sm leading-7 text-on-surface/72">Ví: {walletAddress ? walletAddress.slice(0, 10) + '...' : 'Chưa kết nối'}<br />Email: {email || 'Chưa nhập'}<br />Trạng thái: <span className={step === 'VERIFIED' ? 'text-green-400' : 'text-yellow-400'}>{step === 'VERIFIED' ? 'Xác minh' : step === 'OTP_SENT' ? 'Chờ OTP' : 'Chờ kết nối'}</span></p></div><div className="panel reveal"><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Smart Contract</p><p className="mt-4 break-all text-sm leading-7 text-on-surface/72 font-mono">{contractStatus}</p></div></div></div></div></section>}
       </main>
-      <footer className="relative z-10 border-t border-white/8 bg-surface-container-low/90"><div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 md:grid-cols-3 md:px-8"><div><p className="font-label text-lg font-bold uppercase tracking-[0.38em] text-primary">meChoice</p><p className="mt-5 text-sm leading-7 text-on-surface/60">Landing, vote, results va admin da duoc scaffold de team tiep tuc noi backend va smart contract.</p></div><div><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Flows</p><div className="mt-5 space-y-3 text-sm text-on-surface/60"><p>Wallet connect</p><p>OTP whitelist</p><p>Vote execution</p></div></div><div><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Admin</p><div className="mt-5 space-y-3 text-sm text-on-surface/60"><p>Health monitor</p><p>Logs</p><p>Checklist</p></div></div></div></footer>
+      <footer className="relative z-10 border-t border-white/8 bg-surface-container-low/90"><div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 md:grid-cols-3 md:px-8"><div><p className="font-label text-lg font-bold uppercase tracking-[0.38em] text-primary">meChoice Voting</p><p className="mt-5 text-sm leading-7 text-on-surface/60">Hệ thống bình chọn phi tập trung, minh bạch, an toàn với blockchain. Mỗi phiếu được mã hóa, danh tính được xác minh, kết quả không thể chỉnh sửa.</p></div><div><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Quy trình</p><div className="mt-5 space-y-3 text-sm text-on-surface/60"><p>Kết nối MetaMask</p><p>Xác minh Email OTP</p><p>Gửi phiếu on-chain</p></div></div><div><p className="font-label text-[11px] uppercase tracking-[0.28em] text-primary">Quản trị</p><div className="mt-5 space-y-3 text-sm text-on-surface/60"><p>Giám sát thời gian thực</p><p>Nhật ký blockchain</p><p>Quản lý danh sách trắng</p></div></div></div></footer>
     </div>
   );
 }
