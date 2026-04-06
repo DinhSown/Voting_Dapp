@@ -26,7 +26,7 @@ const SMTP_PORT = parseInt(process.env['SMTP_PORT'] || '587', 10);
 const SMTP_SECURE = process.env['SMTP_SECURE'] === 'true';
 const SMTP_USER = process.env['SMTP_USER'];
 const SMTP_PASS = process.env['SMTP_PASS'];
-const MAIL_FROM = process.env['MAIL_FROM'] || SMTP_USER || 'no-reply@wechoice.local';
+const MAIL_FROM = process.env['MAIL_FROM'] || SMTP_USER || 'no-reply@meChoice.local';
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -76,11 +76,11 @@ const sendOtpEmail = async (email: string, otpCode: string) => {
   await transporter.sendMail({
     from: MAIL_FROM,
     to: email,
-    subject: 'WECHOICE OTP Verification Code',
+    subject: 'meChoice OTP Verification Code',
     text: `Your OTP code is ${otpCode}. It will expire in 5 minutes.`,
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
-        <h2>WECHOICE OTP Verification</h2>
+        <h2>meChoice OTP Verification</h2>
         <p>Your OTP code is:</p>
         <div style="font-size: 28px; font-weight: bold; letter-spacing: 8px; margin: 16px 0;">${otpCode}</div>
         <p>This code expires in 5 minutes.</p>

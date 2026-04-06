@@ -21,9 +21,9 @@ console.log("\n✅ VotingSystem deployed to:", address);
 // ── Seed demo data ──────────────────────────────────────────────────────────
 console.log("\nSeeding demo election...");
 
-const tx1 = await votingSystem.createElection("WeChoice 2024");
+const tx1 = await votingSystem.createElection("meChoice 2024");
 await tx1.wait();
-console.log("Created election: WeChoice 2024");
+console.log("Created election: meChoice 2024");
 
 const candidates = [
   "Nhân vật truyền cảm hứng",
