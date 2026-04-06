@@ -45,12 +45,12 @@ const categories: Category[] = [
   {
     id: 1,
     candidateId: 1,
-    title: "Nhân vật đầu đàn tài năng",
+    title: "Nhân vật truyền cảm hứng",
     label: "Lãnh đạo tài năng",
     summary:
-      "Bình chọn cho những cá nhân có khả năng lãnh đạo, tài năng xuất sắc và có tầm nhìn xa.",
+      "Những cá nhân dành cả cuộc đời để lan tỏa giá trị tích cực, tạo ảnh hưởng đến cộng đồng và thúc đẩy sự thay đổi xã hội.",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBlmFTG6kzrezYtMw39PsX3zglt6pml7t5td_bOicD8cHeWjnZc8dRtD9AUiBEN88e86wctCr-bAJ8j_iX5ZZfb1S6E_bkBNZLuT5oczZfmcxnGBaVKZHdxEYa3jWqIz8IU9ytn6SPe2lxVMyKflNMj_JVSHDuIwwpQiiS_0dnQODpoeVRxWlUvETFD6ok1oXFKRFcMyCmWULRzXc90pGYc6wDlN7dhbDF5Nlb0sbmhjyMuQQ8iFBDwoc7KdALiDMmzIykEfwhjhXjE",
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop",
     nominees: [
       "Ứng viên 1: Người tiên phong công nghệ blockchain",
       "Ứng viên 2: Doanh nhân tầm nhìn toàn cầu",
@@ -59,23 +59,23 @@ const categories: Category[] = [
   {
     id: 2,
     candidateId: 2,
-    title: "Dự án đóng góp cộng đồng",
-    label: "Dự án cộng đồng",
+    title: "Dự án vì Việt Nam tôi",
+    label: "Dự án CSR & cộng đồng",
     summary:
-      "Những dự án có tác động tích cực đến cộng đồng, bền vững và có tiềm năng phát triển lâu dài.",
+      "Những dự án tạo tác động xã hội bền vững, khẳng định trách nhiệm doanh nghiệp và khát vọng phát triển Việt Nam.",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDssEXWOFJZcdzlxp28is5AzKtAKPPwryVB6ibFXD72SYUiScOIg7sc-fqERQIGn3sF0-blrL23RznWiI2gGwfheHNUOMzgGvTGgFxA7UfmXo3zTaHrhpYLUC-Ai17Mj-v9K_Rt3A9n97Ijf-5s8mnc06hg2WQZBARxBTViB-rXIYRgUgYuMVm66h9_kXrFm9nUAomqOzATH9o1tj-fDRNUdoUMqrlyHY6PRPQXyscaQKNBMQf8GIw4d0i_azi4ZyQPwCK2753NNew5",
+      "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&h=600&fit=crop",
     nominees: ["Dự án Green blockchain", "Dự án Tiếp cận công bằng Web3"],
   },
   {
     id: 3,
     candidateId: 3,
-    title: "Thế hệ đổi mới kỹ thuật số",
-    label: "Thế hệ mới",
+    title: "Thế hệ Gen Z đổi mới",
+    label: "Young Face - Gương mặt trẻ",
     summary:
-      "Các nhân vật trẻ có bản lĩnh đổi mới, năng lực phi thường và khát vọng thay đổi thế giới.",
+      "Những gương mặt Gen Z có bản lĩnh, năng lực phi thường, đạo đức tốt và bước đầu khẳng định vị thế trên toàn cầu.",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBLfbyirMWeNcxb3U4UK_s0NDGOEJIX88nhYSAlRrQQ38um5p5qAJXOJtPSozEYN677xEkg9whOGhUCda6D5FQBZ4nbUt1rnQ8BeU1ocoHYzv6EbOVgPU_ef35I7r5XEhBiUGe-Mqd0DS9hehBAeO2WOCNLIPw6R-oysnLTPS7BTPBzfybaOErUViPCFEaBngzUjnWSenuGFOHt_llp_Q0tn7H-x50eZqnRX0Og-cnbbkMkrTJdNx0ytHinyYpERww4uR-cM0txrPUV",
+      "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=800&h=600&fit=crop",
     nominees: [
       "Anh/chị X: Chuyên gia blockchain Gen Z",
       "Anh/chị Y: Giáo dục Web3",
@@ -84,12 +84,12 @@ const categories: Category[] = [
   {
     id: 4,
     candidateId: 4,
-    title: "Nhà sáng tạo nội dung Web3",
-    label: "Sáng tạo nội dung",
+    title: "Rising Creator Web3",
+    label: "Sáng tạo nội dung nổi bật",
     summary:
-      "Những nhân vật sáng tạo nội dung chất lượng cao, lan tỏa kiến thức blockchain và ứng dụng thực tiễn.",
+      "Những nhà sáng tạo nội dung có tầm ảnh hưởng lớn, lan tỏa kiến thức Web3 và xây dựng cộng đồng blockchain mạnh mẽ.",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBIMNr-Pq52k1vn4-IBj1GdQRtlEUkveoEvFD61725r8WcXDmKW5CUQuS6TAOeGk6PatPrTmDaBzyDJNZZ3Lj4GNDva_BpFFigIonjr6f4cTGvI1sea4NT4vtfdiSoOrmsV65BGKx-qC76TBux7XJx6YUHjN9QCDMtkum_4BPAVb7pp5SIS5M0_iyKB1B6KgPRjrNhydFRRVdcbUq3RzLBVM3pEVx6cAxCHRDusKuXylzLZta2zDZhFTYCix05OM9GYsb_ADEx0ZYLa",
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&h=600&fit=crop",
     nominees: ["Nhà sáng tạo video blockchain", "Nhà phân tích Web3 hàng đầu"],
   },
 ];
@@ -662,16 +662,6 @@ function App() {
                 <p className="mt-4 text-sm leading-7 text-on-surface/65">
                   {selected.summary}
                 </p>
-                <div className="mt-6 space-y-3">
-                  {selected.nominees.map((name) => (
-                    <div
-                      key={name}
-                      className="rounded-[1.4rem] border border-white/8 bg-black/18 px-4 py-4 text-sm text-on-surface/75"
-                    >
-                      {name}
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </section>
