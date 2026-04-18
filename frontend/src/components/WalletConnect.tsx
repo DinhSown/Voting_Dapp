@@ -10,19 +10,15 @@ interface Props {
   onSwitchNetwork: () => void
 }
 
-function Step({
-  num,
-  done,
-  active,
-  title,
-  desc,
-}: {
+interface StepProps {
   num: number
   done: boolean
   active: boolean
   title: string
   desc: string
-}) {
+}
+
+function Step({ num, done, active, title, desc }: StepProps) {
   return (
     <div className={`flex items-start gap-3 p-3 rounded-xl transition-all ${active ? 'bg-white/5' : ''}`}>
       <div
@@ -115,6 +111,7 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
         <button
           onClick={onConnect}
           disabled={loading}
+          aria-label={loading ? 'Đang kết nối ví' : 'Kết nối MetaMask'}
           className="w-full py-2.5 px-4 rounded-xl bg-[#f2ca50] text-black font-semibold text-sm hover:bg-[#f2ca50]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
           {loading ? <Loader size={16} className="animate-spin" /> : <Wallet size={16} />}
@@ -124,6 +121,7 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
         <button
           onClick={onSwitchNetwork}
           disabled={loading}
+          aria-label={loading ? 'Đang chuyển mạng' : 'Chuyển sang Hardhat Local'}
           className="w-full py-2.5 px-4 rounded-xl bg-orange-500/20 text-orange-300 border border-orange-500/30 font-semibold text-sm hover:bg-orange-500/30 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
         >
           {loading ? <Loader size={16} className="animate-spin" /> : <RefreshCw size={16} />}
