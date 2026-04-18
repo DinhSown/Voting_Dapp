@@ -7,6 +7,7 @@ import * as dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 import nodemailer from 'nodemailer';
+import twilio from 'twilio';
 
 dotenv.config();
 
@@ -27,6 +28,11 @@ const SMTP_SECURE = process.env['SMTP_SECURE'] === 'true';
 const SMTP_USER = process.env['SMTP_USER'];
 const SMTP_PASS = process.env['SMTP_PASS'];
 const MAIL_FROM = process.env['MAIL_FROM'] || SMTP_USER || 'no-reply@meChoice.local';
+
+const TWILIO_ACCOUNT_SID = process.env['TWILIO_ACCOUNT_SID'];
+const TWILIO_AUTH_TOKEN = process.env['TWILIO_AUTH_TOKEN'];
+const TWILIO_PHONE_NUMBER = process.env['TWILIO_PHONE_NUMBER'];
+
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -60,6 +66,24 @@ const createMailer = () => {
     secure: SMTP_SECURE,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
+};
+
+const sendOtpSms = async (phone: string, otpCode: string) => {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+    console.log('\n==============================');
+    console.log('[MOCK SMS] TO:', phone);
+    console.log('[MOCK SMS] OTP CODE:', otpCode);
+    console.log('==============================\n');
+    return { mode: 'mock' as const };
+  }
+
+  const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+  await client.messages.create({
+    body: `[meChoice] Mã OTP của bạn là: ${otpCode}. Có hiệu lực trong 5 phút.`,
+    from: TWILIO_PHONE_NUMBER,
+    to: phone,
+  });
+  return { mode: 'sms' as const };
 };
 
 const sendOtpEmail = async (email: string, otpCode: string) => {
@@ -177,6 +201,89 @@ app.post('/api/auth/verify-otp', async (req: Request, res: Response) => {
   }
 });
 
+app.post('/api/auth/send-phone-otp', async (req: Request, res: Response) => {
+  const { phone } = req.body as { phone?: string };
+  if (!phone) {
+    res.status(400).json({ error: 'Số điện thoại là bắt buộc' });
+    return;
+  }
+
+  const normalized = phone.trim().replace(/\s+/g, '');
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 5 * 60_000);
+
+  try {
+    await prisma.phoneOtpSession.create({ data: { phone: normalized, otpCode, expiresAt } });
+    const delivery = await sendOtpSms(normalized, otpCode);
+    res.json({
+      message: delivery.mode === 'sms' ? 'OTP đã được gửi qua SMS' : 'OTP được tạo ở mock mode',
+      deliveryMode: delivery.mode,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(err);
+    await prisma.log.create({
+      data: { action: 'PHONE_OTP_SEND_FAILED', description: message },
+    }).catch(() => undefined);
+    res.status(500).json({ error: 'Không thể tạo OTP', details: message });
+  }
+});
+
+app.post('/api/auth/verify-phone-otp', async (req: Request, res: Response) => {
+  const { phone, otpCode, walletAddress, electionId } =
+    req.body as { phone?: string; otpCode?: string; walletAddress?: string; electionId?: number };
+
+  if (!phone || !otpCode || !walletAddress || !electionId) {
+    res.status(400).json({ error: 'Thiếu trường bắt buộc: phone, otpCode, walletAddress, electionId' });
+    return;
+  }
+
+  const normalized = phone.trim().replace(/\s+/g, '');
+
+  try {
+    const session = await prisma.phoneOtpSession.findFirst({
+      where: { phone: normalized, otpCode, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!session) {
+      res.status(400).json({ error: 'OTP không hợp lệ hoặc đã hết hạn' });
+      return;
+    }
+
+    await prisma.user.upsert({
+      where: { phone: normalized },
+      update: { walletAddress, isVerified: true },
+      create: { phone: normalized, walletAddress, isVerified: true },
+    });
+
+    const contract = getContract();
+    console.log(`Whitelisting ${walletAddress} for election ${electionId}...`);
+    const tx = await contract.whitelistEligibleWallet(electionId, walletAddress);
+    console.log(`Tx hash: ${tx.hash}`);
+    await tx.wait();
+    console.log(`Confirmed: ${walletAddress} is whitelisted`);
+
+    await prisma.phoneOtpSession.delete({ where: { id: session.id } });
+
+    await prisma.log.create({
+      data: {
+        action: 'WHITELIST_SUCCESS',
+        description: `${walletAddress} whitelisted via phone for election ${electionId}`,
+      },
+    });
+
+    res.json({ message: 'Xác minh thành công! Ví đã được whitelist.' });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Error:', message);
+    await prisma.log.create({
+      data: { action: 'WHITELIST_FAILED', description: message },
+    }).catch(() => undefined);
+    res.status(500).json({ error: 'Lỗi server hoặc blockchain', details: message });
+  }
+});
+
 app.get('/health', async (_req: Request, res: Response) => {
   try {
     await prisma.$queryRaw`SELECT 1 AS ok`;
@@ -185,6 +292,7 @@ app.get('/health', async (_req: Request, res: Response) => {
       database: 'sqlite',
       contract: CONTRACT_ADDR || 'NOT SET',
       mailer: SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock',
+      sms: TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER ? 'twilio' : 'mock',
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -193,10 +301,55 @@ app.get('/health', async (_req: Request, res: Response) => {
       database: 'sqlite',
       contract: CONTRACT_ADDR || 'NOT SET',
       mailer: SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock',
+      sms: TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER ? 'twilio' : 'mock',
       details: message,
     });
   }
 });
+
+app.get('/api/admin/users', async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
+    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? '10'), 10)))
+    const skip = (page - 1) * limit
+
+    const [data, total] = await Promise.all([
+      prisma.user.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.user.count(),
+    ])
+
+    res.json({ data, total, page, limit })
+  } catch (err: unknown) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch users' })
+  }
+})
+
+app.get('/api/admin/logs', async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
+    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? '10'), 10)))
+    const skip = (page - 1) * limit
+
+    const [data, total] = await Promise.all([
+      prisma.log.findMany({
+        skip,
+        take: limit,
+        orderBy: { timestamp: 'desc' },
+      }),
+      prisma.log.count(),
+    ])
+
+    res.json({ data, total, page, limit })
+  } catch (err: unknown) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch logs' })
+  }
+})
 
 const PORT = parseInt(process.env['PORT'] || '3001', 10);
 app.listen(PORT, () => {
@@ -204,5 +357,6 @@ app.listen(PORT, () => {
   console.log('Database: sqlserver');
   console.log(`Contract address: ${CONTRACT_ADDR || 'NOT SET in .env'}`);
   console.log(`RPC: ${RPC_URL}`);
-  console.log(`Mailer mode: ${SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock'}\n`);
+  console.log(`Mailer mode: ${SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock'}`);
+  console.log(`SMS mode: ${TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER ? 'twilio' : 'mock'}\n`);
 });
