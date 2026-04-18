@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { BACKEND_URL } from '../constants'
+import { BACKEND_URL, ADMIN_API_KEY } from '../constants'
 import type { HealthStatus, PaginatedResponse, AdminUser, AdminLog } from '../types'
 
 const api = axios.create({ baseURL: BACKEND_URL })
@@ -41,6 +41,7 @@ export async function fetchAdminUsers(
 ): Promise<PaginatedResponse<AdminUser>> {
   const res = await api.get<PaginatedResponse<AdminUser>>('/api/admin/users', {
     params: { page, limit },
+    headers: { 'x-admin-key': ADMIN_API_KEY },
   })
   return res.data
 }
@@ -51,6 +52,7 @@ export async function fetchAdminLogs(
 ): Promise<PaginatedResponse<AdminLog>> {
   const res = await api.get<PaginatedResponse<AdminLog>>('/api/admin/logs', {
     params: { page, limit },
+    headers: { 'x-admin-key': ADMIN_API_KEY },
   })
   return res.data
 }

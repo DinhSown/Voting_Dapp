@@ -19,6 +19,8 @@ export const CONTRACT_ABI = [
   'function getCandidate(uint256 electionId, uint256 candidateId) external view returns (string memory name, uint256 voteCount)',
 ]
 
+export const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY || 'dev-admin-key-change-in-production'
+
 export const CATEGORIES: Category[] = [
   {
     id: 1,
