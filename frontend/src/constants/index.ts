@@ -1,3 +1,5 @@
+import type { Category } from '../types'
+
 export const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
 
@@ -17,7 +19,7 @@ export const CONTRACT_ABI = [
   'function getCandidate(uint256 electionId, uint256 candidateId) external view returns (string memory name, uint256 voteCount)',
 ]
 
-export const CATEGORIES = [
+export const CATEGORIES: Category[] = [
   {
     id: 1,
     title: 'Nhân vật truyền cảm hứng',
