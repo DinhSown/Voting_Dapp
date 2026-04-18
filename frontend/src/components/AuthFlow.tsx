@@ -6,7 +6,7 @@ interface Props {
   walletAddress: string
 }
 
-export function AuthFlow({ auth, walletAddress: _walletAddress }: Props) {
+export function AuthFlow({ auth, walletAddress }: Props) {
   const {
     step,
     verifyMode,
