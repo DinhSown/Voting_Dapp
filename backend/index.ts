@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { ethers } from 'ethers';
 import * as fs from 'fs';
@@ -307,7 +307,17 @@ app.get('/health', async (_req: Request, res: Response) => {
   }
 });
 
-app.get('/api/admin/users', async (req: Request, res: Response) => {
+// Admin API key middleware
+function requireAdminKey(req: Request, res: Response, next: NextFunction): void {
+  const key = req.headers['x-admin-key']
+  if (!key || key !== process.env.ADMIN_API_KEY) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+  next()
+}
+
+app.get('/api/admin/users', requireAdminKey, async (req: Request, res: Response) => {
   try {
     const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
     const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? '10'), 10)))
@@ -329,7 +339,7 @@ app.get('/api/admin/users', async (req: Request, res: Response) => {
   }
 })
 
-app.get('/api/admin/logs', async (req: Request, res: Response) => {
+app.get('/api/admin/logs', requireAdminKey, async (req: Request, res: Response) => {
   try {
     const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
     const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? '10'), 10)))
