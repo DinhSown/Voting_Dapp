@@ -61,14 +61,22 @@ export async function castVoteOnChain(candidateId: number, electionId: number): 
 
 export function onAccountsChanged(handler: (accounts: string[]) => void): () => void {
   if (!window.ethereum) return () => {}
-  const listener = (...args: unknown[]) => handler(args[0] as string[])
+  const listener = (...args: unknown[]) => {
+    if (Array.isArray(args[0])) {
+      handler(args[0] as string[])
+    }
+  }
   window.ethereum.on('accountsChanged', listener)
   return () => window.ethereum?.removeListener('accountsChanged', listener)
 }
 
 export function onChainChanged(handler: (chainId: number) => void): () => void {
   if (!window.ethereum) return () => {}
-  const listener = (...args: unknown[]) => handler(parseInt(args[0] as string, 16))
+  const listener = (...args: unknown[]) => {
+    if (typeof args[0] === 'string') {
+      handler(parseInt(args[0], 16))
+    }
+  }
   window.ethereum.on('chainChanged', listener)
   return () => window.ethereum?.removeListener('chainChanged', listener)
 }

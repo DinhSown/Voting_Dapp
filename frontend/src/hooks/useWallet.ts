@@ -57,8 +57,13 @@ export function useWallet(): WalletState {
     setError('')
     try {
       await switchToHardhat()
-      const id = await getChainId()
-      setChainId(id)
+      try {
+        const id = await getChainId()
+        setChainId(id)
+      } catch {
+        // Network switched but chainId confirmation failed — assume success
+        setChainId(HARDHAT_CHAIN_ID)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network switch failed')
     } finally {
