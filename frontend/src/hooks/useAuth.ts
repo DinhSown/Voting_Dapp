@@ -21,7 +21,7 @@ export interface AuthState {
   setEmail: (v: string) => void
   setPhone: (v: string) => void
   setOtp: (v: string) => void
-  sendOtp: (walletAddress: string) => Promise<void>
+  sendOtp: () => Promise<void>
   verifyOtp: (walletAddress: string) => Promise<void>
   reset: () => void
 }
@@ -36,7 +36,7 @@ export function useAuth(): AuthState {
   const [error, setError] = useState('')
 
   const sendOtp = useCallback(
-    async (_walletAddress: string) => {
+    async () => {
       setLoading(true)
       setError('')
       try {

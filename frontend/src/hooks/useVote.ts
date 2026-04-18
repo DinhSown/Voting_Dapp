@@ -17,8 +17,10 @@ export function useVote(): VoteState {
       setVotingFor(candidateId)
       try {
         const txHash = await castVoteOnChain(candidateId, ELECTION_ID)
+        // categoryId tracks which voting category is completed (not individual candidate)
         setVoted((prev) => new Set([...prev, categoryId]))
         return txHash
+        // No catch — errors propagate to caller's try-catch for UI feedback
       } finally {
         setVotingFor(null)
       }
