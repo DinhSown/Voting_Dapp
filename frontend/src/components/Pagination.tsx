@@ -28,6 +28,8 @@ export function Pagination({ page, total, limit, onPageChange }: Props) {
         <button
           key={p}
           onClick={() => onPageChange(p)}
+          aria-label={`Page ${p}`}
+          aria-current={p === page ? 'page' : undefined}
           className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
             p === page
               ? 'bg-[#f2ca50] text-black'
