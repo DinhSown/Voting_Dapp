@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ethers } from 'ethers';
+import { wrapEthersProvider, wrapEthersSigner } from '@oasisprotocol/sapphire-ethers-v6';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -48,8 +49,9 @@ const adapter = new PrismaLibSql({ url: DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 // ─── Ethers ────────────────────────────────────────────────────────
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const signerWallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const baseProvider = new ethers.JsonRpcProvider(RPC_URL);
+const provider = wrapEthersProvider(baseProvider);
+const signerWallet = wrapEthersSigner(new ethers.Wallet(PRIVATE_KEY).connect(baseProvider));
 
 const ARTIFACT_PATH = path.resolve(
   __dirname,

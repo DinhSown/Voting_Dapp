@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 import { ethers } from 'ethers';
+import { wrapEthersSigner } from '@oasisprotocol/sapphire-ethers-v6';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -8,153 +9,253 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const DATABASE_URL = process.env['DATABASE_URL'] || 'file:./dev.db';
-const RPC_URL      = process.env['RPC_URL']      || 'https://testnet.sapphire.oasis.io';
-const PRIVATE_KEY  = process.env['PRIVATE_KEY']  || '';
+const RPC_URL = process.env['RPC_URL'] || 'https://testnet.sapphire.oasis.io';
+const PRIVATE_KEY = process.env['PRIVATE_KEY'] || '';
 const CONTRACT_ADDR = process.env['CONTRACT_ADDRESS'] || '';
 
-const ELECTIONS = [
+type DemoElection = {
+  title: string;
+  description: string;
+  startOnChain: boolean;
+  candidates: Array<{
+    name: string;
+    description: string;
+    image: string;
+  }>;
+};
+
+const DEMO_ELECTIONS: DemoElection[] = [
   {
-    title: 'Nhân vật truyền cảm hứng 2024',
-    description: 'Cá nhân có đóng góp tích cực nhất cho cộng đồng blockchain Việt Nam',
+    title: 'Nhan vat truyen cam hung 2026',
+    description: 'Ca nhan co dong gop tich cuc nhat cho cong dong blockchain Viet Nam.',
+    startOnChain: true,
     candidates: [
-      { name: 'Nguyễn Văn An',  description: 'Founder & CEO BlockchainVN, 10 năm kinh nghiệm',            image: 'https://i.pravatar.cc/150?img=1' },
-      { name: 'Trần Thị Bình',  description: 'Lead Developer DeFi Protocol, 5+ open source projects',     image: 'https://i.pravatar.cc/150?img=2' },
-      { name: 'Lê Hoàng Cường', description: 'Web3 Educator, đào tạo hơn 2000 lập trình viên',            image: 'https://i.pravatar.cc/150?img=3' },
+      {
+        name: 'Nguyen Van An',
+        description: 'Founder BlockchainVN, 10 nam kinh nghiem xay dung cong dong.',
+        image: 'https://i.pravatar.cc/150?img=11',
+      },
+      {
+        name: 'Tran Thi Binh',
+        description: 'Lead Developer DeFi Protocol, dong gop nhieu du an open-source.',
+        image: 'https://i.pravatar.cc/150?img=12',
+      },
+      {
+        name: 'Pham Minh Duc',
+        description: 'Web3 educator, mentor cho nhieu nhom sinh vien blockchain.',
+        image: 'https://i.pravatar.cc/150?img=13',
+      },
     ],
   },
   {
-    title: 'Dự án Blockchain xuất sắc 2024',
-    description: 'Dự án blockchain có tác động xã hội tích cực và tiềm năng phát triển cao nhất',
+    title: 'Du an blockchain xuat sac 2026',
+    description: 'Du an co tinh ung dung cao va tao tac dong tich cuc toi nguoi dung.',
+    startOnChain: true,
     candidates: [
-      { name: 'VietChain ID', description: 'Nền tảng định danh phi tập trung cho 10M người dùng',  image: 'https://i.pravatar.cc/150?img=4' },
-      { name: 'FarmToken',    description: 'Tokenize nông sản Việt Nam, hỗ trợ 50,000 nông dân',  image: 'https://i.pravatar.cc/150?img=5' },
-      { name: 'MedBlock',     description: 'Hồ sơ y tế trên blockchain, bảo mật dữ liệu bệnh nhân', image: 'https://i.pravatar.cc/150?img=6' },
+      {
+        name: 'VietChain ID',
+        description: 'Nen tang dinh danh phi tap trung cho dich vu cong va doanh nghiep.',
+        image: 'https://i.pravatar.cc/150?img=21',
+      },
+      {
+        name: 'FarmToken',
+        description: 'Token hoa nong san va ho tro truy xuat nguon goc cho hop tac xa.',
+        image: 'https://i.pravatar.cc/150?img=22',
+      },
+      {
+        name: 'MedBlock',
+        description: 'He thong ho so y te bao mat va chia se co kiem soat.',
+        image: 'https://i.pravatar.cc/150?img=23',
+      },
     ],
   },
   {
-    title: 'Gương mặt Gen Z Web3 2024',
-    description: 'Tài năng trẻ xuất sắc dưới 25 tuổi đang định hình tương lai Web3 Việt Nam',
+    title: 'Guong mat Gen Z Web3 2026',
+    description: 'Tai nang tre dang tao dau an trong linh vuc Web3 tai Viet Nam.',
+    startOnChain: false,
     candidates: [
-      { name: 'Phạm Minh Đức', description: 'NFT Artist & Smart Contract Developer, 22 tuổi',          image: 'https://i.pravatar.cc/150?img=7' },
-      { name: 'Hoàng Thị Hà',  description: 'DeFi Researcher, tác giả 3 whitepaper được trích dẫn QT', image: 'https://i.pravatar.cc/150?img=8' },
-      { name: 'Đỗ Quang Huy',  description: 'DAO Governance Specialist, quản lý treasury $5M',         image: 'https://i.pravatar.cc/150?img=9' },
+      {
+        name: 'Hoang Thi Ha',
+        description: 'Nghien cuu DeFi va viet whitepaper cho cac du an khoi nghiep.',
+        image: 'https://i.pravatar.cc/150?img=31',
+      },
+      {
+        name: 'Do Quang Huy',
+        description: 'Chuyen gia DAO governance, van hanh cong dong va treasury.',
+        image: 'https://i.pravatar.cc/150?img=32',
+      },
+      {
+        name: 'Le Gia Khanh',
+        description: 'Builder san pham NFT va cong cu creator economy cho gioi tre.',
+        image: 'https://i.pravatar.cc/150?img=33',
+      },
     ],
   },
 ];
 
-async function loadContract(): Promise<ethers.Contract> {
+function loadArtifactAbi(): ethers.InterfaceAbi {
   const artifactPath = path.resolve(__dirname, '../../artifacts/contracts/VotingSystem.sol/VotingSystem.json');
-  if (!fs.existsSync(artifactPath)) throw new Error('ABI not found — run: npx hardhat compile');
-  const { abi } = JSON.parse(fs.readFileSync(artifactPath, 'utf8')) as { abi: unknown[] };
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
-  const wallet   = new ethers.Wallet(PRIVATE_KEY, provider);
-  return new ethers.Contract(CONTRACT_ADDR, abi as ethers.InterfaceAbi, wallet);
+  if (!fs.existsSync(artifactPath)) {
+    throw new Error('ABI not found. Run `npx hardhat compile` first.');
+  }
+
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8')) as { abi: ethers.InterfaceAbi };
+  return artifact.abi;
 }
 
-function parseEvent(contract: ethers.Contract, receipt: ethers.TransactionReceipt | null, eventName: string): bigint | null {
+async function getContract(): Promise<ethers.Contract> {
+  if (!PRIVATE_KEY || !CONTRACT_ADDR) {
+    throw new Error('PRIVATE_KEY or CONTRACT_ADDRESS is missing in backend/.env');
+  }
+
+  const abi = loadArtifactAbi();
+  const baseProvider = new ethers.JsonRpcProvider(RPC_URL);
+  const signer = wrapEthersSigner(new ethers.Wallet(PRIVATE_KEY).connect(baseProvider));
+  return new ethers.Contract(CONTRACT_ADDR, abi, signer);
+}
+
+function getEventId(
+  contract: ethers.Contract,
+  receipt: ethers.TransactionReceipt | null,
+  eventName: 'ElectionCreated' | 'CandidateAdded'
+): number | null {
   if (!receipt?.logs) return null;
+
   for (const log of receipt.logs) {
     try {
       const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data });
-      if (parsed?.name === eventName) return parsed.args[eventName === 'ElectionCreated' ? 0 : 1] as bigint;
-    } catch { /* skip */ }
+      if (parsed?.name === eventName) {
+        return Number(parsed.args[eventName === 'ElectionCreated' ? 0 : 1]);
+      }
+    } catch {
+      // ignore unrelated logs
+    }
   }
+
   return null;
+}
+
+async function resetElectionData(prisma: PrismaClient) {
+  await prisma.vote.deleteMany();
+  await prisma.candidate.deleteMany();
+  await prisma.election.deleteMany();
+  await prisma.log.deleteMany({
+    where: {
+      OR: [
+        { action: { startsWith: 'SEED_' } },
+        { action: 'SEED_RESET' },
+      ],
+    },
+  });
 }
 
 async function main() {
   const adapter = new PrismaLibSql({ url: DATABASE_URL });
-  const prisma  = new PrismaClient({ adapter });
-
-  const existingCount = await prisma.election.count();
-  if (existingCount > 0) {
-    console.log(`ℹ  Đã có ${existingCount} election trong DB — bỏ qua seed.`);
-    console.log('   Xóa DB (npx prisma migrate reset) nếu muốn seed lại.');
-    await prisma.$disconnect();
-    return;
-  }
+  const prisma = new PrismaClient({ adapter });
 
   let contract: ethers.Contract | null = null;
   try {
-    contract = await loadContract();
-    await (contract.runner as ethers.Wallet).provider!.getNetwork();
-    console.log('✓ Kết nối blockchain:', RPC_URL);
-  } catch (e) {
-    console.warn('⚠ Không kết nối được blockchain:', e instanceof Error ? e.message : String(e));
-    console.warn('  Elections sẽ được tạo ở chế độ draft (onChainId = null, isActive = false).');
-    console.warn('  Sau đó dùng Admin panel để tạo lại và start election.\n');
-    contract = null;
+    contract = await getContract();
+    await contract.owner();
+    console.log(`Connected to contract ${CONTRACT_ADDR}`);
+  } catch (error) {
+    console.warn('Blockchain unavailable, seeding demo data in draft mode only.');
+    console.warn(error instanceof Error ? error.message : String(error));
   }
 
-  for (const elData of ELECTIONS) {
-    console.log(`\n── Tạo: "${elData.title}"`);
+  console.log('Resetting election-related demo data...');
+  await resetElectionData(prisma);
+  await prisma.log.create({
+    data: {
+      action: 'SEED_RESET',
+      description: 'Reset elections, candidates, votes and seed logs before creating demo data.',
+    },
+  });
+
+  for (const demoElection of DEMO_ELECTIONS) {
+    console.log(`Creating demo election: ${demoElection.title}`);
 
     const election = await prisma.election.create({
-      data: { title: elData.title, description: elData.description },
+      data: {
+        title: demoElection.title,
+        description: demoElection.description,
+      },
     });
 
     let onChainId: number | null = null;
 
     if (contract) {
       try {
-        const tx      = await (contract.createElection(elData.title) as Promise<ethers.TransactionResponse>);
+        const tx = await (contract.createElection() as Promise<ethers.TransactionResponse>);
         const receipt = await tx.wait();
-        const rawId   = parseEvent(contract, receipt, 'ElectionCreated');
-        if (rawId !== null) {
-          onChainId = Number(rawId);
-          await prisma.election.update({ where: { id: election.id }, data: { onChainId } });
-          console.log(`   onChainId = ${onChainId}`);
-        }
-      } catch (e) {
-        console.warn('   ⚠ Tạo election on-chain thất bại:', e instanceof Error ? e.message : String(e));
+        onChainId = getEventId(contract, receipt, 'ElectionCreated');
+
+        await prisma.election.update({
+          where: { id: election.id },
+          data: { onChainId },
+        });
+      } catch (error) {
+        console.warn(`Failed to create "${demoElection.title}" on-chain:`, error instanceof Error ? error.message : String(error));
       }
     }
 
-    for (const cand of elData.candidates) {
-      const dbCand = await prisma.candidate.create({
-        data: { name: cand.name, description: cand.description, image: cand.image, electionId: election.id },
+    for (const candidateData of demoElection.candidates) {
+      const candidate = await prisma.candidate.create({
+        data: {
+          name: candidateData.name,
+          description: candidateData.description,
+          image: candidateData.image,
+          electionId: election.id,
+        },
       });
 
       if (contract && onChainId !== null) {
         try {
-          const tx2      = await (contract.addCandidate(onChainId, cand.name) as Promise<ethers.TransactionResponse>);
-          const receipt2 = await tx2.wait();
-          const rawCId   = parseEvent(contract, receipt2, 'CandidateAdded');
-          if (rawCId !== null) {
-            await prisma.candidate.update({ where: { id: dbCand.id }, data: { onChainId: Number(rawCId) } });
-            console.log(`   + ${cand.name} (onChainId: ${Number(rawCId)})`);
-          }
-        } catch (e) {
-          console.warn(`   ⚠ Thêm candidate "${cand.name}" on-chain thất bại:`, e instanceof Error ? e.message : String(e));
+          const tx = await (contract.addCandidate(onChainId) as Promise<ethers.TransactionResponse>);
+          const receipt = await tx.wait();
+          const candidateOnChainId = getEventId(contract, receipt, 'CandidateAdded');
+
+          await prisma.candidate.update({
+            where: { id: candidate.id },
+            data: { onChainId: candidateOnChainId },
+          });
+        } catch (error) {
+          console.warn(`Failed to add candidate "${candidateData.name}" on-chain:`, error instanceof Error ? error.message : String(error));
         }
-      } else {
-        console.log(`   + ${cand.name} (draft)`);
       }
     }
 
-    if (contract && onChainId !== null) {
+    if (contract && onChainId !== null && demoElection.startOnChain) {
       try {
-        const tx3 = await (contract.startElection(onChainId) as Promise<ethers.TransactionResponse>);
-        await tx3.wait();
-        await prisma.election.update({ where: { id: election.id }, data: { isActive: true } });
-        console.log('   ✓ Election started');
+        const tx = await (contract.startElection(onChainId) as Promise<ethers.TransactionResponse>);
+        await tx.wait();
 
-      } catch (e) {
-        console.warn('   ⚠ Start election thất bại:', e instanceof Error ? e.message : String(e));
+        await prisma.election.update({
+          where: { id: election.id },
+          data: { isActive: true },
+        });
+      } catch (error) {
+        console.warn(`Failed to start "${demoElection.title}" on-chain:`, error instanceof Error ? error.message : String(error));
       }
     }
+
+    await prisma.log.create({
+      data: {
+        action: 'SEED_ELECTION_CREATED',
+        description: `Created demo election "${demoElection.title}" with ${demoElection.candidates.length} candidates.`,
+      },
+    });
   }
 
   await prisma.$disconnect();
-  console.log('\n✅ Seed hoàn thành!');
-  if (!contract) {
-    console.log('\n📝 Bước tiếp theo (vì không có blockchain):');
-    console.log('   1. Vào Admin panel → tab Bầu cử → tạo từng election');
-    console.log('   2. Thêm candidates rồi bấm Bắt đầu');
-    console.log('   3. Whitelist ví của voter trước khi bỏ phiếu');
-  } else {
-    console.log('\n📝 Voter chỉ cần có token Sapphire Testnet + xác thực email là có thể bỏ phiếu.');
-  }
+
+  console.log('\nSeed completed.');
+  console.log(`Created ${DEMO_ELECTIONS.length} demo elections.`);
+  console.log('- 2 elections are active on-chain (if blockchain is available).');
+  console.log('- 1 election remains draft/inactive for admin flow testing.');
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

@@ -53,12 +53,12 @@ export function createAdminRouter(
       // Push to chain
       try {
         const contract = getContract();
-        const tx = await contract.createElection(title.trim()) as ethers.TransactionResponse;
+        const tx = await contract.createElection() as ethers.TransactionResponse;
         const receipt = await tx.wait();
         // Extract onChainId from event logs if available, otherwise use election.id
         let onChainId: number | null = null;
         if (receipt && receipt.logs) {
-          // The contract emits ElectionCreated(uint256 electionId, string name)
+          // The contract emits ElectionCreated(uint256 electionId)
           const iface = contract.interface;
           for (const log of receipt.logs) {
             try {
@@ -163,7 +163,7 @@ export function createAdminRouter(
       const contract = getContract();
 
       // 1. Create election on chain
-      const tx1 = await contract.createElection(election.title) as ethers.TransactionResponse;
+      const tx1 = await contract.createElection() as ethers.TransactionResponse;
       const receipt1 = await tx1.wait();
 
       let onChainId: number | null = null;
@@ -184,7 +184,7 @@ export function createAdminRouter(
 
       // 2. Add each candidate on chain
       for (const cand of election.candidates) {
-        const tx2 = await contract.addCandidate(onChainId, cand.name) as ethers.TransactionResponse;
+        const tx2 = await contract.addCandidate(onChainId) as ethers.TransactionResponse;
         const receipt2 = await tx2.wait();
         let candOnChainId: number | null = null;
         if (receipt2?.logs) {
@@ -311,12 +311,46 @@ export function createAdminRouter(
       if (election.onChainId !== null) {
         try {
           const contract = getContract();
-          const tx = await contract.addCandidate(election.onChainId, name.trim()) as ethers.TransactionResponse;
-          await tx.wait();
-          res.status(201).json({ ...candidate, pushedToChain: true });
+          const tx = await contract.addCandidate(election.onChainId) as ethers.TransactionResponse;
+          const receipt = await tx.wait();
+
+          let onChainId: number | null = null;
+          if (receipt?.logs) {
+            for (const log of receipt.logs) {
+              try {
+                const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data });
+                if (parsed?.name === 'CandidateAdded') {
+                  onChainId = Number(parsed.args[1]);
+                  break;
+                }
+              } catch { /* skip */ }
+            }
+          }
+
+          const syncedCandidate = await prisma.candidate.update({
+            where: { id: candidate.id },
+            data: { onChainId },
+          });
+
+          res.status(201).json({ ...syncedCandidate, pushedToChain: true });
         } catch (chainErr) {
           const chainMsg = chainErr instanceof Error ? chainErr.message : String(chainErr);
-          res.status(201).json({ ...candidate, pushedToChain: false, chainError: chainMsg });
+          try {
+            await prisma.candidate.delete({ where: { id: candidate.id } });
+          } catch (rollbackErr) {
+            const rollbackMsg = rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr);
+            res.status(500).json({
+              error: 'Failed to add candidate on chain and rollback local record',
+              details: chainMsg,
+              rollbackError: rollbackMsg,
+            });
+            return;
+          }
+
+          res.status(502).json({
+            error: 'Failed to add candidate on chain',
+            details: chainMsg,
+          });
         }
       } else {
         res.status(201).json({ ...candidate, pushedToChain: false });

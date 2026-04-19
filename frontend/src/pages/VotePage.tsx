@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { CheckCircle, Loader, AlertTriangle } from 'lucide-react'
 import { fetchPublicElections } from '../services/api'
 import { useAuthContext } from '../context/AuthContext'
+import { VOTE_FEE_NATIVE, VOTE_FEE_SYMBOL } from '../constants'
 import type { Election } from '../types'
 import type { WalletState } from '../hooks/useWallet'
 import type { VoteState } from '../hooks/useVote'
@@ -132,6 +133,12 @@ export function VotePage({ wallet, vote, onToast }: Props) {
           </div>
         </div>
 
+        <div className="rounded-xl border border-[#f2ca50]/20 bg-[#f2ca50]/10 px-3 py-2">
+          <p className="text-xs text-[#f2ca50]">
+            Mỗi lần bỏ phiếu sẽ tốn <span className="font-semibold">{VOTE_FEE_NATIVE} {VOTE_FEE_SYMBOL}</span> để xác thực giao dịch on-chain.
+          </p>
+        </div>
+
         {hasVoted && votedCandidate && (
           <div className="flex items-center gap-3 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
             {votedCandidate.image && (
@@ -209,7 +216,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
           {vote.votingFor !== null ? (
             <><Loader size={16} className="animate-spin" /> Đang ký giao dịch...</>
           ) : selectedCandidateId ? (
-            <><CheckCircle size={16} /> Bỏ phiếu cho {election.candidates.find((c) => c.id === selectedCandidateId)?.name}</>
+            <><CheckCircle size={16} /> Bỏ phiếu cho {election.candidates.find((c) => c.id === selectedCandidateId)?.name} ({VOTE_FEE_NATIVE} {VOTE_FEE_SYMBOL})</>
           ) : (
             'Chọn ứng viên để bỏ phiếu'
           )}

@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "^2.3.0",
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.14.0",
     "ethers": "^6.16.0",

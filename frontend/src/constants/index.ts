@@ -12,11 +12,14 @@ export const ELECTION_ID = 1
 export const SAPPHIRE_CHAIN_ID = 23295
 
 export const SAPPHIRE_RPC = 'https://testnet.sapphire.oasis.io'
+export const VOTE_FEE_NATIVE = '1'
+export const VOTE_FEE_SYMBOL = 'TEST'
 
 export const CONTRACT_ABI = [
-  'function vote(uint256 electionId, uint256 candidateId) external',
-  'function getElection(uint256 electionId) external view returns (string memory name, bool isActive, uint256 candidateCount)',
-  'function getCandidate(uint256 electionId, uint256 candidateId) external view returns (string memory name, uint256 voteCount)',
+  'function vote(uint256 electionId, uint256 candidateId) external payable',
+  'function VOTE_FEE() external view returns (uint256)',
+  'function getElection(uint256 electionId) external view returns (uint256 id, bool isActive, uint256 candidateCount, uint256 totalVotes)',
+  'function getCandidate(uint256 electionId, uint256 candidateId) external view returns (uint256 id, uint256 voteCount)',
 ]
 
 export const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY || 'dev-admin-key-change-in-production'

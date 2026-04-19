@@ -1,10 +1,11 @@
 import { ethers } from 'ethers'
-import { SAPPHIRE_CHAIN_ID, SAPPHIRE_RPC, CONTRACT_ADDRESS, CONTRACT_ABI } from '../constants'
+import { wrapEthereumProvider } from '@oasisprotocol/sapphire-paratime'
+import { SAPPHIRE_CHAIN_ID, SAPPHIRE_RPC, CONTRACT_ADDRESS, CONTRACT_ABI, VOTE_FEE_NATIVE } from '../constants'
 
 declare global {
   interface Window {
     ethereum?: {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+      request: (args: { method: string; params?: unknown[] | object }) => Promise<unknown>
       on: (event: string, handler: (...args: unknown[]) => void) => void
       removeListener: (event: string, handler: (...args: unknown[]) => void) => void
     }
@@ -52,10 +53,12 @@ export async function switchToSapphire(): Promise<void> {
 
 export async function castVoteOnChain(candidateId: number, electionId: number): Promise<string> {
   if (!window.ethereum) throw new Error('MetaMask not installed')
-  const provider = new ethers.BrowserProvider(window.ethereum)
+  const provider = new ethers.BrowserProvider(wrapEthereumProvider(window.ethereum))
   const signer = await provider.getSigner()
   const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-  const tx = await contract.vote(electionId, candidateId)
+  const tx = await contract.vote(electionId, candidateId, {
+    value: ethers.parseEther(VOTE_FEE_NATIVE),
+  })
   // tx.wait() polls eth_blockNumber — if the RPC throttles, skip waiting
   // The transaction is already submitted at this point; hash is valid
   try {

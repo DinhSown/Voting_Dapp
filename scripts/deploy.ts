@@ -21,7 +21,7 @@ console.log("\n✅ VotingSystem deployed to:", address);
 // ── Seed demo data ──────────────────────────────────────────────────────────
 console.log("\nSeeding demo election...");
 
-const tx1 = await votingSystem.createElection("meChoice 2024");
+const tx1 = await votingSystem.createElection();
 await tx1.wait();
 console.log("Created election: meChoice 2024");
 
@@ -35,7 +35,7 @@ const candidates = [
 ];
 
 for (const name of candidates) {
-  const tx = await votingSystem.addCandidate(1, name);
+  const tx = await votingSystem.addCandidate(1);
   await tx.wait();
   console.log("  Added candidate:", name);
 }
