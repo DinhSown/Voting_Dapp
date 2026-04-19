@@ -1,4 +1,4 @@
-export type Route = 'home' | 'vote' | 'results' | 'admin'
+export type Route = 'home' | 'vote' | 'results' | 'admin' | 'profile'
 
 export type ToastType = 'success' | 'error' | 'info'
 
@@ -32,14 +32,30 @@ export interface HealthStatus {
   contract: string
   mailer: string
   sms: string
+  adminWallet?: string
+}
+
+export interface AuthUser {
+  id: number
+  name: string
+  walletAddress: string | null
+  role: 'user' | 'admin'
+  emailVerified: boolean
+  email?: string | null
+  balance?: string | null
+  isBanned?: boolean
 }
 
 export interface AdminUser {
   id: number
+  name: string
   email: string | null
   phone: string | null
   walletAddress: string | null
+  role: string
   isVerified: boolean
+  emailVerified: boolean
+  isBanned: boolean
   createdAt: string
 }
 
@@ -55,4 +71,45 @@ export interface PaginatedResponse<T> {
   total: number
   page: number
   limit: number
+}
+
+export interface VoteResult {
+  categoryId: number
+  candidateId: number
+  candidateName: string
+  categoryTitle: string
+  voteCount: number
+}
+
+export interface VoteRecord {
+  id: number
+  categoryId: number
+  candidateId: number
+  candidateName: string
+  categoryTitle: string
+  txHash: string | null
+  votedAt: string
+}
+
+export interface Candidate {
+  id: number
+  name: string
+  description: string
+  image: string
+  electionId: number
+  onChainId: number | null
+  isRemoved: boolean
+}
+
+export interface Election {
+  id: number
+  title: string
+  description: string
+  startTime: string | null
+  endTime: string | null
+  onChainId: number | null
+  isActive: boolean
+  createdAt: string
+  candidates: Candidate[]
+  pushedToChain?: boolean
 }

@@ -1,6 +1,6 @@
 import { Wallet, Mail, Cpu, Blocks } from 'lucide-react'
 import type { HealthStatus } from '../types'
-import { HARDHAT_CHAIN_ID } from '../constants'
+import { SAPPHIRE_CHAIN_ID } from '../constants'
 
 interface Props {
   walletAddress: string
@@ -18,7 +18,7 @@ function StatusDot({ ok }: { ok: boolean }) {
 }
 
 export function StatusBar({ walletAddress, chainId, authVerified, health }: Props) {
-  const isCorrectNetwork = chainId === HARDHAT_CHAIN_ID
+  const isCorrectNetwork = chainId === SAPPHIRE_CHAIN_ID
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -60,7 +60,7 @@ export function StatusBar({ walletAddress, chainId, authVerified, health }: Prop
         <div className="flex-1">
           <p className="text-xs text-white/40">Mạng</p>
           <p className="text-xs text-white">
-            {isCorrectNetwork ? 'Hardhat Local' : chainId ? `Chain ${chainId}` : 'Chưa kết nối'}
+            {isCorrectNetwork ? 'Sapphire Testnet' : chainId ? `Chain ${chainId}` : 'Chưa kết nối'}
           </p>
         </div>
         <StatusDot ok={isCorrectNetwork} />

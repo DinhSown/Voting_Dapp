@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ethers } from 'ethers';
 import * as fs from 'fs';
@@ -6,21 +6,31 @@ import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
-import nodemailer from 'nodemailer';
 import twilio from 'twilio';
+
+import { createAuthRouter } from './src/routes/auth';
+import { createAdminRouter } from './src/routes/admin';
+import { createUserRouter } from './src/routes/user';
+import { createAuthMiddleware } from './src/middleware/auth';
+import { requireAdmin } from './src/middleware/requireAdmin';
 
 dotenv.config();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+// ─── Startup validation ────────────────────────────────────────────
+const JWT_SECRET = process.env['JWT_SECRET'];
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET is not set in .env');
+  process.exit(1);
+}
+const ADMIN_WALLET = process.env['ADMIN_WALLET'];
+if (!ADMIN_WALLET) {
+  console.warn('WARNING: ADMIN_WALLET is not set — no wallet will have admin privileges');
+}
 
+// ─── Config ────────────────────────────────────────────────────────
 const DATABASE_URL = process.env['DATABASE_URL'] || 'file:./dev.db';
-const adapter = new PrismaLibSql({ url: DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
-
-const RPC_URL = process.env['RPC_URL'] || 'http://127.0.0.1:8545';
-const PRIVATE_KEY = process.env['PRIVATE_KEY'] || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+const RPC_URL = process.env['RPC_URL'] || 'https://testnet.sapphire.oasis.io';
+const PRIVATE_KEY = process.env['PRIVATE_KEY'] || '';
 const CONTRACT_ADDR = process.env['CONTRACT_ADDRESS'] || '';
 const SMTP_HOST = process.env['SMTP_HOST'];
 const SMTP_PORT = parseInt(process.env['SMTP_PORT'] || '587', 10);
@@ -28,14 +38,18 @@ const SMTP_SECURE = process.env['SMTP_SECURE'] === 'true';
 const SMTP_USER = process.env['SMTP_USER'];
 const SMTP_PASS = process.env['SMTP_PASS'];
 const MAIL_FROM = process.env['MAIL_FROM'] || SMTP_USER || 'no-reply@meChoice.local';
-
 const TWILIO_ACCOUNT_SID = process.env['TWILIO_ACCOUNT_SID'];
 const TWILIO_AUTH_TOKEN = process.env['TWILIO_AUTH_TOKEN'];
 const TWILIO_PHONE_NUMBER = process.env['TWILIO_PHONE_NUMBER'];
+const FRONTEND_URL = process.env['FRONTEND_URL'] || 'http://localhost:5173';
 
+// ─── Prisma ────────────────────────────────────────────────────────
+const adapter = new PrismaLibSql({ url: DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
+// ─── Ethers ────────────────────────────────────────────────────────
 const provider = new ethers.JsonRpcProvider(RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const signerWallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 const ARTIFACT_PATH = path.resolve(
   __dirname,
@@ -55,201 +69,88 @@ if (fs.existsSync(ARTIFACT_PATH)) {
 const getContract = () => {
   if (!CONTRACT_ADDR) throw new Error('CONTRACT_ADDRESS is not set in .env');
   if (!contractABI.length) throw new Error('ABI not loaded, run npx hardhat compile');
-  return new ethers.Contract(CONTRACT_ADDR, contractABI as ethers.InterfaceAbi, wallet);
+  return new ethers.Contract(CONTRACT_ADDR, contractABI as ethers.InterfaceAbi, signerWallet);
 };
 
-const createMailer = () => {
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
-  return nodemailer.createTransport({
+// ─── Express ───────────────────────────────────────────────────────
+const app = express();
+
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  })
+);
+app.use(express.json());
+
+// ─── Middleware factories ──────────────────────────────────────────
+const auth = createAuthMiddleware(prisma);
+
+// ─── Routes ────────────────────────────────────────────────────────
+app.use(
+  '/api/auth',
+  createAuthRouter(prisma, {
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
-};
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+    from: MAIL_FROM,
+  })
+);
 
+app.use('/api/user', auth, createUserRouter(prisma, provider));
+app.use('/api/admin', auth, requireAdmin, createAdminRouter(prisma, getContract));
+
+// ─── Legacy phone OTP (still used by existing frontend) ────────────
 const sendOtpSms = async (phone: string, otpCode: string) => {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
     console.log('\n==============================');
     console.log('[MOCK SMS] TO:', phone);
     console.log('[MOCK SMS] OTP CODE:', otpCode);
     console.log('==============================\n');
-    return { mode: 'mock' as const };
+    return 'mock';
   }
-
   const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
   await client.messages.create({
     body: `[meChoice] Mã OTP của bạn là: ${otpCode}. Có hiệu lực trong 5 phút.`,
     from: TWILIO_PHONE_NUMBER,
     to: phone,
   });
-  return { mode: 'sms' as const };
+  return 'sms';
 };
-
-const sendOtpEmail = async (email: string, otpCode: string) => {
-  const transporter = createMailer();
-
-  if (!transporter) {
-    console.log('\n==============================');
-    console.log('MOCK EMAIL TO:', email);
-    console.log('OTP CODE:     ', otpCode);
-    console.log('==============================\n');
-    return { mode: 'mock' as const };
-  }
-
-  await transporter.sendMail({
-    from: MAIL_FROM,
-    to: email,
-    subject: 'meChoice OTP Verification Code',
-    text: `Your OTP code is ${otpCode}. It will expire in 5 minutes.`,
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
-        <h2>meChoice OTP Verification</h2>
-        <p>Your OTP code is:</p>
-        <div style="font-size: 28px; font-weight: bold; letter-spacing: 8px; margin: 16px 0;">${otpCode}</div>
-        <p>This code expires in 5 minutes.</p>
-      </div>
-    `,
-  });
-
-  return { mode: 'smtp' as const };
-};
-
-app.post('/api/auth/send-otp', async (req: Request, res: Response) => {
-  const { email } = req.body as { email?: string };
-  if (!email) {
-    res.status(400).json({ error: 'Email is required' });
-    return;
-  }
-
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = new Date(Date.now() + 5 * 60_000);
-
-  try {
-    await prisma.otpSession.create({ data: { email, otpCode, expiresAt } });
-    const delivery = await sendOtpEmail(email, otpCode);
-    res.json({
-      message: delivery.mode === 'smtp' ? 'OTP sent successfully' : 'OTP generated in mock mode',
-      deliveryMode: delivery.mode,
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(err);
-    await prisma.log.create({
-      data: {
-        action: 'OTP_SEND_FAILED',
-        description: message,
-      },
-    }).catch(() => undefined);
-    res.status(500).json({ error: 'Failed to generate OTP', details: message });
-  }
-});
-
-app.post('/api/auth/verify-otp', async (req: Request, res: Response) => {
-  const { email, otpCode, walletAddress, electionId } =
-    req.body as { email?: string; otpCode?: string; walletAddress?: string; electionId?: number };
-
-  if (!email || !otpCode || !walletAddress || !electionId) {
-    res.status(400).json({ error: 'Missing required fields: email, otpCode, walletAddress, electionId' });
-    return;
-  }
-
-  try {
-    const session = await prisma.otpSession.findFirst({
-      where: { email, otpCode, expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (!session) {
-      res.status(400).json({ error: 'OTP khong hop le hoac da het han' });
-      return;
-    }
-
-    await prisma.user.upsert({
-      where: { email },
-      update: { walletAddress, isVerified: true },
-      create: { email, walletAddress, isVerified: true },
-    });
-
-    const contract = getContract();
-    console.log(`Whitelisting ${walletAddress} for election ${electionId}...`);
-    const tx = await contract.whitelistEligibleWallet(electionId, walletAddress);
-    console.log(`Tx hash: ${tx.hash}`);
-    await tx.wait();
-    console.log(`Confirmed: ${walletAddress} is whitelisted`);
-
-    await prisma.otpSession.delete({ where: { id: session.id } });
-
-    await prisma.log.create({
-      data: {
-        action: 'WHITELIST_SUCCESS',
-        description: `${walletAddress} whitelisted for election ${electionId}`,
-      },
-    });
-
-    res.json({ message: 'Xac minh thanh cong! Vi da duoc whitelist.' });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('Error:', message);
-    await prisma.log.create({
-      data: {
-        action: 'WHITELIST_FAILED',
-        description: message,
-      },
-    }).catch(() => undefined);
-    res.status(500).json({ error: 'Loi server hoac blockchain', details: message });
-  }
-});
 
 app.post('/api/auth/send-phone-otp', async (req: Request, res: Response) => {
   const { phone } = req.body as { phone?: string };
-  if (!phone) {
-    res.status(400).json({ error: 'Số điện thoại là bắt buộc' });
-    return;
-  }
-
+  if (!phone) { res.status(400).json({ error: 'Số điện thoại là bắt buộc' }); return; }
   const normalized = phone.trim().replace(/\s+/g, '');
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 5 * 60_000);
-
   try {
     await prisma.phoneOtpSession.create({ data: { phone: normalized, otpCode, expiresAt } });
-    const delivery = await sendOtpSms(normalized, otpCode);
-    res.json({
-      message: delivery.mode === 'sms' ? 'OTP đã được gửi qua SMS' : 'OTP được tạo ở mock mode',
-      deliveryMode: delivery.mode,
-    });
-  } catch (err: unknown) {
+    const mode = await sendOtpSms(normalized, otpCode);
+    res.json({ message: mode === 'sms' ? 'OTP đã được gửi qua SMS' : 'OTP được tạo ở mock mode', deliveryMode: mode });
+  } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(err);
-    await prisma.log.create({
-      data: { action: 'PHONE_OTP_SEND_FAILED', description: message },
-    }).catch(() => undefined);
     res.status(500).json({ error: 'Không thể tạo OTP', details: message });
   }
 });
 
 app.post('/api/auth/verify-phone-otp', async (req: Request, res: Response) => {
-  const { phone, otpCode, walletAddress, electionId } =
-    req.body as { phone?: string; otpCode?: string; walletAddress?: string; electionId?: number };
-
-  if (!phone || !otpCode || !walletAddress || !electionId) {
-    res.status(400).json({ error: 'Thiếu trường bắt buộc: phone, otpCode, walletAddress, electionId' });
+  const { phone, otpCode, walletAddress } = req.body as {
+    phone?: string; otpCode?: string; walletAddress?: string;
+  };
+  if (!phone || !otpCode || !walletAddress) {
+    res.status(400).json({ error: 'Thiếu trường bắt buộc: phone, otpCode, walletAddress' });
     return;
   }
-
   const normalized = phone.trim().replace(/\s+/g, '');
-
   try {
     const session = await prisma.phoneOtpSession.findFirst({
       where: { phone: normalized, otpCode, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
     });
-
-    if (!session) {
-      res.status(400).json({ error: 'OTP không hợp lệ hoặc đã hết hạn' });
-      return;
-    }
+    if (!session) { res.status(400).json({ error: 'OTP không hợp lệ hoặc đã hết hạn' }); return; }
 
     await prisma.user.upsert({
       where: { phone: normalized },
@@ -257,33 +158,65 @@ app.post('/api/auth/verify-phone-otp', async (req: Request, res: Response) => {
       create: { phone: normalized, walletAddress, isVerified: true },
     });
 
-    const contract = getContract();
-    console.log(`Whitelisting ${walletAddress} for election ${electionId}...`);
-    const tx = await contract.whitelistEligibleWallet(electionId, walletAddress);
-    console.log(`Tx hash: ${tx.hash}`);
-    await tx.wait();
-    console.log(`Confirmed: ${walletAddress} is whitelisted`);
-
     await prisma.phoneOtpSession.delete({ where: { id: session.id } });
-
-    await prisma.log.create({
-      data: {
-        action: 'WHITELIST_SUCCESS',
-        description: `${walletAddress} whitelisted via phone for election ${electionId}`,
-      },
-    });
-
-    res.json({ message: 'Xác minh thành công! Ví đã được whitelist.' });
-  } catch (err: unknown) {
+    await prisma.log.create({ data: { action: 'VERIFY_PHONE_SUCCESS', description: `${walletAddress} verified phone ${normalized}` } });
+    res.json({ message: 'Xác minh thành công! Ví đã được xác thực.' });
+  } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('Error:', message);
-    await prisma.log.create({
-      data: { action: 'WHITELIST_FAILED', description: message },
-    }).catch(() => undefined);
-    res.status(500).json({ error: 'Lỗi server hoặc blockchain', details: message });
+    res.status(500).json({ error: 'Lỗi server', details: message });
   }
 });
 
+// ─── Elections (public) ───────────────────────────────────────────
+app.get('/api/elections', async (req: Request, res: Response) => {
+  const activeOnly = req.query['active'] === 'true';
+  try {
+    const elections = await prisma.election.findMany({
+      where: activeOnly ? { isActive: true } : undefined,
+      include: { candidates: { where: { isRemoved: false }, orderBy: { id: 'asc' } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(elections);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: 'Failed to fetch elections', details: message });
+  }
+});
+
+// ─── Results (public) ─────────────────────────────────────────────
+app.get('/api/results', async (_req: Request, res: Response) => {
+  try {
+    const votes = await prisma.vote.findMany({
+      select: { categoryId: true, candidateId: true, candidateName: true, categoryTitle: true },
+    });
+
+    const counts: Record<string, number> = {};
+    const meta: Record<string, { candidateName: string; categoryTitle: string }> = {};
+    for (const v of votes) {
+      const key = `${v.categoryId}:${v.candidateId}`;
+      counts[key] = (counts[key] ?? 0) + 1;
+      meta[key] = { candidateName: v.candidateName, categoryTitle: v.categoryTitle };
+    }
+
+    const results = Object.entries(counts).map(([key, count]) => {
+      const [catId, candId] = key.split(':').map(Number);
+      return {
+        categoryId: catId,
+        candidateId: candId,
+        candidateName: meta[key]?.candidateName ?? '',
+        categoryTitle: meta[key]?.categoryTitle ?? '',
+        voteCount: count,
+      };
+    });
+
+    res.json(results);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: 'Failed to fetch results', details: message });
+  }
+});
+
+// ─── Health ────────────────────────────────────────────────────────
 app.get('/health', async (_req: Request, res: Response) => {
   try {
     await prisma.$queryRaw`SELECT 1 AS ok`;
@@ -293,80 +226,21 @@ app.get('/health', async (_req: Request, res: Response) => {
       contract: CONTRACT_ADDR || 'NOT SET',
       mailer: SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock',
       sms: TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER ? 'twilio' : 'mock',
+      adminWallet: ADMIN_WALLET ? `${ADMIN_WALLET.slice(0, 6)}...${ADMIN_WALLET.slice(-4)}` : 'NOT SET',
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({
-      status: 'error',
-      database: 'sqlite',
-      contract: CONTRACT_ADDR || 'NOT SET',
-      mailer: SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock',
-      sms: TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER ? 'twilio' : 'mock',
-      details: message,
-    });
+    res.status(500).json({ status: 'error', details: message });
   }
 });
 
-// Admin API key middleware
-function requireAdminKey(req: Request, res: Response, next: NextFunction): void {
-  const key = req.headers['x-admin-key']
-  if (!key || key !== process.env.ADMIN_API_KEY) {
-    res.status(401).json({ error: 'Unauthorized' })
-    return
-  }
-  next()
-}
-
-app.get('/api/admin/users', requireAdminKey, async (req: Request, res: Response) => {
-  try {
-    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
-    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? '10'), 10)))
-    const skip = (page - 1) * limit
-
-    const [data, total] = await Promise.all([
-      prisma.user.findMany({
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.user.count(),
-    ])
-
-    res.json({ data, total, page, limit })
-  } catch (err: unknown) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch users' })
-  }
-})
-
-app.get('/api/admin/logs', requireAdminKey, async (req: Request, res: Response) => {
-  try {
-    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
-    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? '10'), 10)))
-    const skip = (page - 1) * limit
-
-    const [data, total] = await Promise.all([
-      prisma.log.findMany({
-        skip,
-        take: limit,
-        orderBy: { timestamp: 'desc' },
-      }),
-      prisma.log.count(),
-    ])
-
-    res.json({ data, total, page, limit })
-  } catch (err: unknown) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch logs' })
-  }
-})
-
+// ─── Start ─────────────────────────────────────────────────────────
 const PORT = parseInt(process.env['PORT'] || '3001', 10);
 app.listen(PORT, () => {
   console.log(`\nBackend running on http://localhost:${PORT}`);
-  console.log('Database: sqlserver');
   console.log(`Contract address: ${CONTRACT_ADDR || 'NOT SET in .env'}`);
   console.log(`RPC: ${RPC_URL}`);
-  console.log(`Mailer mode: ${SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock'}`);
-  console.log(`SMS mode: ${TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER ? 'twilio' : 'mock'}\n`);
+  console.log(`Admin wallet: ${ADMIN_WALLET ? `${ADMIN_WALLET.slice(0, 6)}...` : 'NOT SET'}`);
+  console.log(`Frontend CORS: ${FRONTEND_URL}`);
+  console.log(`Mailer mode: ${SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock'}\n`);
 });

@@ -1,5 +1,5 @@
 import { Wallet, AlertCircle, CheckCircle, Loader, RefreshCw } from 'lucide-react'
-import { HARDHAT_CHAIN_ID } from '../constants'
+import { SAPPHIRE_CHAIN_ID } from '../constants'
 
 interface Props {
   address: string
@@ -44,7 +44,7 @@ function Step({ num, done, active, title, desc }: StepProps) {
 
 export function WalletConnect({ address, chainId, loading, error, onConnect, onSwitchNetwork }: Props) {
   const isConnected = !!address
-  const isCorrectNetwork = chainId === HARDHAT_CHAIN_ID
+  const isCorrectNetwork = chainId === SAPPHIRE_CHAIN_ID
 
   if (isConnected && isCorrectNetwork) {
     return (
@@ -61,7 +61,7 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
           </div>
           <div className="ml-auto">
             <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-              Hardhat Local
+              Sapphire Testnet
             </span>
           </div>
         </div>
@@ -95,7 +95,7 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
           num={3}
           done={isConnected && isCorrectNetwork}
           active={isConnected && !isCorrectNetwork}
-          title="Chuyển sang Hardhat Local"
+          title="Chuyển sang Sapphire Testnet"
           desc="Mạng blockchain cục bộ cho bầu cử"
         />
       </div>
@@ -121,11 +121,11 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
         <button
           onClick={onSwitchNetwork}
           disabled={loading}
-          aria-label={loading ? 'Đang chuyển mạng' : 'Chuyển sang Hardhat Local'}
+          aria-label={loading ? 'Đang chuyển mạng' : 'Chuyển sang Sapphire Testnet'}
           className="w-full py-2.5 px-4 rounded-xl bg-orange-500/20 text-orange-300 border border-orange-500/30 font-semibold text-sm hover:bg-orange-500/30 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
         >
           {loading ? <Loader size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-          {loading ? 'Đang chuyển mạng...' : 'Chuyển sang Hardhat Local'}
+          {loading ? 'Đang chuyển mạng...' : 'Chuyển sang Sapphire Testnet'}
         </button>
       )}
     </div>

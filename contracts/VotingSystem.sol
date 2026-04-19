@@ -23,7 +23,6 @@ contract VotingSystem {
     mapping(uint256 => Election) public elections;
     mapping(uint256 => mapping(uint256 => Candidate)) public candidates;
     mapping(uint256 => mapping(address => bool)) public hasVoted;
-    mapping(uint256 => mapping(address => bool)) public isWhitelisted;
     mapping(uint256 => mapping(address => uint256)) public voterChoice;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -31,8 +30,6 @@ contract VotingSystem {
     event CandidateAdded(uint256 indexed electionId, uint256 indexed candidateId, string name);
     event ElectionStarted(uint256 indexed electionId);
     event ElectionEnded(uint256 indexed electionId);
-    event WalletWhitelisted(uint256 indexed electionId, address indexed wallet);
-    event WalletRemovedFromWhitelist(uint256 indexed electionId, address indexed wallet);
     event Voted(uint256 indexed electionId, uint256 indexed candidateId, address indexed voter);
 
     modifier onlyOwner() {
@@ -105,30 +102,10 @@ contract VotingSystem {
         emit ElectionEnded(electionId);
     }
 
-    function whitelistEligibleWallet(uint256 electionId, address walletAddr) public onlyOwner validElection(electionId) {
-        require(walletAddr != address(0), "Invalid wallet");
-        isWhitelisted[electionId][walletAddr] = true;
-        emit WalletWhitelisted(electionId, walletAddr);
-    }
-
-    function whitelistEligibleWallets(uint256 electionId, address[] calldata wallets) external onlyOwner validElection(electionId) {
-        require(wallets.length > 0, "No wallets provided");
-        for (uint256 i = 0; i < wallets.length; i++) {
-            whitelistEligibleWallet(electionId, wallets[i]);
-        }
-    }
-
-    function removeWhitelistedWallet(uint256 electionId, address walletAddr) external onlyOwner validElection(electionId) {
-        require(walletAddr != address(0), "Invalid wallet");
-        isWhitelisted[electionId][walletAddr] = false;
-        emit WalletRemovedFromWhitelist(electionId, walletAddr);
-    }
-
     function vote(uint256 electionId, uint256 candidateId) external validElection(electionId) {
         Election storage election = elections[electionId];
 
         require(election.isActive, "Election is not active");
-        require(isWhitelisted[electionId][msg.sender], "Not authorized to vote in this election");
         require(!hasVoted[electionId][msg.sender], "You already voted");
         require(candidateId > 0 && candidateId <= election.candidateCount, "Invalid candidate");
 
@@ -184,9 +161,9 @@ contract VotingSystem {
         external
         view
         validElection(electionId)
-        returns (bool whitelisted, bool votedAlready, uint256 selectedCandidateId)
+        returns (bool votedAlready, uint256 selectedCandidateId)
     {
-        return (isWhitelisted[electionId][user], hasVoted[electionId][user], voterChoice[electionId][user]);
+        return (hasVoted[electionId][user], voterChoice[electionId][user]);
     }
 
     function hasUserVoted(uint256 electionId, address user) external view validElection(electionId) returns (bool) {
@@ -209,7 +186,7 @@ contract VotingSystem {
         }
 
         if (winnerCandidateId == 0) {
-            return (0, "", 0); // No votes
+            return (0, "", 0);
         }
 
         Candidate memory winner = candidates[electionId][winnerCandidateId];

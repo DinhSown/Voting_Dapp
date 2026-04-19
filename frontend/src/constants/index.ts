@@ -9,9 +9,9 @@ export const CONTRACT_ADDRESS =
 
 export const ELECTION_ID = 1
 
-export const HARDHAT_CHAIN_ID = 31337
+export const SAPPHIRE_CHAIN_ID = 23295
 
-export const HARDHAT_RPC = 'http://127.0.0.1:8545'
+export const SAPPHIRE_RPC = 'https://testnet.sapphire.oasis.io'
 
 export const CONTRACT_ABI = [
   'function vote(uint256 electionId, uint256 candidateId) external',

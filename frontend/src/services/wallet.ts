@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { HARDHAT_CHAIN_ID, HARDHAT_RPC, CONTRACT_ADDRESS, CONTRACT_ABI } from '../constants'
+import { SAPPHIRE_CHAIN_ID, SAPPHIRE_RPC, CONTRACT_ADDRESS, CONTRACT_ABI } from '../constants'
 
 declare global {
   interface Window {
@@ -23,12 +23,12 @@ export async function getChainId(): Promise<number> {
   return parseInt(chainId, 16)
 }
 
-export async function switchToHardhat(): Promise<void> {
+export async function switchToSapphire(): Promise<void> {
   if (!window.ethereum) throw new Error('MetaMask not installed')
   try {
     await window.ethereum.request({
       method: 'wallet_switchEthereumChain',
-      params: [{ chainId: `0x${HARDHAT_CHAIN_ID.toString(16)}` }],
+      params: [{ chainId: `0x${SAPPHIRE_CHAIN_ID.toString(16)}` }],
     })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err && err.code === 4902) {
@@ -36,10 +36,11 @@ export async function switchToHardhat(): Promise<void> {
         method: 'wallet_addEthereumChain',
         params: [
           {
-            chainId: `0x${HARDHAT_CHAIN_ID.toString(16)}`,
-            chainName: 'Hardhat Local',
-            rpcUrls: [HARDHAT_RPC],
-            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+            chainId: `0x${SAPPHIRE_CHAIN_ID.toString(16)}`,
+            chainName: 'Oasis Sapphire Testnet',
+            rpcUrls: [SAPPHIRE_RPC],
+            nativeCurrency: { name: 'TEST', symbol: 'TEST', decimals: 18 },
+            blockExplorerUrls: ['https://explorer.oasis.io/testnet/sapphire'],
           },
         ],
       })
@@ -55,7 +56,13 @@ export async function castVoteOnChain(candidateId: number, electionId: number): 
   const signer = await provider.getSigner()
   const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
   const tx = await contract.vote(electionId, candidateId)
-  await tx.wait()
+  // tx.wait() polls eth_blockNumber — if the RPC throttles, skip waiting
+  // The transaction is already submitted at this point; hash is valid
+  try {
+    await tx.wait()
+  } catch {
+    // RPC rate-limit or polling error — tx was submitted, return hash anyway
+  }
   return tx.hash as string
 }
 

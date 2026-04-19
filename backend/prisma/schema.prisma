@@ -10,12 +10,35 @@ datasource db {
 }
 
 model User {
+  id            Int       @id @default(autoincrement())
+  email         String?   @unique
+  phone         String?   @unique
+  walletAddress String?   @unique
+  isVerified    Boolean   @default(false)
+  emailVerified Boolean   @default(false)
+  name          String    @default("Unknown User")
+  role          String    @default("user")
+  isBanned      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  sessions      Session[]
+  votes         Vote[]
+}
+
+model AuthNonce {
   id            Int      @id @default(autoincrement())
-  email         String?  @unique
-  phone         String?  @unique
-  walletAddress String?  @unique
-  isVerified    Boolean  @default(false)
+  walletAddress String
+  nonce         String   @unique
+  expiresAt     DateTime
   createdAt     DateTime @default(now())
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model OtpSession {
@@ -34,9 +57,48 @@ model PhoneOtpSession {
   createdAt DateTime @default(now())
 }
 
+model Election {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String      @default("")
+  startTime   DateTime?
+  endTime     DateTime?
+  onChainId   Int?
+  isActive    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  candidates  Candidate[]
+}
+
+model Candidate {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @default("")
+  image       String   @default("")
+  electionId  Int
+  onChainId   Int?
+  isRemoved   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  election    Election @relation(fields: [electionId], references: [id])
+}
+
 model Log {
   id          Int      @id @default(autoincrement())
   action      String
   description String
   timestamp   DateTime @default(now())
+}
+
+model Vote {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  categoryId    Int
+  candidateId   Int
+  candidateName String   @default("")
+  categoryTitle String   @default("")
+  txHash        String?
+  votedAt       DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, categoryId])
 }
