@@ -36,8 +36,8 @@ function buildResults(election: Election, voteData: VoteResult[]): CandidateResu
 }
 
 function rankAccent(rank: number): string {
-  if (rank === 1) return '#F59E0B'
-  if (rank === 2) return '#adc6ff'
+  if (rank === 1) return '#f2ca50'
+  if (rank === 2) return '#d97706'
   if (rank === 3) return '#4edea3'
   return 'rgba(140,144,159,0.4)'
 }
@@ -135,9 +135,9 @@ export function ResultsPage({ onNavigate }: Props) {
         <div className="flex items-center justify-between mb-4">
           <div
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-            style={{ background: 'rgba(76,215,246,0.10)', border: '1px solid rgba(76,215,246,0.22)' }}
+            style={{ background: 'rgba(242,202,80,0.10)', border: '1px solid rgba(242,202,80,0.22)' }}
           >
-            <span className="live-dot" style={{ background: '#4cd7f6', animation: 'none' }} />
+            <span className="live-dot" style={{ background: '#f2ca50', animation: 'none' }} />
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
@@ -156,7 +156,7 @@ export function ResultsPage({ onNavigate }: Props) {
             <button
               onClick={load}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-40 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-40"
               style={{
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.07)',
@@ -179,7 +179,7 @@ export function ResultsPage({ onNavigate }: Props) {
             </button>
             <button
               onClick={() => onNavigate('vote')}
-              className="civic-btn px-4 py-2 flex items-center gap-2 rounded-xl active:scale-95 transition-transform cursor-pointer"
+              className="civic-btn px-4 py-2 flex items-center gap-2 rounded-xl active:scale-95 transition-transform"
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 10,
@@ -262,7 +262,7 @@ export function ResultsPage({ onNavigate }: Props) {
                 fontSize: 28,
                 fontWeight: 800,
                 lineHeight: 1,
-                color: leaderShare > 0 ? '#F59E0B' : '#8c909f',
+                color: leaderShare > 0 ? '#f2ca50' : '#848e9c',
               }}
             >
               {leaderShare > 0 ? `${leaderShare}%` : '—'}
@@ -294,13 +294,13 @@ export function ResultsPage({ onNavigate }: Props) {
               <button
                 key={el.id}
                 onClick={() => handleElectionChange(idx)}
-                className="flex-shrink-0 flex items-center gap-2 transition-all cursor-pointer"
+                className="flex-shrink-0 flex items-center gap-2 transition-all"
                 style={
                   isActive
                     ? {
-                        background: 'rgba(173,198,255,0.1)',
-                        border: '1px solid rgba(173,198,255,0.2)',
-                        color: '#adc6ff',
+                        background: 'rgba(242,202,80,0.1)',
+                        border: '1px solid rgba(242,202,80,0.2)',
+                        color: '#f2ca50',
                         borderRadius: 10,
                         padding: '6px 16px',
                         fontSize: 13,
@@ -461,8 +461,8 @@ export function ResultsPage({ onNavigate }: Props) {
             <div
               className="rounded-xl p-md"
               style={{
-                background: 'rgba(245,158,11,0.04)',
-                border: '1px solid rgba(245,158,11,0.12)',
+                background: 'rgba(242,202,80,0.04)',
+                border: '1px solid rgba(242,202,80,0.12)',
                 borderRadius: 16,
               }}
             >
@@ -475,7 +475,7 @@ export function ResultsPage({ onNavigate }: Props) {
                     fontWeight: 600,
                     letterSpacing: '0.09em',
                     textTransform: 'uppercase' as const,
-                    color: '#F59E0B',
+                    color: '#f2ca50',
                   }}
                 >
                   Dẫn đầu
@@ -490,8 +490,8 @@ export function ResultsPage({ onNavigate }: Props) {
                   alt={leader.name}
                   className="w-16 h-16 rounded-xl object-cover shrink-0"
                   style={{
-                    border: '2px solid rgba(245,158,11,0.4)',
-                    boxShadow: '0 0 20px rgba(245,158,11,0.12)',
+                    border: '2px solid rgba(242,202,80,0.4)',
+                    boxShadow: '0 0 20px rgba(242,202,80,0.12)',
                   }}
                 />
                 <div className="min-w-0">
@@ -513,7 +513,7 @@ export function ResultsPage({ onNavigate }: Props) {
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontSize: 44,
                     fontWeight: 800,
-                    color: '#F59E0B',
+                    color: '#f2ca50',
                     lineHeight: 1,
                     display: 'block',
                   }}
@@ -543,7 +543,7 @@ export function ResultsPage({ onNavigate }: Props) {
 
               <button
                 onClick={() => onNavigate('vote')}
-                className="w-full mt-4 civic-btn py-3 rounded-xl text-sm active:scale-[0.98] transition-transform cursor-pointer"
+                className="w-full mt-4 civic-btn py-3 rounded-xl text-sm active:scale-[0.98] transition-transform"
                 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700 }}
               >
                 Tham gia bỏ phiếu →

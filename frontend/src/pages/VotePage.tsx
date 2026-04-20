@@ -14,8 +14,8 @@ interface Props {
 }
 
 const CARD_STYLE: React.CSSProperties = {
-  background: 'rgba(20,20,20,0.8)',
-  border: '1px solid rgba(247,168,0,0.2)',
+  background: 'rgba(255,255,255,0.025)',
+  border: '1px solid rgba(255,255,255,0.07)',
   borderRadius: 16,
 }
 
@@ -25,19 +25,19 @@ const LABEL_STYLE: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: '0.09em',
   textTransform: 'uppercase',
-  color: 'rgba(255,255,255,0.35)',
+  color: 'rgba(218,226,253,0.3)',
 }
 
 const TAB_ACTIVE_STYLE: React.CSSProperties = {
-  background: 'rgba(247,168,0,0.15)',
-  border: '1px solid rgba(247,168,0,0.3)',
-  color: '#fcd34d',
+  background: 'rgba(242,202,80,0.1)',
+  border: '1px solid rgba(242,202,80,0.2)',
+  color: '#f2ca50',
 }
 
 const TAB_INACTIVE_STYLE: React.CSSProperties = {
-  background: 'rgba(20,20,20,0.6)',
-  border: '1px solid rgba(247,168,0,0.1)',
-  color: 'rgba(255,255,255,0.5)',
+  background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(255,255,255,0.07)',
+  color: 'rgba(218,226,253,0.4)',
 }
 
 function CheckRow({ ok, label }: { ok: boolean; label: string }) {
@@ -46,17 +46,17 @@ function CheckRow({ ok, label }: { ok: boolean; label: string }) {
       <div
         className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
         style={{
-          background: ok ? 'rgba(247,168,0,0.15)' : 'rgba(44,52,73,0.8)',
-          border: `1px solid ${ok ? 'rgba(247,168,0,0.3)' : 'rgba(255,255,255,0.07)'}`,
+          background: ok ? 'rgba(78,222,163,0.15)' : 'rgba(44,52,73,0.8)',
+          border: `1px solid ${ok ? 'rgba(78,222,163,0.4)' : 'rgba(255,255,255,0.07)'}`,
         }}
       >
         {ok ? (
-          <span className="material-symbols-outlined text-primary" style={{ fontSize: 10 }}>check</span>
+          <span className="material-symbols-outlined text-tertiary" style={{ fontSize: 10 }}>check</span>
         ) : (
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(140,144,159,0.4)', display: 'block' }} />
         )}
       </div>
-      <span className="text-xs" style={{ color: ok ? '#fff' : '#aaa', fontFamily: 'Inter, sans-serif' }}>
+      <span className="text-xs" style={{ color: ok ? '#c2c6d6' : '#8c909f', fontFamily: 'Inter, sans-serif' }}>
         {label}
       </span>
     </div>
@@ -71,7 +71,7 @@ function FeeRow({ label, value, accent }: { label: string; value: string; accent
       </span>
       <span
         className="text-xs font-mono font-bold"
-        style={{ color: accent ? '#fcd34d' : '#dae2fd', fontFamily: 'Inter, sans-serif' }}
+        style={{ color: accent ? '#4edea3' : '#dae2fd', fontFamily: 'Inter, sans-serif' }}
       >
         {value}
       </span>
@@ -178,7 +178,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <div
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(252,211,77,0.15)', border: '1px solid rgba(252,211,77,0.3)' }}
+              style={{ background: 'rgba(78,222,163,0.12)', border: '1px solid rgba(78,222,163,0.25)' }}
             >
               <span className="live-dot" />
               <span style={{ fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#4edea3' }}>
@@ -205,7 +205,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
               fontWeight: 800,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
-              color: '#ffffff',
+              color: '#dae2fd',
             }}
           >
             {election.title}
@@ -214,7 +214,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
           {election.description && (
             <p
               className="mt-3 max-w-2xl"
-              style={{ fontSize: '15px', lineHeight: 1.75, fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.65)' }}
+              style={{ fontSize: '15px', lineHeight: 1.75, fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
             >
               {election.description}
             </p>
@@ -233,7 +233,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
             <button
               key={el.id}
               onClick={() => { setSelectedIdx(idx); setSelectedCandidateId(null); setConfirmed(false) }}
-              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 cursor-pointer"
+              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 ...(idx === selectedIdx ? TAB_ACTIVE_STYLE : TAB_INACTIVE_STYLE),
@@ -251,23 +251,23 @@ export function VotePage({ wallet, vote, onToast }: Props) {
         <div
           className="flex items-start gap-3 p-4"
           style={{
-            background: 'rgba(252,211,77,0.06)',
-            border: '1px solid rgba(252,211,77,0.2)',
-            borderLeft: '2px solid rgba(252,211,77,0.5)',
+            background: 'rgba(255,180,171,0.04)',
+            border: '1px solid rgba(255,180,171,0.12)',
+            borderLeft: '2px solid rgba(255,180,171,0.5)',
             borderRadius: 12,
           }}
         >
-          <AlertTriangle size={16} style={{ color: '#fcd34d', flexShrink: 0, marginTop: 2 }} />
+          <AlertTriangle size={16} style={{ color: '#ffb4ab', flexShrink: 0, marginTop: 2 }} />
           <div>
             <p
               className="text-sm font-semibold mb-1"
-              style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#fcd34d' }}
+              style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#ffb4ab' }}
             >
               Yêu cầu để bỏ phiếu
             </p>
             <ul
               className="text-xs space-y-0.5 list-disc list-inside"
-              style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.65)' }}
+              style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
             >
               {!wallet.address && <li>Kết nối ví MetaMask</li>}
               {wallet.address && !wallet.isCorrectNetwork && <li>Chuyển sang mạng Sapphire Testnet</li>}
@@ -284,12 +284,12 @@ export function VotePage({ wallet, vote, onToast }: Props) {
         <div className="col-span-12 lg:col-span-8 space-y-md">
           <div className="flex justify-between items-baseline">
             <h2
-              style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.025em', color: '#ffffff' }}
+              style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.025em', color: '#dae2fd' }}
             >
               Chọn ứng viên
             </h2>
             {hasVoted && (
-              <span style={{ ...LABEL_STYLE, color: '#fcd34d' }}>
+              <span style={{ ...LABEL_STYLE, color: '#4edea3' }}>
                 Đã bỏ phiếu
               </span>
             )}
@@ -312,19 +312,19 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                 const disabled = hasVoted || !isEligible || notOnChain
 
                 const cardBorder = isVotedFor
-                  ? '1px solid rgba(252,211,77,0.35)'
+                  ? '1px solid rgba(78,222,163,0.35)'
                   : isSelected
-                  ? '1px solid rgba(252,211,77,0.4)'
+                  ? '1px solid rgba(242,202,80,0.4)'
                   : '1px solid rgba(255,255,255,0.07)'
 
                 const cardBg = isVotedFor
-                  ? 'rgba(252,211,77,0.08)'
+                  ? 'rgba(78,222,163,0.05)'
                   : isSelected
-                  ? 'rgba(252,211,77,0.1)'
+                  ? 'rgba(242,202,80,0.07)'
                   : 'rgba(30,41,59,0.4)'
 
                 const cardShadow = isSelected && !isVotedFor
-                  ? '0 0 0 1px rgba(252,211,77,0.3), 0 0 24px rgba(252,211,77,0.1)'
+                  ? '0 0 0 1px rgba(242,202,80,0.2), 0 0 24px rgba(242,202,80,0.08)'
                   : 'none'
 
                 return (
@@ -342,21 +342,21 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                         className="w-5 h-5 rounded-full flex items-center justify-center transition-all"
                         style={{
                           border: isVotedFor
-                            ? '2px solid #fcd34d'
+                            ? '2px solid #4edea3'
                             : isSelected
-                            ? '2px solid #fcd34d'
+                            ? '2px solid #f2ca50'
                             : '2px solid rgba(255,255,255,0.18)',
                           background: isVotedFor
-                            ? 'rgba(252,211,77,0.25)'
+                            ? 'rgba(78,222,163,0.2)'
                             : isSelected
-                            ? 'rgba(252,211,77,0.25)'
+                            ? 'rgba(242,202,80,0.2)'
                             : 'transparent',
                         }}
                       >
                         {(isVotedFor || isSelected) && (
                           <div
                             className="w-2 h-2 rounded-full"
-                            style={{ background: '#fcd34d' }}
+                            style={{ background: isVotedFor ? '#4edea3' : '#f2ca50' }}
                           />
                         )}
                       </div>
@@ -371,9 +371,9 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                           className="w-14 h-14 rounded-xl object-cover shrink-0"
                           style={{
                             border: isVotedFor
-                              ? '1px solid rgba(252,211,77,0.4)'
+                              ? '1px solid rgba(78,222,163,0.4)'
                               : isSelected
-                              ? '1px solid rgba(252,211,77,0.4)'
+                              ? '1px solid rgba(242,202,80,0.4)'
                               : '1px solid rgba(255,255,255,0.1)',
                           }}
                         />
@@ -383,16 +383,16 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                           style={{
                             fontFamily: 'Space Grotesk, sans-serif',
                             background: isVotedFor
-                              ? 'rgba(252,211,77,0.15)'
+                              ? 'rgba(78,222,163,0.15)'
                               : isSelected
-                              ? 'rgba(252,211,77,0.15)'
+                              ? 'rgba(242,202,80,0.15)'
                               : 'rgba(45,52,73,0.8)',
                             border: isVotedFor
-                              ? '1px solid rgba(252,211,77,0.3)'
+                              ? '1px solid rgba(78,222,163,0.3)'
                               : isSelected
-                              ? '1px solid rgba(252,211,77,0.3)'
+                              ? '1px solid rgba(242,202,80,0.3)'
                               : '1px solid rgba(255,255,255,0.07)',
-                            color: '#fcd34d',
+                            color: isVotedFor ? '#4edea3' : isSelected ? '#f2ca50' : '#8c909f',
                           }}
                         >
                           {candidate.name[0]}
@@ -402,7 +402,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                       <div className="min-w-0 pr-6">
                         <h3
                           className="truncate"
-                          style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff' }}
+                          style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, lineHeight: 1.3, color: '#dae2fd' }}
                         >
                           {candidate.name}
                         </h3>
@@ -435,11 +435,11 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                       style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
                     >
                       {isVotedFor ? (
-                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#fcd34d' }}>
+                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#4edea3' }}>
                           <CheckCircle size={12} /> Đã bỏ phiếu
                         </span>
                       ) : isVoting ? (
-                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#fcd34d' }}>
+                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#adc6ff' }}>
                           <Loader size={12} className="animate-spin" /> Đang ký...
                         </span>
                       ) : (
@@ -553,7 +553,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
             {selectedCandidate && !hasVoted && (
               <div
                 className="p-3"
-                style={{ background: 'rgba(173,198,255,0.08)', border: '1px solid rgba(173,198,255,0.2)', borderRadius: 12 }}
+                style={{ background: 'rgba(242,202,80,0.08)', border: '1px solid rgba(242,202,80,0.2)', borderRadius: 12 }}
               >
                 <p className="mb-1.5" style={{ ...LABEL_STYLE }}>
                   Ứng viên đã chọn
@@ -568,14 +568,14 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                   ) : (
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                      style={{ background: 'rgba(173,198,255,0.2)', color: '#adc6ff', fontFamily: 'Space Grotesk, sans-serif' }}
+                      style={{ background: 'rgba(242,202,80,0.2)', color: '#f2ca50', fontFamily: 'Space Grotesk, sans-serif' }}
                     >
                       {selectedCandidate.name[0]}
                     </div>
                   )}
                   <span
                     className="text-sm font-bold"
-                    style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#fcd34d' }}
+                    style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#f2ca50' }}
                   >
                     {selectedCandidate.name}
                   </span>
@@ -605,7 +605,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                 <button
                   onClick={handleVote}
                   disabled={!selectedCandidateId || !confirmed || vote.votingFor !== null || election?.onChainId === null}
-                  className="w-full civic-btn py-3.5 rounded-xl flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all text-sm cursor-pointer"
+                  className="w-full civic-btn py-3.5 rounded-xl flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all text-sm"
                   style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700 }}
                 >
                   {vote.votingFor !== null ? (

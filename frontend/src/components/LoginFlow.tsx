@@ -76,14 +76,7 @@ export function LoginFlow({ walletAddress, onSuccess }: LoginFlowProps) {
           <button
             onClick={handleSign}
             disabled={loading}
-            className="w-full py-2.5 rounded-lg text-black disabled:opacity-50 text-sm font-medium transition-all"
-            style={{
-              background: 'linear-gradient(180deg, #f2ca50 0%, #d97706 100%)',
-              borderTop: '1px solid #fde047',
-              boxShadow: '0 4px 15px rgba(242, 202, 80, 0.5)',
-              border: '1px solid #f2ca50',
-              cursor: 'pointer'
-            }}
+            className="w-full py-2.5 rounded-lg bg-[#f2ca50] text-[#1a0900] hover:brightness-110 disabled:opacity-50 text-sm font-bold transition-all"
           >
             {loading ? 'Đang ký...' : 'Ký xác thực'}
           </button>
@@ -100,21 +93,14 @@ export function LoginFlow({ walletAddress, onSuccess }: LoginFlowProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Nhập địa chỉ email"
-            className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-sm placeholder:text-white/40 focus:outline-none focus:border-primary"
+            className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-sm placeholder:text-white/40 focus:outline-none focus:border-[#f2ca50]/50"
             onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
           />
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button
             onClick={handleSendOtp}
             disabled={loading}
-            className="w-full py-2.5 rounded-lg text-black disabled:opacity-50 text-sm font-medium transition-all"
-            style={{
-              background: 'linear-gradient(180deg, #f2ca50 0%, #d97706 100%)',
-              borderTop: '1px solid #fde047',
-              boxShadow: '0 4px 15px rgba(242, 202, 80, 0.5)',
-              border: '1px solid #f2ca50',
-              cursor: 'pointer'
-            }}
+            className="w-full py-2.5 rounded-lg bg-[#f2ca50] text-[#1a0900] hover:brightness-110 disabled:opacity-50 text-sm font-bold transition-all"
           >
             {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
           </button>
@@ -137,27 +123,20 @@ export function LoginFlow({ walletAddress, onSuccess }: LoginFlowProps) {
             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="6 chữ số"
             maxLength={6}
-            className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-sm text-center tracking-widest placeholder:text-white/40 focus:outline-none focus:border-primary"
+            className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-sm text-center tracking-widest placeholder:text-white/40 focus:outline-none focus:border-[#f2ca50]/50"
             onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()}
           />
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button
             onClick={handleVerifyOtp}
             disabled={loading}
-            className="w-full py-2.5 rounded-lg text-black disabled:opacity-50 text-sm font-medium transition-all"
-            style={{
-              background: 'linear-gradient(180deg, #f2ca50 0%, #d97706 100%)',
-              borderTop: '1px solid #fde047',
-              boxShadow: '0 4px 15px rgba(242, 202, 80, 0.5)',
-              border: '1px solid #f2ca50',
-              cursor: 'pointer'
-            }}
+            className="w-full py-2.5 rounded-lg bg-[#f2ca50] text-[#1a0900] hover:brightness-110 disabled:opacity-50 text-sm font-bold transition-all"
           >
             {loading ? 'Đang xác minh...' : 'Xác minh'}
           </button>
           <button
             onClick={() => { setStep('email'); setMockOtp(false) }}
-            className="w-full text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+            className="w-full text-sm text-white/40 hover:text-white/70 transition-colors"
           >
             Đổi email
           </button>

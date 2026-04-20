@@ -124,12 +124,12 @@ function AppInner() {
     <div className="bg-background text-on-background min-h-screen" style={{ fontFamily: 'Inter, sans-serif' }}>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-[#1E293B]/40 backdrop-blur-lg border-r border-white/10 p-4 z-40 flex-col shadow-xl">
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-[#181a20]/80 backdrop-blur-lg border-r border-white/5 p-4 z-40 flex-col shadow-xl">
         <div className="mb-10 px-4">
-          <h1 className="text-lg font-black text-white tracking-widest" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-            VOTE_CHAIN
+          <h1 className="text-xl font-extrabold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#f2ca50' }}>
+            meChoice
           </h1>
-          <p className="uppercase tracking-wider text-xs text-slate-400 mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <p className="uppercase tracking-wider text-[10px] text-slate-500 mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             meChoice Platform
           </p>
         </div>
@@ -163,14 +163,14 @@ function AppInner() {
       </aside>
 
       {/* Top Header */}
-      <header className="md:ml-64 flex justify-between items-center px-6 h-16 sticky top-0 z-50 bg-[#0F172A]/80 backdrop-blur-md border-b border-white/10">
+      <header className="md:ml-64 flex justify-between items-center px-6 h-16 sticky top-0 z-50 bg-[#0b0e11]/80 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-8">
           {/* Brand - mobile only */}
           <div
-            className="text-xl font-bold tracking-widest text-primary drop-shadow-[0_0_8px_rgba(252,211,77,0.5)] md:hidden"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            className="text-xl font-extrabold tracking-tight md:hidden"
+            style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#f2ca50' }}
           >
-            VOTE_CHAIN
+            meChoice
           </div>
           {/* Nav links - large screens */}
           <nav className="hidden lg:flex items-center space-x-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
@@ -208,10 +208,7 @@ function AppInner() {
               className="bg-primary text-black px-8 py-3 rounded-lg text-base font-bold active:scale-95 transition-all border-t-2 border-b-2 shadow-xl cursor-pointer"
               style={{ 
                 fontFamily: 'Space Grotesk, sans-serif',
-                background: 'linear-gradient(180deg, #f2ca50 0%, #d97706 100%)',
-                borderTop: '1px solid #fde047',
-                borderBottom: '1px solid #f2ca50',
-                boxShadow: '0 4px 15px rgba(242, 202, 80, 0.5), 0 0 20px rgba(242, 202, 80, 0.3)',
+                background: '#f2ca50',
                 cursor: 'pointer'
               }}
             >
@@ -235,7 +232,7 @@ function AppInner() {
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A]/90 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-20 z-50 px-4">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0b0e11]/90 backdrop-blur-xl border-t border-white/5 flex justify-around items-center h-20 z-50 px-4">
         <button
           onClick={() => navigate('home')}
           className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${route === 'home' ? 'text-primary' : 'text-slate-400'}`}

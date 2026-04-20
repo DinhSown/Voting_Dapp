@@ -71,7 +71,7 @@ export function UsersTab() {
         </div>
         <button
           onClick={handleSearch}
-          className="px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-sm text-on-surface-variant border border-white/5 transition-colors cursor-pointer"
+          className="px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-sm text-on-surface-variant border border-white/5 transition-colors"
         >
           Tìm
         </button>
@@ -80,7 +80,7 @@ export function UsersTab() {
           {search && (
             <button
               onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}
-              className="flex items-center gap-0.5 text-xs text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+              className="flex items-center gap-0.5 text-xs text-on-surface-variant hover:text-on-surface transition-colors"
             >
               <span className="material-symbols-outlined text-[13px]">close</span>
               Xóa bộ lọc
@@ -189,7 +189,7 @@ export function UsersTab() {
                   <td className="px-5 py-3 text-right">
                     <button
                       onClick={() => handleBan(u)}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all border cursor-pointer ${
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all border ${
                         u.isBanned
                           ? 'bg-tertiary/10 hover:bg-tertiary/20 text-tertiary border-tertiary/20'
                           : 'bg-surface-container-high hover:bg-error/10 hover:text-error hover:border-error/20 text-on-surface-variant border-white/5'
@@ -210,7 +210,7 @@ export function UsersTab() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest disabled:opacity-30 text-on-surface-variant border border-white/5 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest disabled:opacity-30 text-on-surface-variant border border-white/5 transition-all"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_left</span>
             </button>
@@ -218,7 +218,7 @@ export function UsersTab() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest disabled:opacity-30 text-on-surface-variant border border-white/5 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest disabled:opacity-30 text-on-surface-variant border border-white/5 transition-all"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </button>

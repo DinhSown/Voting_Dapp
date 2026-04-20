@@ -101,7 +101,7 @@ function ElectionCard({
         {election.onChainId === null && !election.isActive && activeCands.length >= 2 && (
           <button
             onClick={() => onPushToChain(election.id)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-xs text-secondary border border-secondary/20 transition-all cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-xs text-secondary border border-secondary/20 transition-all"
           >
             <span className="material-symbols-outlined text-[13px]">upload</span>
             Đẩy lên chain
@@ -110,7 +110,7 @@ function ElectionCard({
         {election.onChainId !== null && !election.isActive && (
           <button
             onClick={() => onStart(election.id)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-tertiary/10 hover:bg-tertiary/20 text-xs text-tertiary border border-tertiary/20 transition-all cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-tertiary/10 hover:bg-tertiary/20 text-xs text-tertiary border border-tertiary/20 transition-all"
           >
             <span className="material-symbols-outlined text-[13px]">play_arrow</span>
             Bắt đầu
@@ -119,7 +119,7 @@ function ElectionCard({
         {election.isActive && (
           <button
             onClick={() => onEnd(election.id)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 hover:bg-error/20 text-xs text-error border border-error/20 transition-all cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 hover:bg-error/20 text-xs text-error border border-error/20 transition-all"
           >
             <span className="material-symbols-outlined text-[13px]">stop</span>
             Kết thúc
@@ -128,7 +128,7 @@ function ElectionCard({
 
         <button
           onClick={onToggleExpand}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-on-surface-variant border border-white/5 transition-all ml-auto cursor-pointer"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-on-surface-variant border border-white/5 transition-all ml-auto"
         >
           <span className="material-symbols-outlined text-[13px]">
             {isExpanded ? 'expand_less' : 'people'}
@@ -139,7 +139,7 @@ function ElectionCard({
         {!election.isActive && (
           <button
             onClick={() => onDelete(election.id)}
-            className="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error/10 transition-all cursor-pointer"
+            className="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error/10 transition-all"
             title="Xóa cuộc bầu cử"
           >
             <span className="material-symbols-outlined text-[15px]">delete</span>
@@ -171,7 +171,7 @@ function ElectionCard({
                   {!election.isActive && (
                     <button
                       onClick={() => onRemoveCandidate(election.id, c)}
-                      className="opacity-0 group-hover:opacity-100 text-outline hover:text-error transition-all p-0.5 cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 text-outline hover:text-error transition-all p-0.5"
                     >
                       <span className="material-symbols-outlined text-[14px]">close</span>
                     </button>
@@ -203,7 +203,7 @@ function ElectionCard({
                 <button
                   onClick={submitCandidate}
                   disabled={adding || !candName.trim()}
-                  className="px-3 py-1.5 rounded-lg bg-primary/15 hover:bg-primary/25 disabled:opacity-40 text-xs font-medium text-primary border border-primary/20 transition-all whitespace-nowrap cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-primary/15 hover:bg-primary/25 disabled:opacity-40 text-xs font-medium text-primary border border-primary/20 transition-all whitespace-nowrap"
                 >
                   {adding ? '…' : 'Thêm'}
                 </button>
@@ -315,7 +315,7 @@ export function ElectionsTab() {
             <span className="material-symbols-outlined text-error text-[18px]">error</span>
             <span className="text-sm text-error">{error}</span>
           </div>
-          <button onClick={load} className="text-xs text-error/70 hover:text-error underline shrink-0 cursor-pointer">Thử lại</button>
+          <button onClick={load} className="text-xs text-error/70 hover:text-error underline shrink-0">Thử lại</button>
         </div>
       )}
 
@@ -331,7 +331,7 @@ export function ElectionsTab() {
         </div>
         <button
           onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium bg-primary/15 hover:bg-primary/25 text-primary border border-primary/20 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium bg-primary/15 hover:bg-primary/25 text-primary border border-primary/20 transition-all"
           style={{ fontFamily: 'Space Grotesk, sans-serif' }}
         >
           <span className="material-symbols-outlined text-[16px]">add</span>
@@ -365,13 +365,13 @@ export function ElectionsTab() {
             <button
               onClick={handleCreate}
               disabled={creating || !newTitle.trim()}
-              className="px-4 py-2 rounded-xl bg-primary/15 hover:bg-primary/25 disabled:opacity-40 text-sm font-medium text-primary border border-primary/20 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-primary/15 hover:bg-primary/25 disabled:opacity-40 text-sm font-medium text-primary border border-primary/20 transition-all"
             >
               {creating ? 'Đang tạo...' : 'Tạo'}
             </button>
             <button
               onClick={() => setShowCreate(false)}
-              className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-sm text-on-surface-variant border border-white/5 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-sm text-on-surface-variant border border-white/5 transition-colors"
             >
               Hủy
             </button>
