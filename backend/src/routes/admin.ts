@@ -139,6 +139,56 @@ export function createAdminRouter(
     }
   });
 
+  // POST /api/admin/elections/:id/sync-candidates
+  // Retry syncing candidates that are in DB (onChainId = null) for an already on-chain election
+  router.post('/elections/:id/sync-candidates', async (req: AuthRequest, res: Response) => {
+    const id = parseInt(String(req.params['id'] ?? ''), 10);
+    if (isNaN(id)) { res.status(400).json({ error: 'Invalid election id' }); return; }
+
+    try {
+      const election = await prisma.election.findUnique({
+        where: { id },
+        include: { candidates: { where: { isRemoved: false, onChainId: null }, orderBy: { id: 'asc' } } },
+      });
+      if (!election) { res.status(404).json({ error: 'Election not found' }); return; }
+      if (election.onChainId === null) {
+        res.status(400).json({ error: 'Election not on chain yet — use push-to-chain first' });
+        return;
+      }
+      if (election.candidates.length === 0) {
+        res.json({ synced: 0, message: 'All candidates already on chain' });
+        return;
+      }
+
+      const contract = getContract();
+      const results: { id: number; name: string; onChainId: number }[] = [];
+
+      for (const cand of election.candidates) {
+        const tx = await contract.addCandidate(election.onChainId) as ethers.TransactionResponse;
+        const receipt = await tx.wait();
+        let candOnChainId: number | null = null;
+        if (receipt?.logs) {
+          for (const log of receipt.logs) {
+            try {
+              const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data });
+              if (parsed?.name === 'CandidateAdded') { candOnChainId = Number(parsed.args[1]); break; }
+            } catch { /* skip */ }
+          }
+        }
+        if (candOnChainId === null) {
+          throw new Error(`Failed to parse CandidateAdded event for candidate "${cand.name}"`);
+        }
+        await prisma.candidate.update({ where: { id: cand.id }, data: { onChainId: candOnChainId } });
+        results.push({ id: cand.id, name: cand.name, onChainId: candOnChainId });
+      }
+
+      res.json({ synced: results.length, candidates: results });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: 'Failed to sync candidates', details: message });
+    }
+  });
+
   // POST /api/admin/elections/:id/push-to-chain
   // Promote a draft election (onChainId = null) to the blockchain, then start it
   router.post('/elections/:id/push-to-chain', async (req: AuthRequest, res: Response) => {
@@ -195,9 +245,10 @@ export function createAdminRouter(
             } catch { /* skip */ }
           }
         }
-        if (candOnChainId !== null) {
-          await prisma.candidate.update({ where: { id: cand.id }, data: { onChainId: candOnChainId } });
+        if (candOnChainId === null) {
+          throw new Error(`Failed to parse CandidateAdded event for candidate "${cand.name}"`);
         }
+        await prisma.candidate.update({ where: { id: cand.id }, data: { onChainId: candOnChainId } });
       }
 
       // 3. Start election on chain
