@@ -163,7 +163,7 @@ function AppInner() {
       </aside>
 
       {/* Top Header */}
-      <header className="md:ml-64 flex justify-between items-center w-full px-6 h-16 sticky top-0 z-50 bg-[#0F172A]/80 backdrop-blur-md border-b border-white/10">
+      <header className="md:ml-64 flex justify-between items-center px-6 h-16 sticky top-0 z-50 bg-[#0F172A]/80 backdrop-blur-md border-b border-white/10 overflow-hidden">
         <div className="flex items-center gap-8">
           {/* Brand - mobile only */}
           <div
