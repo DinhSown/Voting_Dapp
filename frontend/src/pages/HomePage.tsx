@@ -14,8 +14,8 @@ interface Props {
 }
 
 const CARD: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.025)',
-  border: '1px solid rgba(255,255,255,0.07)',
+  background: 'rgba(20,20,20,0.8)',
+  border: '1px solid rgba(247,168,0,0.2)',
   borderRadius: 16,
 }
 
@@ -73,15 +73,15 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
         <div className="mt-3 p-6 space-y-5" style={CARD}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(78,222,163,0.1)', border: '1px solid rgba(78,222,163,0.2)' }}>
-              <span className="material-symbols-outlined text-[20px]" style={{ color: '#4edea3' }}>check</span>
+              style={{ background: 'rgba(247,168,0,0.15)', border: '1px solid rgba(247,168,0,0.3)' }}>
+              <span className="material-symbols-outlined text-[20px]" style={{ color: '#fcd34d' }}>check</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-on-surface leading-none mb-1"
                 style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                 {user?.name || 'Đã đăng nhập'}
               </p>
-              <p className="text-xs font-mono" style={{ color: 'rgba(218,226,253,0.35)' }}>
+              <p className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 {wallet.address ? `${wallet.address.slice(0, 8)}···${wallet.address.slice(-6)}` : ''}
               </p>
             </div>
@@ -91,9 +91,9 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
                   fontFamily: 'Inter, sans-serif',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
-                  background: 'rgba(76,215,246,0.1)',
-                  border: '1px solid rgba(76,215,246,0.2)',
-                  color: '#4cd7f6',
+                  background: 'rgba(247,168,0,0.15)',
+                  border: '1px solid rgba(247,168,0,0.3)',
+                  color: '#fcd34d',
                 }}>
                 Admin
               </span>
@@ -105,14 +105,14 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
           <div className="space-y-2">
             <button
               onClick={() => onNavigate('vote')}
-              className="w-full py-2.5 rounded-xl text-sm font-bold civic-btn active:scale-[0.98] transition-transform"
+              className="w-full py-2.5 rounded-xl text-sm font-bold civic-btn active:scale-[0.98] transition-transform cursor-pointer"
               style={{ fontFamily: 'Space Grotesk, sans-serif' }}
             >
               Bỏ phiếu ngay →
             </button>
             <button
               onClick={() => onNavigate('results')}
-              className="w-full py-2.5 rounded-xl text-xs font-medium transition-all hover:text-on-surface active:scale-[0.98]"
+              className="w-full py-2.5 rounded-xl text-xs font-medium transition-all hover:text-on-surface active:scale-[0.98] cursor-pointer"
               style={{
                 fontFamily: 'Inter, sans-serif',
                 color: 'rgba(218,226,253,0.4)',
@@ -139,14 +139,14 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
           <div className="space-y-5">
             {/* Event eyebrow */}
             <div className="inline-flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full" style={{ background: '#f59e0b' }} />
+              <span className="w-1 h-1 rounded-full" style={{ background: '#fcd34d' }} />
               <span style={{
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 11,
                 fontWeight: 600,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: 'rgba(245,158,11,0.8)',
+                color: 'rgba(252,211,77,0.9)',
               }}>
                 Vietnam Blockchain Week 2025
               </span>
@@ -159,10 +159,10 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
               fontWeight: 700,
               lineHeight: 1.08,
               letterSpacing: '-0.03em',
-              color: '#dae2fd',
+              color: '#ffffff',
             }}>
               Bình chọn<br />
-              <span style={{ color: '#adc6ff' }}>meChoice</span>
+              <span style={{ color: '#fcd34d' }}>meChoice</span>
             </h1>
 
             {/* Description */}
@@ -170,7 +170,7 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
               fontFamily: 'Inter, sans-serif',
               fontSize: 15,
               lineHeight: 1.8,
-              color: 'rgba(218,226,253,0.55)',
+              color: 'rgba(255,255,255,0.65)',
               maxWidth: 400,
             }}>
               Bình chọn cho các cá nhân và dự án xuất sắc trong hệ sinh thái
@@ -190,14 +190,14 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
               </button>
               <button
                 onClick={() => onNavigate('results')}
-                className="px-6 py-2.5 rounded-xl text-sm font-medium active:scale-[0.98] transition-all"
+                className="px-6 py-2.5 rounded-xl text-sm font-medium active:scale-[0.98] transition-all cursor-pointer"
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
-                  color: 'rgba(218,226,253,0.5)',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.6)',
+                  background: 'rgba(20,20,20,0.6)',
+                  border: '1px solid rgba(247,168,0,0.2)',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#dae2fd')}
+                onMouseEnter={e => (e.currentTarget.style.color = '#fcd34d')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(218,226,253,0.5)')}
               >
                 Xem kết quả
@@ -217,7 +217,7 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
               <div className="w-full rounded-full overflow-hidden" style={{ height: 2, background: 'rgba(255,255,255,0.06)' }}>
                 <div className="h-full rounded-full" style={{
                   width: `${readiness}%`,
-                  background: 'linear-gradient(90deg, #adc6ff, #4cd7f6)',
+                  background: 'linear-gradient(90deg, #fcd34d, #f7a800)',
                   transition: 'width 0.9s cubic-bezier(0.23,1,0.32,1)',
                 }} />
               </div>
@@ -241,7 +241,7 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
             live: !!health,
             color: health ? '#4edea3' : '#8c909f',
           },
-          { label: 'Mạng', value: 'Oasis Sapphire', color: '#4cd7f6' },
+          { label: 'Mạng', value: 'Oasis Sapphire', color: '#fcd34d' },
           { label: 'Bảo mật', value: 'On-chain', color: '#dae2fd' },
           {
             label: 'Ví',
@@ -249,7 +249,7 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
               ? `${wallet.address.slice(0, 6)}···${wallet.address.slice(-4)}`
               : 'Chưa kết nối',
             mono: true,
-            color: wallet.address ? '#adc6ff' : '#8c909f',
+            color: wallet.address ? '#fcd34d' : '#8c909f',
           },
         ].map((s) => (
           <div key={s.label} className="px-5 py-4" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
@@ -286,7 +286,7 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
                         fontFamily: 'Space Grotesk, sans-serif',
                         background: s.done ? 'rgba(173,198,255,0.12)' : 'rgba(11,19,38,1)',
                         border: `1px solid ${s.done ? 'rgba(173,198,255,0.35)' : 'rgba(255,255,255,0.1)'}`,
-                        color: s.done ? '#adc6ff' : 'rgba(218,226,253,0.25)',
+                        color: s.done ? '#fcd34d' : 'rgba(218,226,253,0.25)',
                       }}>
                       {s.done ? '✓' : s.n}
                     </div>
@@ -341,7 +341,7 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
                   <p className="text-sm font-semibold leading-none mb-1"
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
-                      color: item.accent ? '#adc6ff' : '#dae2fd',
+                      color: item.accent ? '#fcd34d' : '#ffffff',
                     }}>
                     {item.label}
                   </p>

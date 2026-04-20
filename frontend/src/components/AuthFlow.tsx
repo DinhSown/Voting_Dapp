@@ -39,7 +39,7 @@ export function AuthFlow({ auth, walletAddress }: Props) {
           </div>
           <button
             onClick={reset}
-            className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors"
+            className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors cursor-pointer"
           >
             Đổi
           </button>
@@ -59,7 +59,7 @@ export function AuthFlow({ auth, walletAddress }: Props) {
         <div className="flex gap-2">
           <button
             onClick={() => setVerifyMode('email')}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-medium border transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-medium border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               verifyMode === 'email'
                 ? 'bg-[#a2e7ff]/20 border-[#a2e7ff]/40 text-[#a2e7ff]'
                 : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80'
@@ -69,7 +69,7 @@ export function AuthFlow({ auth, walletAddress }: Props) {
           </button>
           <button
             onClick={() => setVerifyMode('phone')}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-medium border transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-medium border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               verifyMode === 'phone'
                 ? 'bg-[#a2e7ff]/20 border-[#a2e7ff]/40 text-[#a2e7ff]'
                 : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80'
@@ -94,7 +94,7 @@ export function AuthFlow({ auth, walletAddress }: Props) {
           <button
             onClick={sendOtp}
             disabled={loading || (verifyMode === 'email' ? !email : !phone)}
-            className="w-full py-2.5 px-4 rounded-xl bg-[#a2e7ff]/20 text-[#a2e7ff] border border-[#a2e7ff]/30 font-semibold text-sm hover:bg-[#a2e7ff]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 px-4 rounded-xl bg-[#a2e7ff]/20 text-[#a2e7ff] border border-[#a2e7ff]/30 font-semibold text-sm hover:bg-[#a2e7ff]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? <Loader size={16} className="animate-spin" /> : null}
             {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
@@ -121,14 +121,14 @@ export function AuthFlow({ auth, walletAddress }: Props) {
           <div className="flex gap-2">
             <button
               onClick={reset}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-white/10 text-white/60 text-sm hover:bg-white/5 transition-all"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-white/10 text-white/60 text-sm hover:bg-white/5 transition-all cursor-pointer"
             >
               Quay lại
             </button>
             <button
               onClick={() => verifyOtp(walletAddress)}
               disabled={loading || otp.length !== 6}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold text-sm hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-green-500/20 text-green-300 border border-green-500/30 font-semibold text-sm hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? <Loader size={16} className="animate-spin" /> : null}
               {loading ? 'Đang xác minh...' : 'Xác minh'}

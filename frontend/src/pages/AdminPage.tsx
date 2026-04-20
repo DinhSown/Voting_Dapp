@@ -83,7 +83,7 @@ export function AdminPage() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               tab === t.id
                 ? 'bg-surface-container-highest text-on-surface shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'

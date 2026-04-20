@@ -156,7 +156,7 @@ export function ResultsPage({ onNavigate }: Props) {
             <button
               onClick={load}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-40"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors disabled:opacity-40 cursor-pointer"
               style={{
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.07)',
@@ -179,7 +179,7 @@ export function ResultsPage({ onNavigate }: Props) {
             </button>
             <button
               onClick={() => onNavigate('vote')}
-              className="civic-btn px-4 py-2 flex items-center gap-2 rounded-xl active:scale-95 transition-transform"
+              className="civic-btn px-4 py-2 flex items-center gap-2 rounded-xl active:scale-95 transition-transform cursor-pointer"
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 10,
@@ -294,7 +294,7 @@ export function ResultsPage({ onNavigate }: Props) {
               <button
                 key={el.id}
                 onClick={() => handleElectionChange(idx)}
-                className="flex-shrink-0 flex items-center gap-2 transition-all"
+                className="flex-shrink-0 flex items-center gap-2 transition-all cursor-pointer"
                 style={
                   isActive
                     ? {
@@ -543,7 +543,7 @@ export function ResultsPage({ onNavigate }: Props) {
 
               <button
                 onClick={() => onNavigate('vote')}
-                className="w-full mt-4 civic-btn py-3 rounded-xl text-sm active:scale-[0.98] transition-transform"
+                className="w-full mt-4 civic-btn py-3 rounded-xl text-sm active:scale-[0.98] transition-transform cursor-pointer"
                 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700 }}
               >
                 Tham gia bỏ phiếu →

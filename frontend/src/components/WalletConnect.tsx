@@ -72,7 +72,7 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
   return (
     <div className="panel p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <Wallet size={18} className="text-[#f2ca50]" />
+        <Wallet size={18} className="text-primary" />
         <h3 className="text-sm font-semibold text-white">Kết nối ví</h3>
       </div>
 
@@ -112,7 +112,14 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
           onClick={onConnect}
           disabled={loading}
           aria-label={loading ? 'Đang kết nối ví' : 'Kết nối MetaMask'}
-          className="w-full py-2.5 px-4 rounded-xl bg-[#f2ca50] text-black font-semibold text-sm hover:bg-[#f2ca50]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          className="w-full py-2.5 px-4 rounded-xl text-black font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          style={{
+            background: 'linear-gradient(180deg, #f2ca50 0%, #d97706 100%)',
+            borderTop: '1px solid #fde047',
+            boxShadow: '0 4px 15px rgba(242, 202, 80, 0.5)',
+            border: '1px solid #f2ca50',
+            cursor: 'pointer'
+          }}
         >
           {loading ? <Loader size={16} className="animate-spin" /> : <Wallet size={16} />}
           {loading ? 'Đang kết nối...' : 'Kết nối MetaMask'}
@@ -122,7 +129,14 @@ export function WalletConnect({ address, chainId, loading, error, onConnect, onS
           onClick={onSwitchNetwork}
           disabled={loading}
           aria-label={loading ? 'Đang chuyển mạng' : 'Chuyển sang Sapphire Testnet'}
-          className="w-full py-2.5 px-4 rounded-xl bg-orange-500/20 text-orange-300 border border-orange-500/30 font-semibold text-sm hover:bg-orange-500/30 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+          className="w-full py-2.5 px-4 rounded-xl text-black font-semibold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+          style={{
+            background: 'linear-gradient(180deg, #f2ca50 0%, #d97706 100%)',
+            borderTop: '1px solid #fde047',
+            boxShadow: '0 4px 15px rgba(242, 202, 80, 0.5)',
+            border: '1px solid #f2ca50',
+            cursor: 'pointer'
+          }}
         >
           {loading ? <Loader size={16} className="animate-spin" /> : <RefreshCw size={16} />}
           {loading ? 'Đang chuyển mạng...' : 'Chuyển sang Sapphire Testnet'}

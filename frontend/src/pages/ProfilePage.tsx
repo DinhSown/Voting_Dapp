@@ -153,14 +153,14 @@ export function ProfilePage() {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="civic-btn px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-all"
+                    className="civic-btn px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-all cursor-pointer"
                     style={{ fontFamily: 'Space Grotesk, sans-serif' }}
                   >
                     {saving ? '...' : 'Lưu'}
                   </button>
                   <button
                     onClick={() => { setEditing(false); setName(user.name) }}
-                    className="px-3 py-2 rounded-xl text-xs text-on-surface-variant hover:text-on-surface transition-colors"
+                    className="px-3 py-2 rounded-xl text-xs text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
                     style={{ background: 'rgba(44,52,73,0.6)' }}
                   >
                     Hủy
@@ -182,7 +182,7 @@ export function ProfilePage() {
                   </h1>
                   <button
                     onClick={() => { setEditing(true); setName(user.name) }}
-                    className="text-outline hover:text-on-surface-variant transition-colors shrink-0"
+                    className="text-outline hover:text-on-surface-variant transition-colors shrink-0 cursor-pointer"
                     title="Chỉnh sửa tên"
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: 16 }}>edit</span>
@@ -212,7 +212,7 @@ export function ProfilePage() {
                 <span className="font-mono text-[11px] text-outline">{shortAddress}</span>
                 <button
                   onClick={copyAddress}
-                  className="text-outline hover:text-on-surface-variant transition-colors"
+                  className="text-outline hover:text-on-surface-variant transition-colors cursor-pointer"
                   title="Sao chép địa chỉ"
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: 13 }}>content_copy</span>
@@ -224,7 +224,7 @@ export function ProfilePage() {
           {/* Logout */}
           <button
             onClick={logout}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-error text-xs font-medium hover:bg-error/10 transition-colors shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-error text-xs font-medium hover:bg-error/10 transition-colors shrink-0 cursor-pointer"
             style={{
               fontFamily: 'Space Grotesk, sans-serif',
               border: '1px solid rgba(255,180,171,0.2)',

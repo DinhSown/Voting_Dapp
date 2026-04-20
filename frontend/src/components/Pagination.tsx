@@ -18,7 +18,7 @@ export function Pagination({ page, total, limit, onPageChange }: Props) {
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        className="p-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        className="p-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
         aria-label="Previous page"
       >
         <ChevronLeft size={16} />
@@ -30,7 +30,7 @@ export function Pagination({ page, total, limit, onPageChange }: Props) {
           onClick={() => onPageChange(p)}
           aria-label={`Page ${p}`}
           aria-current={p === page ? 'page' : undefined}
-          className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
+          className={`w-8 h-8 rounded-lg text-sm font-medium transition-all cursor-pointer ${
             p === page
               ? 'bg-[#f2ca50] text-black'
               : 'border border-white/10 text-white/60 hover:text-white hover:bg-white/10'
@@ -43,7 +43,7 @@ export function Pagination({ page, total, limit, onPageChange }: Props) {
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        className="p-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        className="p-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
         aria-label="Next page"
       >
         <ChevronRight size={16} />

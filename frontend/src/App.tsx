@@ -35,7 +35,7 @@ function NavUserMenu({ onNavigate }: { onNavigate: (r: string) => void }) {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high border border-white/5 text-sm transition-all hover:bg-surface-container-highest"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high border border-white/5 text-sm transition-all hover:bg-surface-container-highest cursor-pointer"
       >
         <span className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/50 to-secondary/50 flex items-center justify-center text-xs font-bold text-on-surface">
           {(user.name || 'U')[0].toUpperCase()}
@@ -55,13 +55,13 @@ function NavUserMenu({ onNavigate }: { onNavigate: (r: string) => void }) {
             </div>
             <button
               onClick={() => { onNavigate('profile'); setOpen(false) }}
-              className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors"
+              className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors cursor-pointer"
             >
               Hồ sơ
             </button>
             <button
               onClick={() => { logout(); setOpen(false) }}
-              className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/10 transition-colors"
+              className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/10 transition-colors cursor-pointer"
             >
               Đăng xuất
             </button>
@@ -139,9 +139,9 @@ function AppInner() {
             <button
               key={item.route}
               onClick={() => navigate(item.route)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 transition-all active:translate-x-1 uppercase tracking-wider text-xs ${
+              className={`w-full flex items-center space-x-3 px-4 py-3 transition-all active:translate-x-1 uppercase tracking-wider text-xs cursor-pointer ${
                 route === item.route
-                  ? 'bg-[#3B82F6]/20 text-[#3B82F6] rounded-md border-l-4 border-[#3B82F6]'
+                  ? 'bg-primary/20 text-primary rounded-md border-l-4 border-primary'
                   : 'text-slate-400 hover:bg-white/10 hover:text-white'
               }`}
               style={{ fontFamily: 'Space Grotesk, sans-serif' }}
@@ -154,7 +154,7 @@ function AppInner() {
 
         <button
           onClick={() => navigate('vote')}
-          className="mt-auto cast-vote-btn py-4 rounded-lg text-white text-sm flex justify-center items-center gap-2 active:scale-95 transition-transform font-semibold"
+          className="mt-auto cast-vote-btn py-4 rounded-lg text-white text-sm flex justify-center items-center gap-2 active:scale-95 transition-transform font-semibold cursor-pointer"
           style={{ fontFamily: 'Space Grotesk, sans-serif' }}
         >
           <span className="material-symbols-outlined">ballot</span>
@@ -163,11 +163,11 @@ function AppInner() {
       </aside>
 
       {/* Top Header */}
-      <header className="md:ml-64 flex justify-between items-center px-6 h-16 sticky top-0 z-50 bg-[#0F172A]/80 backdrop-blur-md border-b border-white/10 overflow-hidden">
+      <header className="md:ml-64 flex justify-between items-center px-6 h-16 sticky top-0 z-50 bg-[#0F172A]/80 backdrop-blur-md border-b border-white/10">
         <div className="flex items-center gap-8">
           {/* Brand - mobile only */}
           <div
-            className="text-xl font-bold tracking-widest text-[#3B82F6] drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] md:hidden"
+            className="text-xl font-bold tracking-widest text-primary drop-shadow-[0_0_8px_rgba(252,211,77,0.5)] md:hidden"
             style={{ fontFamily: 'Space Grotesk, sans-serif' }}
           >
             VOTE_CHAIN
@@ -178,9 +178,9 @@ function AppInner() {
               <button
                 key={item.route}
                 onClick={() => navigate(item.route)}
-                className={`text-sm transition-all duration-200 tracking-tight ${
+                className={`text-sm transition-all duration-200 tracking-tight cursor-pointer ${
                   route === item.route
-                    ? 'text-[#3B82F6] font-bold border-b-2 border-[#3B82F6] pb-1'
+                    ? 'text-primary font-bold border-b-2 border-primary pb-1'
                     : 'text-slate-400 font-medium hover:text-white'
                 }`}
               >
@@ -205,10 +205,17 @@ function AppInner() {
           {!isAuthenticated && (
             <button
               onClick={() => navigate('home')}
-              className="bg-[#3B82F6] text-white px-5 py-2 rounded-full text-sm font-bold active:scale-95 transition-transform glow-button"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              className="bg-primary text-black px-8 py-3 rounded-lg text-base font-bold active:scale-95 transition-all border-t-2 border-b-2 shadow-xl cursor-pointer"
+              style={{ 
+                fontFamily: 'Space Grotesk, sans-serif',
+                background: 'linear-gradient(180deg, #f2ca50 0%, #d97706 100%)',
+                borderTop: '1px solid #fde047',
+                borderBottom: '1px solid #f2ca50',
+                boxShadow: '0 4px 15px rgba(242, 202, 80, 0.5), 0 0 20px rgba(242, 202, 80, 0.3)',
+                cursor: 'pointer'
+              }}
             >
-              Đăng nhập
+               Đăng nhập
             </button>
           )}
         </div>
@@ -231,7 +238,7 @@ function AppInner() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A]/90 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-20 z-50 px-4">
         <button
           onClick={() => navigate('home')}
-          className={`flex flex-col items-center gap-1 transition-colors ${route === 'home' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${route === 'home' ? 'text-primary' : 'text-slate-400'}`}
         >
           <span className="material-symbols-outlined text-[22px]">dashboard</span>
           <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
@@ -240,7 +247,7 @@ function AppInner() {
         </button>
         <button
           onClick={() => navigate('vote')}
-          className={`flex flex-col items-center gap-1 transition-colors ${route === 'vote' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${route === 'vote' ? 'text-primary' : 'text-slate-400'}`}
         >
           <span className="material-symbols-outlined text-[22px]">how_to_vote</span>
           <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
@@ -251,14 +258,14 @@ function AppInner() {
         <div className="relative -top-6">
           <button
             onClick={() => navigate('vote')}
-            className="w-14 h-14 rounded-full cast-vote-btn flex items-center justify-center text-white shadow-xl active:scale-95 transition-transform"
+            className="w-14 h-14 rounded-full cast-vote-btn flex items-center justify-center text-white shadow-xl active:scale-95 transition-transform cursor-pointer"
           >
             <span className="material-symbols-outlined">ballot</span>
           </button>
         </div>
         <button
           onClick={() => navigate('results')}
-          className={`flex flex-col items-center gap-1 transition-colors ${route === 'results' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${route === 'results' ? 'text-primary' : 'text-slate-400'}`}
         >
           <span className="material-symbols-outlined text-[22px]">leaderboard</span>
           <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
@@ -267,7 +274,7 @@ function AppInner() {
         </button>
         <button
           onClick={() => navigate('profile')}
-          className={`flex flex-col items-center gap-1 transition-colors ${route === 'profile' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${route === 'profile' ? 'text-primary' : 'text-slate-400'}`}
         >
           <span className="material-symbols-outlined text-[22px]">person</span>
           <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
