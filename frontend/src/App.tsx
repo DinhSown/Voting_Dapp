@@ -32,36 +32,36 @@ function NavUserMenu({ onNavigate }: { onNavigate: (r: string) => void }) {
     : ''
 
   return (
-    <div className="relative ml-auto">
+    <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm transition-all"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high border border-white/5 text-sm transition-all hover:bg-surface-container-highest"
       >
-        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold">
+        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/50 to-secondary/50 flex items-center justify-center text-xs font-bold text-on-surface">
           {(user.name || 'U')[0].toUpperCase()}
         </span>
-        <span className="text-white/80 max-w-[120px] truncate">{user.name}</span>
+        <span className="text-on-surface-variant max-w-[120px] truncate font-h3 text-xs">{user.name}</span>
         {user.role === 'admin' && (
-          <span className="text-xs text-yellow-400">★</span>
+          <span className="text-xs text-secondary">★</span>
         )}
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-xl bg-[#1a1a2e] border border-white/10 shadow-xl overflow-hidden">
-            <div className="px-3 py-2 border-b border-white/5">
-              <p className="text-xs text-white/40 font-mono truncate">{shortAddr}</p>
+          <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-lg glass-card overflow-hidden shadow-xl">
+            <div className="px-3 py-2 border-b border-white/10">
+              <p className="text-xs text-on-surface-variant font-mono truncate">{shortAddr}</p>
             </div>
             <button
               onClick={() => { onNavigate('profile'); setOpen(false) }}
-              className="w-full text-left px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+              className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors"
             >
               Hồ sơ
             </button>
             <button
               onClick={() => { logout(); setOpen(false) }}
-              className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+              className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/10 transition-colors"
             >
               Đăng xuất
             </button>
@@ -72,6 +72,14 @@ function NavUserMenu({ onNavigate }: { onNavigate: (r: string) => void }) {
   )
 }
 
+const NAV_ITEMS: { route: Route; label: string; icon: string }[] = [
+  { route: 'home', label: 'Dashboard', icon: 'dashboard' },
+  { route: 'vote', label: 'Bỏ phiếu', icon: 'how_to_vote' },
+  { route: 'results', label: 'Kết quả', icon: 'leaderboard' },
+  { route: 'admin', label: 'Quản trị', icon: 'admin_panel_settings' },
+  { route: 'profile', label: 'Hồ sơ', icon: 'person' },
+]
+
 function AppInner() {
   const [route, setRoute] = useState<Route>(getRouteFromHash)
   const [toast, setToast] = useState<ToastType | null>(null)
@@ -80,6 +88,7 @@ function AppInner() {
   const wallet = useWallet()
   const auth = useAuth()
   const vote = useVote()
+  const { isAuthenticated } = useAuthContext()
 
   useEffect(() => {
     const handler = () => setRoute(getRouteFromHash())
@@ -107,41 +116,106 @@ function AppInner() {
     setToast({ message, type })
   }, [])
 
-  const navItems: { route: Route; label: string }[] = [
-    { route: 'home', label: 'Trang chủ' },
-    { route: 'vote', label: 'Bỏ phiếu' },
-    { route: 'results', label: 'Kết quả' },
-    { route: 'admin', label: 'Quản trị' },
-  ]
+  const shortAddr = wallet.address
+    ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
+    : null
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="orb absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-purple-900/20 rounded-full blur-[120px]" />
-        <div className="orb absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-blue-900/20 rounded-full blur-[100px]" />
-      </div>
+    <div className="bg-background text-on-background min-h-screen" style={{ fontFamily: 'Inter, sans-serif' }}>
 
-      <nav className="sticky top-0 z-40 backdrop-blur-md bg-black/40 border-b border-white/10">
-        <div className="max-w-5xl mx-auto px-4 flex items-center gap-1 h-14">
-          <span className="font-headline font-bold text-[#f2ca50] mr-4 text-sm">meChoice</span>
-          {navItems.map((item) => (
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-[#1E293B]/40 backdrop-blur-lg border-r border-white/10 p-4 z-40 flex-col shadow-xl">
+        <div className="mb-10 px-4">
+          <h1 className="text-lg font-black text-white tracking-widest" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            VOTE_CHAIN
+          </h1>
+          <p className="uppercase tracking-wider text-xs text-slate-400 mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            meChoice Platform
+          </p>
+        </div>
+
+        <nav className="flex-grow space-y-2">
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.route}
               onClick={() => navigate(item.route)}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+              className={`w-full flex items-center space-x-3 px-4 py-3 transition-all active:translate-x-1 uppercase tracking-wider text-xs ${
                 route === item.route
-                  ? 'bg-white/10 text-white font-medium'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
+                  ? 'bg-[#3B82F6]/20 text-[#3B82F6] rounded-md border-l-4 border-[#3B82F6]'
+                  : 'text-slate-400 hover:bg-white/10 hover:text-white'
               }`}
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
             >
-              {item.label}
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <span>{item.label}</span>
             </button>
           ))}
-          <NavUserMenu onNavigate={navigate} />
-        </div>
-      </nav>
+        </nav>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
+        <button
+          onClick={() => navigate('vote')}
+          className="mt-auto cast-vote-btn py-4 rounded-lg text-white text-sm flex justify-center items-center gap-2 active:scale-95 transition-transform font-semibold"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
+          <span className="material-symbols-outlined">ballot</span>
+          Bỏ phiếu ngay
+        </button>
+      </aside>
+
+      {/* Top Header */}
+      <header className="md:ml-64 flex justify-between items-center w-full px-6 h-16 sticky top-0 z-50 bg-[#0F172A]/80 backdrop-blur-md border-b border-white/10">
+        <div className="flex items-center gap-8">
+          {/* Brand - mobile only */}
+          <div
+            className="text-xl font-bold tracking-widest text-[#3B82F6] drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] md:hidden"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            VOTE_CHAIN
+          </div>
+          {/* Nav links - large screens */}
+          <nav className="hidden lg:flex items-center space-x-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.route}
+                onClick={() => navigate(item.route)}
+                className={`text-sm transition-all duration-200 tracking-tight ${
+                  route === item.route
+                    ? 'text-[#3B82F6] font-bold border-b-2 border-[#3B82F6] pb-1'
+                    : 'text-slate-400 font-medium hover:text-white'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {shortAddr && (
+            <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-surface-container-high border border-white/5">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  wallet.isCorrectNetwork ? 'bg-tertiary-container animate-pulse' : 'bg-error'
+                }`}
+              />
+              <span className="font-mono text-xs text-on-surface-variant">{shortAddr}</span>
+            </div>
+          )}
+          <NavUserMenu onNavigate={navigate} />
+          {!isAuthenticated && (
+            <button
+              onClick={() => navigate('home')}
+              className="bg-[#3B82F6] text-white px-5 py-2 rounded-full text-sm font-bold active:scale-95 transition-transform glow-button"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
+              Đăng nhập
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="md:ml-64 p-6 lg:p-8 max-w-7xl mx-auto pb-24 md:pb-8">
         {route === 'home' && (
           <HomePage wallet={wallet} auth={auth} health={health} onNavigate={navigate} />
         )}
@@ -152,6 +226,55 @@ function AppInner() {
         {route === 'admin' && <AdminPage />}
         {route === 'profile' && <ProfilePage />}
       </main>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A]/90 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-20 z-50 px-4">
+        <button
+          onClick={() => navigate('home')}
+          className={`flex flex-col items-center gap-1 transition-colors ${route === 'home' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">dashboard</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Dashboard
+          </span>
+        </button>
+        <button
+          onClick={() => navigate('vote')}
+          className={`flex flex-col items-center gap-1 transition-colors ${route === 'vote' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">how_to_vote</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Bỏ phiếu
+          </span>
+        </button>
+        {/* FAB */}
+        <div className="relative -top-6">
+          <button
+            onClick={() => navigate('vote')}
+            className="w-14 h-14 rounded-full cast-vote-btn flex items-center justify-center text-white shadow-xl active:scale-95 transition-transform"
+          >
+            <span className="material-symbols-outlined">ballot</span>
+          </button>
+        </div>
+        <button
+          onClick={() => navigate('results')}
+          className={`flex flex-col items-center gap-1 transition-colors ${route === 'results' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">leaderboard</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Kết quả
+          </span>
+        </button>
+        <button
+          onClick={() => navigate('profile')}
+          className={`flex flex-col items-center gap-1 transition-colors ${route === 'profile' ? 'text-[#3B82F6]' : 'text-slate-400'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">person</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Hồ sơ
+          </span>
+        </button>
+      </nav>
 
       <Toast toast={toast} />
     </div>

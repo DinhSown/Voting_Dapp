@@ -2,7 +2,53 @@ import { useState, useEffect } from 'react'
 import { useAuthContext } from '../context/AuthContext'
 import { updateProfile, getApiErrorMessage, fetchMyVotes } from '../services/api'
 import type { VoteRecord } from '../types'
-import { CheckCircle, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
+
+const CARD_STYLE: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.025)',
+  border: '1px solid rgba(255,255,255,0.07)',
+  borderRadius: 16,
+}
+
+const LABEL_STYLE: React.CSSProperties = {
+  fontFamily: 'Inter, sans-serif',
+  fontWeight: 600,
+  fontSize: 10,
+  letterSpacing: '0.09em',
+  textTransform: 'uppercase',
+  color: 'rgba(218,226,253,0.3)',
+}
+
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div
+      className="flex items-center justify-between py-3"
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      <span className="shrink-0" style={LABEL_STYLE}>
+        {label}
+      </span>
+      <div className="text-right">{children}</div>
+    </div>
+  )
+}
+
+function NetRow({ label, value, accent, live }: {
+  label: string
+  value: string
+  accent?: string
+  live?: boolean
+}) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-[10px] text-outline font-mono">{label}</span>
+      <div className="flex items-center gap-1.5">
+        {live && <span className="live-dot" />}
+        <span className={`text-[10px] font-mono font-bold ${accent ?? 'text-on-surface'}`}>{value}</span>
+      </div>
+    </div>
+  )
+}
 
 export function ProfilePage() {
   const { user, refreshProfile, logout } = useAuthContext()
@@ -30,8 +76,8 @@ export function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="text-center py-20 text-white/40">
-        Vui lòng đăng nhập để xem hồ sơ
+      <div className="text-center py-24 text-on-surface-variant text-sm">
+        Vui lòng đăng nhập để xem hồ sơ.
       </div>
     )
   }
@@ -53,186 +99,383 @@ export function ProfilePage() {
   }
 
   const shortAddress = user.walletAddress
-    ? `${user.walletAddress.slice(0, 8)}...${user.walletAddress.slice(-6)}`
+    ? `${user.walletAddress.slice(0, 8)}···${user.walletAddress.slice(-6)}`
     : '—'
 
   const copyAddress = () => {
     if (user.walletAddress) navigator.clipboard.writeText(user.walletAddress)
   }
 
-  const roleBadgeClass =
-    user.role === 'admin'
-      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-      : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+  const initials = (user.name || 'U')[0].toUpperCase()
+  const isAdmin = user.role === 'admin'
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-white">Hồ sơ của tôi</h1>
+    <div className="space-y-12">
 
-      {/* Profile card */}
-      <div className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-5">
+      {/* ── PROFILE HEADER ── */}
+      <div>
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex items-start gap-5">
+            {/* Avatar */}
+            <div
+              className="w-20 h-20 flex items-center justify-center text-3xl font-bold text-primary select-none shrink-0"
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                background: 'linear-gradient(135deg, rgba(173,198,255,0.15), rgba(76,215,246,0.1))',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 16,
+              }}
+            >
+              {initials}
+            </div>
 
-        {/* Avatar + name */}
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-2xl font-bold text-white select-none">
-            {(user.name || 'U')[0].toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            {editing ? (
-              <div className="flex gap-2 items-center">
-                <input
-                  autoFocus
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={50}
-                  className="flex-1 px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-sm text-white focus:outline-none focus:border-purple-500"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSave()
-                    if (e.key === 'Escape') { setEditing(false); setName(user.name) }
-                  }}
-                />
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-xs font-medium disabled:opacity-50 transition-colors"
-                >
-                  {saving ? '...' : 'Lưu'}
-                </button>
-                <button
-                  onClick={() => { setEditing(false); setName(user.name) }}
-                  className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-colors"
-                >
-                  Hủy
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-white truncate">{user.name}</span>
-                <button
-                  onClick={() => { setEditing(true); setName(user.name) }}
-                  className="text-white/30 hover:text-white/70 transition-colors text-xs"
-                  title="Chỉnh sửa tên"
-                >
-                  ✏️
-                </button>
-              </div>
-            )}
-            <span className={`mt-1 inline-block text-xs px-2 py-0.5 rounded-full ${roleBadgeClass}`}>
-              {user.role === 'admin' ? 'Admin' : 'Người dùng'}
-            </span>
-          </div>
-        </div>
+            {/* Name + meta */}
+            <div className="flex-1 min-w-0 pt-1">
+              {editing ? (
+                <div className="flex gap-2 items-center mb-2">
+                  <input
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={50}
+                    className="flex-1 px-3 py-2 text-sm text-on-surface focus:outline-none"
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(173,198,255,0.25)',
+                      borderRadius: 10,
+                      fontFamily: 'Space Grotesk, sans-serif',
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSave()
+                      if (e.key === 'Escape') { setEditing(false); setName(user.name) }
+                    }}
+                  />
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="civic-btn px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-all"
+                    style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                  >
+                    {saving ? '...' : 'Lưu'}
+                  </button>
+                  <button
+                    onClick={() => { setEditing(false); setName(user.name) }}
+                    className="px-3 py-2 rounded-xl text-xs text-on-surface-variant hover:text-on-surface transition-colors"
+                    style={{ background: 'rgba(44,52,73,0.6)' }}
+                  >
+                    Hủy
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-2">
+                  <h1
+                    className="text-on-surface truncate"
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 'clamp(22px, 4vw, 34px)',
+                      fontWeight: 800,
+                      lineHeight: 1.1,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {user.name}
+                  </h1>
+                  <button
+                    onClick={() => { setEditing(true); setName(user.name) }}
+                    className="text-outline hover:text-on-surface-variant transition-colors shrink-0"
+                    title="Chỉnh sửa tên"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>edit</span>
+                  </button>
+                </div>
+              )}
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-        {success && <p className="text-green-400 text-sm">{success}</p>}
-
-        {/* Info rows */}
-        <div className="space-y-3 divide-y divide-white/5">
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-white/50">Địa chỉ ví</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-mono text-white/80">{shortAddress}</span>
-              <button
-                onClick={copyAddress}
-                className="text-white/30 hover:text-white/70 text-xs transition-colors"
-                title="Sao chép"
+              {/* Role badge */}
+              <span
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  letterSpacing: '0.07em',
+                  background: isAdmin ? 'rgba(76,215,246,0.12)' : 'rgba(173,198,255,0.12)',
+                  border: `1px solid ${isAdmin ? 'rgba(76,215,246,0.25)' : 'rgba(173,198,255,0.22)'}`,
+                  color: isAdmin ? '#4cd7f6' : '#adc6ff',
+                }}
               >
-                📋
-              </button>
+                <span className="material-symbols-outlined" style={{ fontSize: 11 }}>
+                  {isAdmin ? 'admin_panel_settings' : 'person'}
+                </span>
+                {isAdmin ? 'Admin' : 'Người dùng'}
+              </span>
+
+              {/* Wallet address */}
+              <div className="flex items-center gap-1.5 mt-2">
+                <span className="font-mono text-[11px] text-outline">{shortAddress}</span>
+                <button
+                  onClick={copyAddress}
+                  className="text-outline hover:text-on-surface-variant transition-colors"
+                  title="Sao chép địa chỉ"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 13 }}>content_copy</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-white/50">Email đã xác thực</span>
-            <span className="text-sm text-white/80">
-              {loadingProfile ? (
-                <span className="text-white/30 animate-pulse">Đang tải…</span>
-              ) : user.email ? user.email : '—'}
-            </span>
+          {/* Logout */}
+          <button
+            onClick={logout}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-error text-xs font-medium hover:bg-error/10 transition-colors shrink-0"
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              border: '1px solid rgba(255,180,171,0.2)',
+              background: 'rgba(147,0,10,0.08)',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>logout</span>
+            Đăng xuất
+          </button>
+        </div>
+
+        {/* Inline feedback */}
+        {error && (
+          <p className="mt-3 text-xs text-error" style={{ fontFamily: 'Inter, sans-serif' }}>{error}</p>
+        )}
+        {success && (
+          <p className="mt-3 text-xs text-tertiary" style={{ fontFamily: 'Inter, sans-serif' }}>{success}</p>
+        )}
+      </div>
+
+      {/* ── MAIN GRID ── */}
+      <div className="grid grid-cols-12 gap-gutter">
+
+        {/* Left: Info + Vote history (8 cols) */}
+        <div className="col-span-12 lg:col-span-8 space-y-6">
+
+          {/* Account info panel */}
+          <div style={{ ...CARD_STYLE, padding: 24 }}>
+            <p className="mb-1" style={LABEL_STYLE}>
+              Thông tin tài khoản
+            </p>
+
+            <div>
+              <InfoRow label="Email">
+                <span className="text-sm text-on-surface font-mono">
+                  {loadingProfile
+                    ? <span className="text-outline animate-pulse">Đang tải…</span>
+                    : user.email || '—'}
+                </span>
+              </InfoRow>
+
+              <InfoRow label="Số dư (Testnet)">
+                <span className="text-sm text-on-surface font-mono">
+                  {loadingProfile
+                    ? <span className="text-outline animate-pulse">Đang tải…</span>
+                    : user.balance !== undefined && user.balance !== null
+                    ? `${parseFloat(user.balance).toFixed(4)} ROSE`
+                    : '—'}
+                </span>
+              </InfoRow>
+
+              <div className="flex items-center justify-between pt-3">
+                <span style={LABEL_STYLE}>Xác minh</span>
+                <span
+                  className="flex items-center gap-1.5 text-xs"
+                  style={{ color: user.emailVerified ? '#4edea3' : '#ffb4ab' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                    {user.emailVerified ? 'verified' : 'cancel'}
+                  </span>
+                  {user.emailVerified ? 'Đã xác minh' : 'Chưa xác minh'}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-white/50">Số dư (Sapphire Testnet)</span>
-            <span className="text-sm text-white font-mono">
-              {loadingProfile ? (
-                <span className="text-white/30 animate-pulse">Đang tải…</span>
-              ) : user.balance !== undefined && user.balance !== null
-                ? `${parseFloat(user.balance).toFixed(4)} ROSE`
-                : '—'}
-            </span>
-          </div>
+          {/* Vote history */}
+          <div style={{ ...CARD_STYLE, overflow: 'hidden' }}>
+            <div
+              className="px-6 py-3 flex justify-between items-center"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <h3
+                className="text-sm font-bold text-on-surface"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              >
+                Lịch sử bỏ phiếu
+              </h3>
+              <span className="text-[10px] font-mono text-outline">{voteHistory.length} giao dịch</span>
+            </div>
 
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-white/50">Trạng thái xác minh</span>
-            <span className={`text-sm ${user.emailVerified ? 'text-green-400' : 'text-yellow-400'}`}>
-              {user.emailVerified ? 'Đã xác minh' : 'Chưa xác minh'}
-            </span>
+            {loadingVotes ? (
+              <div>
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="px-6 py-4 flex items-center gap-3"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-lg animate-pulse shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.04)' }}
+                    />
+                    <div className="flex-1 space-y-2">
+                      <div
+                        className="h-3 rounded animate-pulse w-1/2"
+                        style={{ background: 'rgba(255,255,255,0.04)' }}
+                      />
+                      <div
+                        className="h-2 rounded animate-pulse w-1/3"
+                        style={{ background: 'rgba(255,255,255,0.04)' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : voteHistory.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <span
+                  className="material-symbols-outlined text-outline block mb-3"
+                  style={{ fontSize: 40, opacity: 0.35 }}
+                >
+                  how_to_vote
+                </span>
+                <p className="text-xs text-on-surface-variant">Bạn chưa bỏ phiếu cho cuộc bình chọn nào.</p>
+              </div>
+            ) : (
+              <div>
+                {voteHistory.map((record, i) => (
+                  <div
+                    key={record.id}
+                    className="px-6 py-4 flex items-center justify-between gap-3"
+                    style={{
+                      borderBottom: i < voteHistory.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    }}
+                  >
+                    {/* Left: icon + details */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-8 h-8 flex items-center justify-center shrink-0"
+                        style={{
+                          background: 'rgba(78,222,163,0.08)',
+                          border: '1px solid rgba(78,222,163,0.15)',
+                          borderRadius: 8,
+                        }}
+                      >
+                        <span className="material-symbols-outlined text-tertiary" style={{ fontSize: 15 }}>
+                          how_to_vote
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p
+                          className="text-sm font-bold text-on-surface truncate"
+                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                        >
+                          {record.candidateName || `Ứng viên #${record.candidateId}`}
+                        </p>
+                        <p className="font-mono text-[10px] text-outline mt-0.5">
+                          {record.categoryTitle || `Danh mục #${record.categoryId}`}
+                          {' · '}
+                          {new Date(record.votedAt).toLocaleString('vi-VN', {
+                            year: 'numeric', month: '2-digit', day: '2-digit',
+                            hour: '2-digit', minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: status + link */}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-tertiary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                          Hợp lệ
+                        </p>
+                        <p className="text-[10px] font-mono text-outline">On-chain</p>
+                      </div>
+                      {record.txHash && (
+                        <a
+                          href={`https://explorer.oasis.io/testnet/sapphire/tx/${record.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-outline hover:text-on-surface transition-colors"
+                          title="Xem trên Explorer"
+                        >
+                          <ExternalLink size={13} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Logout */}
-        <button
-          onClick={logout}
-          className="w-full py-2.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors"
-        >
-          Đăng xuất
-        </button>
-      </div>
+        {/* Right sidebar (4 cols) */}
+        <div className="col-span-12 lg:col-span-4 space-y-6">
 
-      {/* Vote history */}
-      <div className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-4">
-        <h2 className="text-base font-semibold text-white flex items-center gap-2">
-          <CheckCircle size={16} className="text-green-400" />
-          Lịch sử bỏ phiếu
-        </h2>
+          {/* Participation stats */}
+          <div style={{ ...CARD_STYLE, padding: 24 }}>
+            <p className="mb-4" style={LABEL_STYLE}>
+              Tham gia
+            </p>
 
-        {loadingVotes ? (
-          <div className="space-y-3">
-            {[1, 2].map((i) => (
-              <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" />
-            ))}
-          </div>
-        ) : voteHistory.length === 0 ? (
-          <p className="text-sm text-white/40 text-center py-4">
-            Bạn chưa bỏ phiếu cho cuộc bình chọn nào.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {voteHistory.map((record) => (
-              <div
-                key={record.id}
-                className="rounded-xl bg-white/5 border border-white/10 p-4 flex items-start justify-between gap-3"
+            <div className="mb-4">
+              <p
+                className="font-bold text-on-surface"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 48,
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  color: voteHistory.length > 0 ? '#adc6ff' : '#424754',
+                }}
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-white/40 mb-1">{record.categoryTitle || `Danh mục #${record.categoryId}`}</p>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={14} className="text-green-400 shrink-0" />
-                    <span className="text-sm font-semibold text-white truncate">
-                      {record.candidateName || `Ứng viên #${record.candidateId}`}
-                    </span>
-                  </div>
-                  <p className="text-xs text-white/30 mt-1">
-                    {new Date(record.votedAt).toLocaleString('vi-VN', {
-                      year: 'numeric', month: '2-digit', day: '2-digit',
-                      hour: '2-digit', minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-                {record.txHash && (
-                  <a
-                    href={`https://explorer.oasis.io/testnet/sapphire/tx/${record.txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/30 hover:text-white/70 transition-colors shrink-0 mt-0.5"
-                    title="Xem giao dịch trên Explorer"
-                  >
-                    <ExternalLink size={14} />
-                  </a>
-                )}
-              </div>
-            ))}
+                {voteHistory.length}
+              </p>
+              <p className="mt-1" style={LABEL_STYLE}>
+                Lượt bỏ phiếu
+              </p>
+            </div>
+
+            <div
+              className="pt-3"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+            >
+              <p className="mb-2" style={LABEL_STYLE}>
+                Quyền truy cập
+              </p>
+              <span
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-widest"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  letterSpacing: '0.07em',
+                  background: isAdmin ? 'rgba(76,215,246,0.12)' : 'rgba(173,198,255,0.10)',
+                  border: `1px solid ${isAdmin ? 'rgba(76,215,246,0.25)' : 'rgba(173,198,255,0.2)'}`,
+                  color: isAdmin ? '#4cd7f6' : '#adc6ff',
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
+                  {isAdmin ? 'admin_panel_settings' : 'person'}
+                </span>
+                {isAdmin ? 'Admin' : 'User'}
+              </span>
+            </div>
           </div>
-        )}
+
+          {/* Network info */}
+          <div style={{ ...CARD_STYLE, padding: 24 }}>
+            <p className="mb-4" style={LABEL_STYLE}>
+              Thông tin mạng
+            </p>
+            <div className="space-y-3">
+              <NetRow label="MẠNG" value="Sapphire Testnet" />
+              <NetRow label="CHAIN ID" value="0x5aff" />
+              <NetRow label="TRẠNG THÁI" value="Active" accent="text-tertiary" live />
+              <NetRow label="LOẠI" value="Smart Contract" accent="text-secondary" />
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )

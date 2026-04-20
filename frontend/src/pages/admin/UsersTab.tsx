@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchAdminUsers, banUser, getApiErrorMessage } from '../../services/api'
 import type { AdminUser } from '../../types'
 
+function initials(user: AdminUser) {
+  if (user.name) return user.name.trim().split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+  if (user.walletAddress) return user.walletAddress.slice(2, 4).toUpperCase()
+  return '??'
+}
+
 export function UsersTab() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [total, setTotal] = useState(0)
@@ -28,20 +34,13 @@ export function UsersTab() {
 
   useEffect(() => { load() }, [load])
 
-  const handleSearch = () => {
-    setSearch(searchInput)
-    setPage(1)
-  }
+  const handleSearch = () => { setSearch(searchInput); setPage(1) }
 
   const handleBan = async (user: AdminUser) => {
     const action = user.isBanned ? 'bỏ cấm' : 'cấm'
     if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} người dùng "${user.name || user.walletAddress}"?`)) return
-    try {
-      await banUser(user.id, !user.isBanned)
-      load()
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Thao tác thất bại'))
-    }
+    try { await banUser(user.id, !user.isBanned); load() }
+    catch (err) { setError(getApiErrorMessage(err, 'Thao tác thất bại')) }
   }
 
   const totalPages = Math.ceil(total / limit)
@@ -49,118 +48,183 @@ export function UsersTab() {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-400 text-sm">
-          {error}
+        <div className="rounded-xl bg-error/10 border border-error/20 px-4 py-3 flex items-center gap-2">
+          <span className="material-symbols-outlined text-error text-[18px]">error</span>
+          <span className="text-sm text-error">{error}</span>
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="Tìm theo ví, email hoặc tên..."
-          className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-purple-500"
-        />
+      {/* ── Toolbar ── */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[17px] text-outline pointer-events-none">
+            search
+          </span>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Tìm theo ví, email hoặc tên..."
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-surface-container border border-white/10 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/40 transition-colors"
+          />
+        </div>
         <button
           onClick={handleSearch}
-          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm transition-colors"
+          className="px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-sm text-on-surface-variant border border-white/5 transition-colors"
         >
           Tìm
         </button>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-outline">{total} người dùng</span>
+          {search && (
+            <button
+              onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}
+              className="flex items-center gap-0.5 text-xs text-on-surface-variant hover:text-on-surface transition-colors"
+            >
+              <span className="material-symbols-outlined text-[13px]">close</span>
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="text-xs text-white/40">{total} người dùng</div>
+      {/* ── Table ── */}
+      <div className="glass-card rounded-xl overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-16 gap-2">
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span className="text-sm text-on-surface-variant">Đang tải...</span>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <span className="material-symbols-outlined text-4xl text-outline">person_search</span>
+            <p className="text-sm text-on-surface-variant">Không có người dùng nào</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="text-left px-5 py-3 text-[11px] font-semibold text-outline uppercase tracking-widest"
+                  style={{ fontFamily: 'Inter, sans-serif' }}>Người dùng</th>
+                <th className="text-left px-5 py-3 text-[11px] font-semibold text-outline uppercase tracking-widest hidden sm:table-cell"
+                  style={{ fontFamily: 'Inter, sans-serif' }}>Vai trò</th>
+                <th className="text-left px-5 py-3 text-[11px] font-semibold text-outline uppercase tracking-widest hidden md:table-cell"
+                  style={{ fontFamily: 'Inter, sans-serif' }}>Ví / Email</th>
+                <th className="text-left px-5 py-3 text-[11px] font-semibold text-outline uppercase tracking-widest hidden lg:table-cell"
+                  style={{ fontFamily: 'Inter, sans-serif' }}>Ngày tạo</th>
+                <th className="text-right px-5 py-3 text-[11px] font-semibold text-outline uppercase tracking-widest"
+                  style={{ fontFamily: 'Inter, sans-serif' }}>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr
+                  key={u.id}
+                  className={`border-b border-white/5 hover:bg-white/[0.025] transition-colors ${u.isBanned ? 'bg-error/[0.03]' : ''}`}
+                >
+                  {/* User cell */}
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-semibold text-primary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                          {initials(u)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-on-surface leading-none mb-0.5"
+                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                          {u.name || 'Unknown User'}
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                          {u.isBanned && (
+                            <span className="text-[10px] text-error">Đã cấm</span>
+                          )}
+                          {!u.emailVerified && (
+                            <span className="text-[10px] text-outline">Chưa xác minh</span>
+                          )}
+                          {u.emailVerified && !u.isBanned && (
+                            <span className="text-[10px] text-outline">Đã xác minh</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
 
-      {loading ? (
-        <div className="text-white/40 py-8 text-center text-sm">Đang tải...</div>
-      ) : users.length === 0 ? (
-        <div className="text-center py-12 text-white/30 text-sm">Không có người dùng nào</div>
-      ) : (
-        <div className="space-y-2">
-          {users.map((u) => (
-            <div
-              key={u.id}
-              className={`rounded-xl border px-4 py-3 flex items-start justify-between gap-3 ${
-                u.isBanned
-                  ? 'bg-red-500/5 border-red-500/20'
-                  : 'bg-white/5 border-white/10'
-              }`}
-            >
-              <div className="flex-1 min-w-0 space-y-0.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-white truncate">
-                    {u.name || 'Unknown User'}
-                  </span>
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded-full border ${
+                  {/* Role cell */}
+                  <td className="px-5 py-3 hidden sm:table-cell">
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${
                       u.role === 'admin'
-                        ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                        : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                    }`}
-                  >
-                    {u.role}
-                  </span>
-                  {u.isBanned && (
-                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
-                      Đã cấm
+                        ? 'bg-secondary/15 text-secondary border-secondary/20'
+                        : 'bg-primary/10 text-primary border-primary/15'
+                    }`}>
+                      {u.role}
                     </span>
-                  )}
-                </div>
-                <p className="text-xs text-white/40 font-mono">
-                  {u.walletAddress
-                    ? `${u.walletAddress.slice(0, 10)}...${u.walletAddress.slice(-6)}`
-                    : '—'}
-                </p>
-                {u.email && (
-                  <p className="text-xs text-white/40">
-                    {u.email.replace(/(.{2}).*(@.*)/, '$1***$2')}
-                  </p>
-                )}
-                <p className="text-xs text-white/25">
-                  {u.emailVerified ? 'Đã xác minh' : 'Chưa xác minh'} ·{' '}
-                  {new Date(u.createdAt).toLocaleDateString('vi-VN')}
-                </p>
-              </div>
+                  </td>
 
-              <button
-                onClick={() => handleBan(u)}
-                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex-shrink-0 ${
-                  u.isBanned
-                    ? 'bg-green-600/80 hover:bg-green-500 text-white'
-                    : 'bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-white/60'
-                }`}
-              >
-                {u.isBanned ? 'Bỏ cấm' : 'Cấm'}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+                  {/* Wallet / Email cell */}
+                  <td className="px-5 py-3 hidden md:table-cell">
+                    <div className="space-y-0.5">
+                      {u.walletAddress && (
+                        <p className="text-xs text-on-surface-variant font-mono">
+                          {u.walletAddress.slice(0, 8)}…{u.walletAddress.slice(-6)}
+                        </p>
+                      )}
+                      {u.email && (
+                        <p className="text-xs text-outline">
+                          {u.email.replace(/(.{2}).*(@.*)/, '$1***$2')}
+                        </p>
+                      )}
+                    </div>
+                  </td>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-40 text-sm transition-colors"
-          >
-            ←
-          </button>
-          <span className="text-sm text-white/50">
-            {page} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-40 text-sm transition-colors"
-          >
-            →
-          </button>
-        </div>
-      )}
+                  {/* Date cell */}
+                  <td className="px-5 py-3 hidden lg:table-cell">
+                    <span className="text-xs text-outline">
+                      {new Date(u.createdAt).toLocaleDateString('vi-VN')}
+                    </span>
+                  </td>
+
+                  {/* Action cell */}
+                  <td className="px-5 py-3 text-right">
+                    <button
+                      onClick={() => handleBan(u)}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all border ${
+                        u.isBanned
+                          ? 'bg-tertiary/10 hover:bg-tertiary/20 text-tertiary border-tertiary/20'
+                          : 'bg-surface-container-high hover:bg-error/10 hover:text-error hover:border-error/20 text-on-surface-variant border-white/5'
+                      }`}
+                    >
+                      {u.isBanned ? 'Bỏ cấm' : 'Cấm'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {/* ── Pagination ── */}
+        {totalPages > 1 && !loading && (
+          <div className="flex items-center justify-center gap-2 px-5 py-3.5 border-t border-white/10">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest disabled:opacity-30 text-on-surface-variant border border-white/5 transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+            </button>
+            <span className="text-xs text-on-surface-variant px-2">{page} / {totalPages}</span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest disabled:opacity-30 text-on-surface-variant border border-white/5 transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

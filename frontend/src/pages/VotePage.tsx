@@ -13,12 +13,79 @@ interface Props {
   onToast: (msg: string, type: 'success' | 'error' | 'info') => void
 }
 
+const CARD_STYLE: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.025)',
+  border: '1px solid rgba(255,255,255,0.07)',
+  borderRadius: 16,
+}
+
+const LABEL_STYLE: React.CSSProperties = {
+  fontSize: 10,
+  fontFamily: 'Inter, sans-serif',
+  fontWeight: 600,
+  letterSpacing: '0.09em',
+  textTransform: 'uppercase',
+  color: 'rgba(218,226,253,0.3)',
+}
+
+const TAB_ACTIVE_STYLE: React.CSSProperties = {
+  background: 'rgba(173,198,255,0.1)',
+  border: '1px solid rgba(173,198,255,0.2)',
+  color: '#adc6ff',
+}
+
+const TAB_INACTIVE_STYLE: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(255,255,255,0.07)',
+  color: 'rgba(218,226,253,0.4)',
+}
+
+function CheckRow({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div
+        className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+        style={{
+          background: ok ? 'rgba(78,222,163,0.15)' : 'rgba(44,52,73,0.8)',
+          border: `1px solid ${ok ? 'rgba(78,222,163,0.4)' : 'rgba(255,255,255,0.07)'}`,
+        }}
+      >
+        {ok ? (
+          <span className="material-symbols-outlined text-tertiary" style={{ fontSize: 10 }}>check</span>
+        ) : (
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(140,144,159,0.4)', display: 'block' }} />
+        )}
+      </div>
+      <span className="text-xs" style={{ color: ok ? '#c2c6d6' : '#8c909f', fontFamily: 'Inter, sans-serif' }}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function FeeRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span style={{ ...LABEL_STYLE }}>
+        {label}
+      </span>
+      <span
+        className="text-xs font-mono font-bold"
+        style={{ color: accent ? '#4edea3' : '#dae2fd', fontFamily: 'Inter, sans-serif' }}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
 export function VotePage({ wallet, vote, onToast }: Props) {
   const { isAuthenticated } = useAuthContext()
   const [elections, setElections] = useState<Election[]>([])
   const [loadingElections, setLoadingElections] = useState(true)
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null)
+  const [confirmed, setConfirmed] = useState(false)
 
   const isEligible = !!wallet.address && wallet.isCorrectNetwork && isAuthenticated
 
@@ -33,6 +100,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
   const hasVoted = election ? vote.voted.has(election.id) : false
   const votedFor = election ? vote.votedCandidates.get(election.id) : undefined
   const votedCandidate = votedFor ? election?.candidates.find((c) => c.id === votedFor.candidateId) : undefined
+  const selectedCandidate = election?.candidates.find((c) => c.id === selectedCandidateId)
 
   async function handleVote() {
     if (!selectedCandidateId || !election) return
@@ -42,6 +110,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
       const txHash = await vote.castVote(election, candidate)
       onToast(`Bỏ phiếu thành công! TX: ${txHash.slice(0, 10)}...`, 'success')
       setSelectedCandidateId(null)
+      setConfirmed(false)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       if (msg.includes('-32002') || msg.includes('could not coalesce') || msg.includes('UNKNOWN_ERROR')) {
@@ -52,16 +121,38 @@ export function VotePage({ wallet, vote, onToast }: Props) {
     }
   }
 
-  // Loading state (elections or history)
   if (loadingElections || !vote.historyLoaded) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-12">
+        <div
+          className="h-40 rounded-xl animate-pulse"
+          style={{ background: 'rgba(255,255,255,0.04)' }}
+        />
         <div className="flex gap-2">
-          {[1, 2, 3].map((i) => <div key={i} className="h-9 w-28 rounded-xl bg-white/5 animate-pulse" />)}
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-9 w-32 rounded-xl animate-pulse"
+              style={{ background: 'rgba(255,255,255,0.04)' }}
+            />
+          ))}
         </div>
-        <div className="h-32 rounded-xl bg-white/5 animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-xl bg-white/5 animate-pulse" />)}
+        <div className="grid grid-cols-12 gap-gutter">
+          <div className="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-md">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-52 rounded-xl animate-pulse"
+                style={{ background: 'rgba(255,255,255,0.04)' }}
+              />
+            ))}
+          </div>
+          <div className="col-span-12 lg:col-span-4">
+            <div
+              className="h-80 rounded-xl animate-pulse"
+              style={{ background: 'rgba(255,255,255,0.04)' }}
+            />
+          </div>
         </div>
       </div>
     )
@@ -69,21 +160,115 @@ export function VotePage({ wallet, vote, onToast }: Props) {
 
   if (elections.length === 0) {
     return (
-      <div className="text-center py-20 space-y-3">
-        <div className="text-4xl">🗳️</div>
-        <p className="text-white/50 text-sm">Hiện chưa có cuộc bầu cử nào đang diễn ra.</p>
+      <div className="text-center py-24 space-y-4">
+        <span className="material-symbols-outlined text-7xl" style={{ opacity: 0.4, color: 'rgba(218,226,253,0.3)' }}>how_to_vote</span>
+        <p style={{ color: 'rgba(218,226,253,0.55)', fontSize: 14, fontFamily: 'Inter, sans-serif' }}>
+          Hiện chưa có cuộc bầu cử nào đang diễn ra.
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12">
+
+      {/* ── ELECTION HEADER ── */}
+      {election && (
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+              style={{ background: 'rgba(78,222,163,0.12)', border: '1px solid rgba(78,222,163,0.25)' }}
+            >
+              <span className="live-dot" />
+              <span style={{ fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#4edea3' }}>
+                Đang diễn ra
+              </span>
+            </div>
+            {election.onChainId !== null ? (
+              <span style={{ fontSize: 10, fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.3)' }}>
+                ID #{election.onChainId}
+              </span>
+            ) : (
+              <span
+                style={{ fontSize: 10, padding: '2px 8px', borderRadius: 999, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', background: 'rgba(234,179,8,0.12)', border: '1px solid rgba(234,179,8,0.25)', color: '#facc15' }}
+              >
+                Chưa lên chain
+              </span>
+            )}
+          </div>
+
+          <h1
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: 'clamp(28px, 5vw, 48px)',
+              fontWeight: 800,
+              lineHeight: 1.1,
+              letterSpacing: '-0.025em',
+              color: '#dae2fd',
+            }}
+          >
+            {election.title}
+          </h1>
+
+          {election.description && (
+            <p
+              className="mt-3 max-w-2xl"
+              style={{ fontSize: '15px', lineHeight: 1.75, fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
+            >
+              {election.description}
+            </p>
+          )}
+
+          <p className="mt-4" style={{ ...LABEL_STYLE }}>
+            {election.candidates.length} ứng viên
+          </p>
+        </div>
+      )}
+
+      {/* ── ELECTION TABS ── */}
+      {elections.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {elections.map((el, idx) => (
+            <button
+              key={el.id}
+              onClick={() => { setSelectedIdx(idx); setSelectedCandidateId(null); setConfirmed(false) }}
+              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                ...(idx === selectedIdx ? TAB_ACTIVE_STYLE : TAB_INACTIVE_STYLE),
+              }}
+            >
+              <span className="truncate max-w-[140px]">{el.title}</span>
+              {vote.voted.has(el.id) && <CheckCircle size={12} style={{ color: '#4edea3', flexShrink: 0 }} />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── ELIGIBILITY BANNER ── */}
       {!isEligible && (
-        <div className="panel p-4 flex items-start gap-3 border-amber-500/30 bg-amber-500/10">
-          <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+        <div
+          className="flex items-start gap-3 p-4"
+          style={{
+            background: 'rgba(255,180,171,0.04)',
+            border: '1px solid rgba(255,180,171,0.12)',
+            borderLeft: '2px solid rgba(255,180,171,0.5)',
+            borderRadius: 12,
+          }}
+        >
+          <AlertTriangle size={16} style={{ color: '#ffb4ab', flexShrink: 0, marginTop: 2 }} />
           <div>
-            <p className="text-sm font-medium text-amber-300">Yêu cầu để bỏ phiếu</p>
-            <ul className="text-xs text-amber-300/70 mt-1 space-y-0.5 list-disc list-inside">
+            <p
+              className="text-sm font-semibold mb-1"
+              style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#ffb4ab' }}
+            >
+              Yêu cầu để bỏ phiếu
+            </p>
+            <ul
+              className="text-xs space-y-0.5 list-disc list-inside"
+              style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
+            >
               {!wallet.address && <li>Kết nối ví MetaMask</li>}
               {wallet.address && !wallet.isCorrectNetwork && <li>Chuyển sang mạng Sapphire Testnet</li>}
               {!isAuthenticated && <li>Đăng nhập bằng ví MetaMask</li>}
@@ -92,145 +277,381 @@ export function VotePage({ wallet, vote, onToast }: Props) {
         </div>
       )}
 
-      {/* Election tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {elections.map((el, idx) => (
-          <button
-            key={el.id}
-            onClick={() => { setSelectedIdx(idx); setSelectedCandidateId(null) }}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium border transition-all flex items-center gap-2 ${
-              idx === selectedIdx
-                ? 'bg-[#f2ca50]/20 border-[#f2ca50]/40 text-[#f2ca50]'
-                : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <span className="truncate max-w-[140px]">{el.title}</span>
-            {vote.voted.has(el.id) && <CheckCircle size={12} className="text-green-400 shrink-0" />}
-          </button>
-        ))}
-      </div>
+      {/* ── MAIN GRID ── */}
+      <div className="grid grid-cols-12 gap-gutter">
 
-      {/* Election header */}
-      <div className="panel p-4 space-y-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-white">{election.title}</h2>
-            {election.description && (
-              <p className="text-sm text-white/50 mt-1">{election.description}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
+        {/* Left: Candidates (8 cols) */}
+        <div className="col-span-12 lg:col-span-8 space-y-md">
+          <div className="flex justify-between items-baseline">
+            <h2
+              style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.025em', color: '#dae2fd' }}
+            >
+              Chọn ứng viên
+            </h2>
             {hasVoted && (
-              <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+              <span style={{ ...LABEL_STYLE, color: '#4edea3' }}>
                 Đã bỏ phiếu
               </span>
             )}
-            {election.onChainId === null && (
-              <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                Chưa lên chain
-              </span>
-            )}
           </div>
-        </div>
 
-        <div className="rounded-xl border border-[#f2ca50]/20 bg-[#f2ca50]/10 px-3 py-2">
-          <p className="text-xs text-[#f2ca50]">
-            Mỗi lần bỏ phiếu sẽ tốn <span className="font-semibold">{VOTE_FEE_NATIVE} {VOTE_FEE_SYMBOL}</span> để xác thực giao dịch on-chain.
-          </p>
-        </div>
-
-        {hasVoted && votedCandidate && (
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-            {votedCandidate.image && (
-              <img src={votedCandidate.image} alt={votedCandidate.name}
-                className="w-9 h-9 rounded-full object-cover shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-green-400/70">Bạn đã bỏ phiếu cho</p>
-              <p className="text-sm font-semibold text-green-300 truncate">{votedCandidate.name}</p>
+          {election?.candidates.length === 0 ? (
+            <div
+              className="text-center py-12 text-sm"
+              style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
+            >
+              Chưa có ứng viên nào
             </div>
-            <CheckCircle size={16} className="text-green-400 shrink-0" />
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              {election?.candidates.map((candidate) => {
+                const isSelected = selectedCandidateId === candidate.id
+                const isVoting = vote.votingFor === candidate.id
+                const isVotedFor = votedFor?.candidateId === candidate.id
+                const notOnChain = candidate.onChainId === null
+                const disabled = hasVoted || !isEligible || notOnChain
 
-      {/* Candidates */}
-      {election.candidates.length === 0 ? (
-        <div className="text-center py-8 text-white/30 text-sm">Chưa có ứng viên nào</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {election.candidates.map((candidate) => {
-            const isSelected = selectedCandidateId === candidate.id
-            const isVoting = vote.votingFor === candidate.id
-            const isVotedFor = votedFor?.candidateId === candidate.id
-            const notOnChain = candidate.onChainId === null
-            return (
-              <button
-                key={candidate.id}
-                onClick={() => !hasVoted && isEligible && !notOnChain && setSelectedCandidateId(isSelected ? null : candidate.id)}
-                disabled={hasVoted || !isEligible || notOnChain}
-                className={`panel p-4 text-left transition-all ${
-                  isVotedFor
-                    ? 'border-green-500/40 bg-green-500/5'
-                    : isSelected
-                    ? 'border-[#f2ca50]/50 bg-[#f2ca50]/5'
-                    : hasVoted || !isEligible || notOnChain
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:border-white/20 hover:bg-white/5 cursor-pointer'
-                }`}
+                const cardBorder = isVotedFor
+                  ? '1px solid rgba(78,222,163,0.35)'
+                  : isSelected
+                  ? '1px solid rgba(173,198,255,0.4)'
+                  : '1px solid rgba(255,255,255,0.07)'
+
+                const cardBg = isVotedFor
+                  ? 'rgba(78,222,163,0.05)'
+                  : isSelected
+                  ? 'rgba(173,198,255,0.07)'
+                  : 'rgba(30,41,59,0.4)'
+
+                const cardShadow = isSelected && !isVotedFor
+                  ? '0 0 0 1px rgba(173,198,255,0.2), 0 0 24px rgba(173,198,255,0.08)'
+                  : 'none'
+
+                return (
+                  <div
+                    key={candidate.id}
+                    onClick={() => !disabled && setSelectedCandidateId(isSelected ? null : candidate.id)}
+                    className={`rounded-xl backdrop-blur-xl transition-all relative overflow-hidden group ${
+                      disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                    style={{ border: cardBorder, background: cardBg, boxShadow: cardShadow, padding: '20px' }}
+                  >
+                    {/* Radio indicator */}
+                    <div className="absolute top-3 right-3">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center transition-all"
+                        style={{
+                          border: isVotedFor
+                            ? '2px solid #4edea3'
+                            : isSelected
+                            ? '2px solid #adc6ff'
+                            : '2px solid rgba(255,255,255,0.18)',
+                          background: isVotedFor
+                            ? 'rgba(78,222,163,0.2)'
+                            : isSelected
+                            ? 'rgba(173,198,255,0.2)'
+                            : 'transparent',
+                        }}
+                      >
+                        {(isVotedFor || isSelected) && (
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ background: isVotedFor ? '#4edea3' : '#adc6ff' }}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Candidate info */}
+                    <div className="flex items-center gap-3 mb-3">
+                      {candidate.image ? (
+                        <img
+                          src={candidate.image}
+                          alt={candidate.name}
+                          className="w-14 h-14 rounded-xl object-cover shrink-0"
+                          style={{
+                            border: isVotedFor
+                              ? '1px solid rgba(78,222,163,0.4)'
+                              : isSelected
+                              ? '1px solid rgba(173,198,255,0.4)'
+                              : '1px solid rgba(255,255,255,0.1)',
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold shrink-0"
+                          style={{
+                            fontFamily: 'Space Grotesk, sans-serif',
+                            background: isVotedFor
+                              ? 'rgba(78,222,163,0.15)'
+                              : isSelected
+                              ? 'rgba(173,198,255,0.15)'
+                              : 'rgba(45,52,73,0.8)',
+                            border: isVotedFor
+                              ? '1px solid rgba(78,222,163,0.3)'
+                              : isSelected
+                              ? '1px solid rgba(173,198,255,0.3)'
+                              : '1px solid rgba(255,255,255,0.07)',
+                            color: isVotedFor ? '#4edea3' : isSelected ? '#adc6ff' : '#8c909f',
+                          }}
+                        >
+                          {candidate.name[0]}
+                        </div>
+                      )}
+
+                      <div className="min-w-0 pr-6">
+                        <h3
+                          className="truncate"
+                          style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, lineHeight: 1.3, color: '#dae2fd' }}
+                        >
+                          {candidate.name}
+                        </h3>
+                        {notOnChain ? (
+                          <p
+                            className="mt-0.5"
+                            style={{ fontSize: 10, fontFamily: 'Inter, sans-serif', color: '#facc15', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}
+                          >
+                            Chưa lên chain
+                          </p>
+                        ) : (
+                          <p className="mt-0.5" style={{ ...LABEL_STYLE }}>
+                            Ứng viên
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {candidate.description && (
+                      <p
+                        className="text-xs leading-relaxed line-clamp-3 mb-3"
+                        style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
+                      >
+                        {candidate.description}
+                      </p>
+                    )}
+
+                    <div
+                      className="flex justify-between items-center pt-3"
+                      style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+                    >
+                      {isVotedFor ? (
+                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#4edea3' }}>
+                          <CheckCircle size={12} /> Đã bỏ phiếu
+                        </span>
+                      ) : isVoting ? (
+                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#adc6ff' }}>
+                          <Loader size={12} className="animate-spin" /> Đang ký...
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono" style={{ color: 'rgba(218,226,253,0.3)' }}>
+                          {isSelected ? 'Đã chọn →' : 'Nhấn để chọn'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Vote action sidebar (4 cols) */}
+        <aside className="col-span-12 lg:col-span-4 space-y-md">
+
+          {/* Voted confirmation card */}
+          {hasVoted && votedCandidate && (
+            <div
+              className="p-5"
+              style={{
+                background: 'rgba(78,222,163,0.04)',
+                border: '1px solid rgba(78,222,163,0.15)',
+                borderRadius: 16,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle size={16} style={{ color: '#4edea3', flexShrink: 0 }} />
+                <p style={{ ...LABEL_STYLE, color: '#4edea3' }}>
+                  Đã bỏ phiếu
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {votedCandidate.image && (
+                  <img
+                    src={votedCandidate.image}
+                    alt={votedCandidate.name}
+                    className="w-10 h-10 rounded-lg object-cover shrink-0"
+                    style={{ border: '1px solid rgba(78,222,163,0.3)' }}
+                  />
+                )}
+                <div>
+                  <p className="mb-0.5" style={{ ...LABEL_STYLE }}>
+                    Bạn đã bỏ phiếu cho
+                  </p>
+                  <p
+                    className="text-sm font-bold"
+                    style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#4edea3' }}
+                  >
+                    {votedCandidate.name}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3" style={{ ...LABEL_STYLE }}>
+                Phiếu đã được ghi vĩnh viễn lên Oasis Sapphire.
+              </p>
+            </div>
+          )}
+
+          {/* Unified vote action panel */}
+          <div className="p-5 space-y-md" style={CARD_STYLE}>
+            <div className="flex items-center justify-between">
+              <h4
+                className="text-sm font-bold"
+                style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '-0.025em', color: '#dae2fd' }}
               >
-                <div className="flex items-start gap-3">
-                  {candidate.image ? (
-                    <img src={candidate.image} alt={candidate.name}
-                      className="w-12 h-12 rounded-full object-cover shrink-0" />
+                Bỏ phiếu
+              </h4>
+              <span
+                style={{
+                  fontSize: 10,
+                  padding: '2px 8px',
+                  borderRadius: 999,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 700,
+                  letterSpacing: '0.07em',
+                  textTransform: 'uppercase',
+                  background: 'rgba(78,222,163,0.12)',
+                  border: '1px solid rgba(78,222,163,0.2)',
+                  color: '#4edea3',
+                }}
+              >
+                On-chain
+              </span>
+            </div>
+
+            {/* Eligibility checklist */}
+            <div className="space-y-2">
+              <CheckRow ok={!!wallet.address} label="Ví kết nối" />
+              <CheckRow ok={isAuthenticated} label="Đã xác thực JWT" />
+              <CheckRow ok={wallet.isCorrectNetwork} label="Đúng mạng (Sapphire)" />
+            </div>
+
+            {/* Transaction fee */}
+            <div
+              className="p-3 space-y-2"
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 12,
+              }}
+            >
+              <FeeRow label="Phí bỏ phiếu" value={`${VOTE_FEE_NATIVE} ${VOTE_FEE_SYMBOL}`} />
+              <FeeRow label="Mạng" value="Sapphire Testnet" />
+              <FeeRow label="Loại" value="On-chain" accent />
+            </div>
+
+            {/* Selected candidate preview */}
+            {selectedCandidate && !hasVoted && (
+              <div
+                className="p-3"
+                style={{ background: 'rgba(173,198,255,0.08)', border: '1px solid rgba(173,198,255,0.2)', borderRadius: 12 }}
+              >
+                <p className="mb-1.5" style={{ ...LABEL_STYLE }}>
+                  Ứng viên đã chọn
+                </p>
+                <div className="flex items-center gap-2">
+                  {selectedCandidate.image ? (
+                    <img
+                      src={selectedCandidate.image}
+                      alt={selectedCandidate.name}
+                      className="w-7 h-7 rounded-lg object-cover shrink-0"
+                    />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/40 to-blue-500/40 flex items-center justify-center text-lg font-bold text-white/50 shrink-0">
-                      {candidate.name[0]}
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                      style={{ background: 'rgba(173,198,255,0.2)', color: '#adc6ff', fontFamily: 'Space Grotesk, sans-serif' }}
+                    >
+                      {selectedCandidate.name[0]}
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{candidate.name}</p>
-                    {candidate.description && (
-                      <p className="text-xs text-white/50 mt-0.5 line-clamp-2">{candidate.description}</p>
-                    )}
-                    {notOnChain && (
-                      <p className="text-xs text-yellow-400/70 mt-1">Chưa lên chain</p>
-                    )}
-                  </div>
-                  {isVotedFor && <CheckCircle size={18} className="text-green-400 shrink-0" />}
-                  {!isVotedFor && isSelected && <CheckCircle size={18} className="text-[#f2ca50] shrink-0" />}
-                  {isVoting && <Loader size={18} className="text-[#f2ca50] shrink-0 animate-spin" />}
+                  <span
+                    className="text-sm font-bold"
+                    style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#adc6ff' }}
+                  >
+                    {selectedCandidate.name}
+                  </span>
                 </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
+              </div>
+            )}
 
-      {isEligible && !hasVoted && (
-        <button
-          onClick={handleVote}
-          disabled={!selectedCandidateId || vote.votingFor !== null || election.onChainId === null}
-          className="w-full py-3 px-6 rounded-xl bg-[#f2ca50] text-black font-bold text-sm hover:bg-[#f2ca50]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-        >
-          {vote.votingFor !== null ? (
-            <><Loader size={16} className="animate-spin" /> Đang ký giao dịch...</>
-          ) : selectedCandidateId ? (
-            <><CheckCircle size={16} /> Bỏ phiếu cho {election.candidates.find((c) => c.id === selectedCandidateId)?.name} ({VOTE_FEE_NATIVE} {VOTE_FEE_SYMBOL})</>
-          ) : (
-            'Chọn ứng viên để bỏ phiếu'
+            {/* Confirmation + submit */}
+            {isEligible && !hasVoted && (
+              <div className="space-y-3">
+                <label className="flex items-start gap-2.5 cursor-pointer group">
+                  <input
+                    id="confirm"
+                    type="checkbox"
+                    checked={confirmed}
+                    onChange={(e) => setConfirmed(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 shrink-0 rounded accent-primary cursor-pointer"
+                  />
+                  <span
+                    className="text-xs leading-relaxed"
+                    style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
+                  >
+                    Tôi hiểu rằng phiếu bầu này không thể thay đổi và được ghi lên blockchain. Chữ ký ví của tôi sẽ được yêu cầu.
+                  </span>
+                </label>
+
+                <button
+                  onClick={handleVote}
+                  disabled={!selectedCandidateId || !confirmed || vote.votingFor !== null || election?.onChainId === null}
+                  className="w-full civic-btn py-3.5 rounded-xl flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all text-sm"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700 }}
+                >
+                  {vote.votingFor !== null ? (
+                    <><Loader size={15} className="animate-spin" /> Đang ký giao dịch...</>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-lg" style={{ fontSize: 18 }}>fingerprint</span>
+                      {selectedCandidateId ? `BỎ PHIẾU (${VOTE_FEE_NATIVE} ${VOTE_FEE_SYMBOL})` : 'CHỌN ỨNG VIÊN'}
+                    </>
+                  )}
+                </button>
+
+                {!selectedCandidateId && (
+                  <p
+                    className="text-center"
+                    style={{ ...LABEL_STYLE }}
+                  >
+                    Chọn một ứng viên ở bên trái để tiếp tục
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Pending TX notice */}
+          {vote.votingFor !== null && (
+            <div
+              className="flex items-center gap-3 p-4"
+              style={{
+                background: 'rgba(76,215,246,0.04)',
+                border: '1px solid rgba(76,215,246,0.12)',
+                borderLeft: '2px solid rgba(76,215,246,0.5)',
+                borderRadius: 12,
+              }}
+            >
+              <Loader size={14} className="animate-spin shrink-0" style={{ color: '#4cd7f6' }} />
+              <p
+                className="text-xs"
+                style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
+              >
+                MetaMask đang yêu cầu xác nhận giao dịch...
+              </p>
+            </div>
           )}
-        </button>
-      )}
-
-      {vote.votingFor !== null && (
-        <div className="panel p-4 border-blue-500/30 bg-blue-500/10">
-          <p className="text-sm text-blue-300 flex items-center gap-2">
-            <Loader size={14} className="animate-spin" />
-            MetaMask đang yêu cầu xác nhận giao dịch. Vui lòng kiểm tra ví của bạn...
-          </p>
-        </div>
-      )}
+        </aside>
+      </div>
     </div>
   )
 }

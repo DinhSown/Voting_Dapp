@@ -1,20 +1,5 @@
 @import "tailwindcss";
 
-@theme {
-  --color-background: #131313;
-  --color-surface-container-low: #171717;
-  --color-surface-container-high: #232323;
-  --color-on-surface: #e5e2da;
-  --color-primary: #f2ca50;
-  --color-on-primary: #352700;
-  --color-secondary: #9fe2ff;
-  --color-error-container: #7b1620;
-  --color-on-error-container: #ffd8dd;
-  --font-headline: "Newsreader", serif;
-  --font-body: "Manrope", sans-serif;
-  --font-label: "Space Grotesk", sans-serif;
-}
-
 :root {
   color-scheme: dark;
 }
@@ -30,12 +15,9 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  font-family: var(--font-body);
-  background:
-    radial-gradient(circle at top left, rgba(242, 202, 80, 0.12), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(159, 226, 255, 0.12), transparent 22%),
-    #131313;
-  color: var(--color-on-surface);
+  background-color: #0b1326;
+  color: #dae2fd;
+  font-family: "Inter", sans-serif;
 }
 
 button,
@@ -43,64 +25,51 @@ input {
   font: inherit;
 }
 
-.font-headline { font-family: var(--font-headline); }
-.font-label { font-family: var(--font-label); }
-.bg-background { background-color: #131313; }
-.bg-surface-container-low { background-color: #171717; }
-.bg-surface-container-high { background-color: #232323; }
-.text-on-surface { color: #e5e2da; }
-.text-primary { color: #f2ca50; }
-.text-secondary { color: #9fe2ff; }
-.bg-primary { background-color: #f2ca50; }
-.text-on-primary { color: #352700; }
-.bg-error-container { background-color: #7b1620; }
-.text-on-error-container { color: #ffd8dd; }
-.border-primary\/40 { border-color: rgba(242, 202, 80, 0.4); }
-.border-error\/40 { border-color: rgba(255, 120, 135, 0.35); }
-.border-error\/30 { border-color: rgba(255, 120, 135, 0.25); }
+/* Glass card - core component from FE_Demo */
+.glass-card {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
 
+/* Alias .panel to glass-card for backward compat */
 .panel {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.18));
-  backdrop-filter: blur(18px);
-  border-radius: 2rem;
-  padding: 1.5rem;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1rem;
 }
 
-.panel-glow {
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(242, 202, 80, 0.08);
+.active-glow {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.4) !important;
 }
 
-.orb {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(110px);
-  opacity: 0.6;
+.cast-vote-btn {
+  background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%);
+  border-top: 1px solid #60a5fa;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
 }
 
-.orb-primary {
-  right: -8rem;
-  top: 4rem;
-  height: 26rem;
-  width: 26rem;
-  background: rgba(242, 202, 80, 0.13);
+.glow-button {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  border-top: 1px solid rgba(167, 243, 255, 0.4);
 }
 
-.orb-secondary {
-  bottom: -10rem;
-  left: -6rem;
-  height: 22rem;
-  width: 22rem;
-  background: rgba(159, 226, 255, 0.12);
-}
-
-.grid-mask {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: radial-gradient(circle at center, black, transparent 78%);
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
 }
 
 .reveal {
@@ -112,9 +81,43 @@ input {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 767px) {
-  .panel {
-    border-radius: 1.5rem;
-    padding: 1.1rem;
-  }
+/* ── Dark Civic design additions ── */
+
+.hero-mesh {
+  background:
+    radial-gradient(ellipse 70% 80% at 10% 110%, rgba(173, 198, 255, 0.11) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 90% -10%, rgba(76, 215, 246, 0.07) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 50% at 55% 85%, rgba(78, 222, 163, 0.05) 0%, transparent 50%),
+    rgba(13, 18, 38, 0.7);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.civic-btn {
+  background: linear-gradient(180deg, #f7a800 0%, #d97706 100%);
+  border-top: 1px solid #fcd34d;
+  box-shadow: 0 4px 20px rgba(217, 119, 6, 0.35);
+  color: #1a0900;
+  font-weight: 700;
+}
+.civic-btn:hover {
+  box-shadow: 0 4px 28px rgba(217, 119, 6, 0.5);
+  filter: brightness(1.06);
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4edea3;
+  box-shadow: 0 0 0 0 rgba(78, 222, 163, 0.5);
+  animation: live-ping 2.2s ease-out infinite;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+@keyframes live-ping {
+  0%   { box-shadow: 0 0 0 0   rgba(78, 222, 163, 0.5); }
+  70%  { box-shadow: 0 0 0 7px rgba(78, 222, 163, 0);   }
+  100% { box-shadow: 0 0 0 0   rgba(78, 222, 163, 0);   }
 }
