@@ -331,128 +331,89 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                   <div
                     key={candidate.id}
                     onClick={() => !disabled && setSelectedCandidateId(isSelected ? null : candidate.id)}
-                    className={`rounded-xl backdrop-blur-xl transition-all relative overflow-hidden group ${
-                      disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    className={`rounded-2xl backdrop-blur-xl transition-all relative overflow-hidden group flex flex-col ${
+                      disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:translate-y-[-4px]'
                     }`}
-                    style={{ border: cardBorder, background: cardBg, boxShadow: cardShadow, padding: '28px' }}
+                    style={{ 
+                      border: cardBorder, 
+                      background: cardBg, 
+                      boxShadow: cardShadow,
+                      minHeight: '480px'
+                    }}
                   >
-                    {/* Radio indicator */}
-                    <div className="absolute top-4 right-4">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center transition-all"
-                        style={{
-                          border: isVotedFor
-                            ? '2px solid #4edea3'
-                            : isSelected
-                            ? '2px solid #f2ca50'
-                            : '2px solid rgba(255,255,255,0.18)',
-                          background: isVotedFor
-                            ? 'rgba(78,222,163,0.2)'
-                            : isSelected
-                            ? 'rgba(242,202,80,0.2)'
-                            : 'transparent',
-                        }}
-                      >
-                        {(isVotedFor || isSelected) && (
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ background: isVotedFor ? '#4edea3' : '#f2ca50' }}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Candidate info */}
-                    <div className="flex flex-col items-center text-center gap-3 mb-4">
-                      {candidate.image ? (
-                        <div className="relative group/img">
-                          <img
-                            src={candidate.image}
-                            alt={candidate.name}
-                            className="w-24 h-24 rounded-2xl object-cover shadow-lg transition-transform group-hover/img:scale-105"
-                            style={{
-                              border: isVotedFor
-                                ? '2px solid #4edea3'
-                                : isSelected
-                                ? '2px solid #f2ca50'
-                                : '2px solid rgba(255,255,255,0.1)',
-                            }}
-                          />
-                          {(isVotedFor || isSelected) && (
-                            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center shadow-md"
-                              style={{ background: isVotedFor ? '#4edea3' : '#f2ca50' }}>
-                              <span className="material-symbols-outlined text-[14px] text-surface font-bold">
-                                check
-                              </span>
-                            </div>
+                    {/* Header: Title & Desc (Top) */}
+                    <div className="p-7 pb-4 space-y-4 flex-grow-0">
+                      <div className="flex gap-4">
+                        <div className="w-0.5 h-auto bg-primary shrink-0" style={{ background: isVotedFor ? '#4edea3' : isSelected ? '#f2ca50' : 'rgba(255,255,255,0.2)' }} />
+                        <div className="min-w-0">
+                          <h3
+                            className="uppercase tracking-wide"
+                            style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: '#dae2fd', lineHeight: 1.2 }}
+                          >
+                            {candidate.name}
+                          </h3>
+                          {notOnChain && (
+                            <span className="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                              Chưa lên chain
+                            </span>
                           )}
                         </div>
-                      ) : (
-                        <div
-                          className="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner"
-                          style={{
-                            fontFamily: 'Space Grotesk, sans-serif',
-                            background: isVotedFor
-                              ? 'linear-gradient(135deg, rgba(78,222,163,0.2), rgba(78,222,163,0.05))'
-                              : isSelected
-                              ? 'linear-gradient(135deg, rgba(242,202,80,0.2), rgba(242,202,80,0.05))'
-                              : 'rgba(45,52,73,0.8)',
-                            border: isVotedFor
-                              ? '1px solid rgba(78,222,163,0.3)'
-                              : isSelected
-                              ? '1px solid rgba(242,202,80,0.3)'
-                              : '1px solid rgba(255,255,255,0.07)',
-                            color: isVotedFor ? '#4edea3' : isSelected ? '#f2ca50' : '#8c909f',
-                          }}
+                      </div>
+                      
+                      {candidate.description && (
+                        <p
+                          className="text-sm leading-relaxed line-clamp-3 text-outline"
+                          style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.5)' }}
                         >
-                          {candidate.name[0]}
+                          {candidate.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Image Area (Bottom) */}
+                    <div className="relative flex-1 min-h-[300px] overflow-hidden">
+                      {candidate.image ? (
+                        <img
+                          src={candidate.image}
+                          alt={candidate.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-white/5">
+                          <span className="text-6xl font-bold opacity-10" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                            {candidate.name[0]}
+                          </span>
                         </div>
                       )}
 
-                      <div className="min-w-0">
-                        <h3
-                          style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: '#dae2fd' }}
-                        >
-                          {candidate.name}
-                        </h3>
-                        {notOnChain ? (
-                          <span className="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
-                            Chưa lên chain
-                          </span>
-                        ) : (
-                          <p className="mt-0.5 opacity-40" style={{ ...LABEL_STYLE }}>
-                            Ứng cử viên
-                          </p>
+                      {/* Overlay Gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
+
+                      {/* Selection Status indicators */}
+                      <div className="absolute top-4 right-4">
+                        {(isVotedFor || isSelected) && (
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
+                            style={{ background: isVotedFor ? '#4edea3' : '#f2ca50' }}>
+                            <span className="material-symbols-outlined text-[18px] text-surface font-bold">
+                              check
+                            </span>
+                          </div>
                         )}
                       </div>
-                    </div>
 
-                    {candidate.description && (
-                      <p
-                        className="text-xs leading-relaxed line-clamp-3 mb-4 text-center px-2"
-                        style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.6)' }}
-                      >
-                        {candidate.description}
-                      </p>
-                    )}
-
-                    <div
-                      className="flex justify-between items-center pt-3"
-                      style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-                    >
-                      {isVotedFor ? (
-                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#4edea3' }}>
-                          <CheckCircle size={12} /> Đã bỏ phiếu
-                        </span>
-                      ) : isVoting ? (
-                        <span className="flex items-center gap-1.5 text-xs font-mono" style={{ color: '#adc6ff' }}>
-                          <Loader size={12} className="animate-spin" /> Đang ký...
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-mono" style={{ color: 'rgba(218,226,253,0.3)' }}>
-                          {isSelected ? 'Đã chọn →' : 'Nhấn để chọn'}
-                        </span>
-                      )}
+                      {/* Action Button Overlay */}
+                      <div className="absolute bottom-6 left-0 right-0 flex justify-center px-6">
+                        <div 
+                          className={`w-full py-2.5 rounded-full text-center text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+                            isSelected || isVotedFor 
+                              ? 'bg-white text-black translate-y-0' 
+                              : 'bg-white/90 text-black translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'
+                          }`}
+                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                        >
+                          {isVotedFor ? 'Đã bỏ phiếu' : isVoting ? 'Đang ký...' : isSelected ? 'Đã chọn' : 'Chọn ứng viên'}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )
