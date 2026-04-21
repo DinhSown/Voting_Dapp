@@ -329,7 +329,7 @@ export function ResultsPage({ onNavigate }: Props) {
       )}
 
       {/* ── MAIN GRID ── */}
-      <div className="grid grid-cols-12 gap-gutter">
+      <div className="grid grid-cols-12 gap-8 lg:gap-10">
 
         {/* Left: Leaderboard (8 cols) */}
         <div className="col-span-12 lg:col-span-8 space-y-md">
@@ -387,7 +387,7 @@ export function ResultsPage({ onNavigate }: Props) {
                 return (
                   <div
                     key={result.id}
-                    className="px-md py-4"
+                    className="px-6 py-5 transition-colors hover:bg-white/[0.02]"
                     style={{
                       borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)',
                     }}
@@ -459,11 +459,10 @@ export function ResultsPage({ onNavigate }: Props) {
           {/* Winner spotlight */}
           {leader?.votes > 0 ? (
             <div
-              className="rounded-xl p-md"
+              className="rounded-2xl p-8"
               style={{
                 background: 'rgba(242,202,80,0.04)',
                 border: '1px solid rgba(242,202,80,0.12)',
-                borderRadius: 16,
               }}
             >
               {/* Label */}
@@ -551,11 +550,10 @@ export function ResultsPage({ onNavigate }: Props) {
             </div>
           ) : (
             <div
-              className="rounded-xl p-md text-center"
+              className="rounded-2xl p-7 text-center"
               style={{
                 background: 'rgba(255,255,255,0.025)',
                 border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 16,
               }}
             >
               <span className="material-symbols-outlined text-outline text-3xl mb-2 block" style={{ opacity: 0.4 }}>
@@ -567,11 +565,10 @@ export function ResultsPage({ onNavigate }: Props) {
 
           {/* Integrity panel */}
           <div
-            className="p-md rounded-xl"
+            className="p-6 rounded-2xl"
             style={{
               background: 'rgba(255,255,255,0.025)',
               border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 16,
             }}
           >
             <p

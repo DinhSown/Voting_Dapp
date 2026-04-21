@@ -278,7 +278,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
       )}
 
       {/* ── MAIN GRID ── */}
-      <div className="grid grid-cols-12 gap-gutter">
+      <div className="grid grid-cols-12 gap-8 lg:gap-10">
 
         {/* Left: Candidates (8 cols) */}
         <div className="col-span-12 lg:col-span-8 space-y-md">
@@ -303,7 +303,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
               Chưa có ứng viên nào
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
               {election?.candidates.map((candidate) => {
                 const isSelected = selectedCandidateId === candidate.id
                 const isVoting = vote.votingFor === candidate.id
@@ -334,10 +334,10 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                     className={`rounded-xl backdrop-blur-xl transition-all relative overflow-hidden group ${
                       disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
-                    style={{ border: cardBorder, background: cardBg, boxShadow: cardShadow, padding: '20px' }}
+                    style={{ border: cardBorder, background: cardBg, boxShadow: cardShadow, padding: '28px' }}
                   >
                     {/* Radio indicator */}
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-4 right-4">
                       <div
                         className="w-5 h-5 rounded-full flex items-center justify-center transition-all"
                         style={{
@@ -467,7 +467,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
           {/* Voted confirmation card */}
           {hasVoted && votedCandidate && (
             <div
-              className="p-5"
+              className="p-7"
               style={{
                 background: 'rgba(78,222,163,0.04)',
                 border: '1px solid rgba(78,222,163,0.15)',
@@ -508,7 +508,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
           )}
 
           {/* Unified vote action panel */}
-          <div className="p-5 space-y-md" style={CARD_STYLE}>
+          <div className="p-7 space-y-md" style={CARD_STYLE}>
             <div className="flex items-center justify-between">
               <h4
                 className="text-sm font-bold"

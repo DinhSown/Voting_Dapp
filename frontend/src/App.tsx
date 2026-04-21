@@ -124,7 +124,7 @@ function AppInner() {
     <div className="bg-background text-on-background min-h-screen" style={{ fontFamily: 'Inter, sans-serif' }}>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-[#181a20]/80 backdrop-blur-lg border-r border-white/5 p-4 z-40 flex-col shadow-xl">
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-56 bg-[#181a20]/80 backdrop-blur-lg border-r border-white/5 p-4 z-40 flex-col shadow-xl">
         <div className="mb-10 px-4">
           <h1 className="text-xl font-extrabold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#f2ca50' }}>
             meChoice
@@ -163,7 +163,7 @@ function AppInner() {
       </aside>
 
       {/* Top Header */}
-      <header className="md:ml-64 flex justify-between items-center px-6 h-16 sticky top-0 z-50 bg-[#0b0e11]/80 backdrop-blur-md border-b border-white/5">
+      <header className="md:ml-56 flex justify-between items-center px-6 h-16 sticky top-0 z-50 bg-[#0b0e11]/80 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-8">
           {/* Brand - mobile only */}
           <div
@@ -219,7 +219,7 @@ function AppInner() {
       </header>
 
       {/* Main Content */}
-      <main className="md:ml-64 p-6 lg:p-8 max-w-7xl mx-auto pb-24 md:pb-8">
+      <main className="md:ml-56 p-6 lg:p-8 max-w-7xl mx-auto pb-24 md:pb-8">
         {route === 'home' && (
           <HomePage wallet={wallet} auth={auth} health={health} onNavigate={navigate} />
         )}

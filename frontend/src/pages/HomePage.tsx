@@ -1,5 +1,4 @@
 import { WalletConnect } from '../components/WalletConnect'
-import { AuthFlow } from '../components/AuthFlow'
 import { LoginFlow } from '../components/LoginFlow'
 import { useAuthContext } from '../context/AuthContext'
 import type { WalletState } from '../hooks/useWallet'
@@ -368,25 +367,17 @@ export function HomePage({ wallet, auth, health, onNavigate }: Props) {
 
       {/* ── WALLET + AUTH detail (wallet connected, not authed) ── */}
       {!isAuthenticated && wallet.address && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <Label className="mb-3">Trạng thái ví</Label>
-            <div className="rounded-2xl overflow-hidden">
-              <WalletConnect
-                address={wallet.address}
-                chainId={wallet.chainId}
-                loading={wallet.loading}
-                error={wallet.error}
-                onConnect={wallet.connect}
-                onSwitchNetwork={wallet.switchNetwork}
-              />
-            </div>
-          </div>
-          <div>
-            <Label className="mb-3">Xác minh danh tính</Label>
-            <div className="rounded-2xl overflow-hidden">
-              <AuthFlow auth={auth} walletAddress={wallet.address} />
-            </div>
+        <div className="max-w-2xl">
+          <Label className="mb-3">Trạng thái ví</Label>
+          <div className="rounded-2xl overflow-hidden">
+            <WalletConnect
+              address={wallet.address}
+              chainId={wallet.chainId}
+              loading={wallet.loading}
+              error={wallet.error}
+              onConnect={wallet.connect}
+              onSwitchNetwork={wallet.switchNetwork}
+            />
           </div>
         </div>
       )}
