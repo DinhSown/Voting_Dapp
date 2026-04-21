@@ -50,8 +50,13 @@ const prisma = new PrismaClient({ adapter });
 
 // ─── Ethers ────────────────────────────────────────────────────────
 const baseProvider = new ethers.JsonRpcProvider(RPC_URL);
-const provider = wrapEthersProvider(baseProvider);
-const signerWallet = wrapEthersSigner(new ethers.Wallet(PRIVATE_KEY).connect(baseProvider));
+
+// Only wrap with Sapphire if not on localhost to avoid "fetchRuntimePublicKey" error on standard nodes
+const isSapphire = !RPC_URL.includes('localhost') && !RPC_URL.includes('127.0.0.1');
+const provider = isSapphire ? wrapEthersProvider(baseProvider) : baseProvider;
+
+const baseWallet = new ethers.Wallet(PRIVATE_KEY).connect(baseProvider);
+const signerWallet = isSapphire ? wrapEthersSigner(baseWallet) : baseWallet;
 
 const ARTIFACT_PATH = path.resolve(
   __dirname,

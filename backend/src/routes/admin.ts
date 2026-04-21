@@ -58,16 +58,26 @@ export function createAdminRouter(
         // Extract onChainId from event logs if available, otherwise use election.id
         let onChainId: number | null = null;
         if (receipt && receipt.logs) {
-          // The contract emits ElectionCreated(uint256 electionId)
           const iface = contract.interface;
           for (const log of receipt.logs) {
             try {
-              const parsed = iface.parseLog({ topics: [...log.topics], data: log.data });
-              if (parsed && parsed.name === 'ElectionCreated') {
-                onChainId = Number(parsed.args[0]);
+              // Try parsing the log directly
+              const parsed = iface.parseLog(log as any);
+              if (parsed && (parsed.name === 'ElectionCreated' || parsed.name === 'CandidateAdded')) {
+                // If it's ElectionCreated, arg[0] is electionId
+                // If it's CandidateAdded, arg[1] is candidateId
+                onChainId = parsed.name === 'ElectionCreated' ? Number(parsed.args[0]) : Number(parsed.args[1]);
                 break;
               }
-            } catch { /* skip */ }
+            } catch (e) {
+              // If direct parsing fails, try manual match for standard nodes
+              // ElectionCreated(uint256 electionId) -> topic0 is hash, topic1 is electionId (indexed)
+              const eventHash = iface.getEvent('ElectionCreated')?.topicHash;
+              if (log.topics[0] === eventHash && log.topics.length > 1) {
+                onChainId = Number(ethers.toBigInt(log.topics[1]));
+                break;
+              }
+            }
           }
         }
 
@@ -218,11 +228,21 @@ export function createAdminRouter(
 
       let onChainId: number | null = null;
       if (receipt1?.logs) {
+        const iface = contract.interface;
         for (const log of receipt1.logs) {
           try {
-            const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data });
-            if (parsed?.name === 'ElectionCreated') { onChainId = Number(parsed.args[0]); break; }
-          } catch { /* skip */ }
+            const parsed = iface.parseLog(log as any);
+            if (parsed?.name === 'ElectionCreated') { 
+              onChainId = Number(parsed.args[0]); 
+              break; 
+            }
+          } catch {
+            const eventHash = iface.getEvent('ElectionCreated')?.topicHash;
+            if (log.topics[0] === eventHash && log.topics.length > 1) {
+              onChainId = Number(ethers.toBigInt(log.topics[1]));
+              break;
+            }
+          }
         }
       }
       if (onChainId === null) {
@@ -238,11 +258,23 @@ export function createAdminRouter(
         const receipt2 = await tx2.wait();
         let candOnChainId: number | null = null;
         if (receipt2?.logs) {
+          const iface = contract.interface;
           for (const log of receipt2.logs) {
             try {
-              const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data });
-              if (parsed?.name === 'CandidateAdded') { candOnChainId = Number(parsed.args[1]); break; }
-            } catch { /* skip */ }
+              const parsed = iface.parseLog(log as any);
+              if (parsed?.name === 'CandidateAdded') { 
+                candOnChainId = Number(parsed.args[1]); 
+                break; 
+              }
+            } catch {
+              const eventHash = iface.getEvent('CandidateAdded')?.topicHash;
+              if (log.topics[0] === eventHash && log.topics.length > 2) {
+                // CandidateAdded(uint256 indexed electionId, uint256 indexed candidateId)
+                // topic1 is electionId, topic2 is candidateId
+                candOnChainId = Number(ethers.toBigInt(log.topics[2]));
+                break;
+              }
+            }
           }
         }
         if (candOnChainId === null) {
@@ -293,7 +325,12 @@ export function createAdminRouter(
       res.json(updated);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      res.status(500).json({ error: 'Failed to start election', details: message });
+      console.error('Start election error:', err);
+      res.status(500).json({ 
+        error: 'Failed to start election', 
+        details: message,
+        tip: message.includes('ECONNRESET') ? 'Lỗi mạng Blockchain, hãy nhấn Thử lại sau vài giây.' : undefined
+      });
     }
   });
 
@@ -367,14 +404,21 @@ export function createAdminRouter(
 
           let onChainId: number | null = null;
           if (receipt?.logs) {
+            const iface = contract.interface;
             for (const log of receipt.logs) {
               try {
-                const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data });
+                const parsed = iface.parseLog(log as any);
                 if (parsed?.name === 'CandidateAdded') {
                   onChainId = Number(parsed.args[1]);
                   break;
                 }
-              } catch { /* skip */ }
+              } catch {
+                const eventHash = iface.getEvent('CandidateAdded')?.topicHash;
+                if (log.topics[0] === eventHash && log.topics.length > 2) {
+                  onChainId = Number(ethers.toBigInt(log.topics[2]));
+                  break;
+                }
+              }
             }
           }
 
@@ -409,6 +453,48 @@ export function createAdminRouter(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: 'Failed to add candidate', details: message });
+    }
+  });
+
+  // PATCH /api/admin/elections/:id/candidates/:cid
+  router.patch('/elections/:id/candidates/:cid', async (req: AuthRequest, res: Response) => {
+    const electionId = parseInt(String(req.params['id'] ?? ''), 10);
+    const candidateId = parseInt(String(req.params['cid'] ?? ''), 10);
+    if (isNaN(electionId) || isNaN(candidateId)) {
+      res.status(400).json({ error: 'Invalid id' });
+      return;
+    }
+
+    const { name, description, image } = req.body as {
+      name?: string;
+      description?: string;
+      image?: string;
+    };
+
+    try {
+      const election = await prisma.election.findUnique({ where: { id: electionId } });
+      if (!election) { res.status(404).json({ error: 'Election not found' }); return; }
+      
+      // If the election is active or already on chain, we usually don't want to change metadata 
+      // unless we also sync with blockchain. For simplicity, we only allow editing draft/inactive elections.
+      if (election.isActive) {
+        res.status(400).json({ error: 'Cannot edit candidates of an active election' });
+        return;
+      }
+
+      const updated = await prisma.candidate.update({
+        where: { id: candidateId },
+        data: {
+          ...(name !== undefined && { name: name.trim() }),
+          ...(description !== undefined && { description: description.trim() }),
+          ...(image !== undefined && { image: image.trim() }),
+        },
+      });
+
+      res.json(updated);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: 'Failed to update candidate', details: message });
     }
   });
 

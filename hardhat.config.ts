@@ -28,10 +28,12 @@ function parseEnvFile(filePath: string): Record<string, string> {
   }
 }
 
-const env = parseEnvFile(resolve(__dirname, ".env"));
+const rootEnv = parseEnvFile(resolve(__dirname, ".env"));
+const backendEnv = parseEnvFile(resolve(__dirname, "backend", ".env"));
+const env = { ...backendEnv, ...rootEnv };
 
-const sapphireKey = env["SAPPHIRE_PRIVATE_KEY"]
-  ? `0x${env["SAPPHIRE_PRIVATE_KEY"].replace(/^0x/, "")}`
+const sapphireKey = (env["SAPPHIRE_PRIVATE_KEY"] || env["PRIVATE_KEY"])
+  ? `0x${(env["SAPPHIRE_PRIVATE_KEY"] || env["PRIVATE_KEY"]).replace(/^0x/, "")}`
   : undefined;
 
 export default defineConfig({

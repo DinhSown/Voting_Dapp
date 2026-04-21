@@ -363,29 +363,39 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                     </div>
 
                     {/* Candidate info */}
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="flex flex-col items-center text-center gap-3 mb-4">
                       {candidate.image ? (
-                        <img
-                          src={candidate.image}
-                          alt={candidate.name}
-                          className="w-14 h-14 rounded-xl object-cover shrink-0"
-                          style={{
-                            border: isVotedFor
-                              ? '1px solid rgba(78,222,163,0.4)'
-                              : isSelected
-                              ? '1px solid rgba(242,202,80,0.4)'
-                              : '1px solid rgba(255,255,255,0.1)',
-                          }}
-                        />
+                        <div className="relative group/img">
+                          <img
+                            src={candidate.image}
+                            alt={candidate.name}
+                            className="w-24 h-24 rounded-2xl object-cover shadow-lg transition-transform group-hover/img:scale-105"
+                            style={{
+                              border: isVotedFor
+                                ? '2px solid #4edea3'
+                                : isSelected
+                                ? '2px solid #f2ca50'
+                                : '2px solid rgba(255,255,255,0.1)',
+                            }}
+                          />
+                          {(isVotedFor || isSelected) && (
+                            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center shadow-md"
+                              style={{ background: isVotedFor ? '#4edea3' : '#f2ca50' }}>
+                              <span className="material-symbols-outlined text-[14px] text-surface font-bold">
+                                check
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <div
-                          className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold shrink-0"
+                          className="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner"
                           style={{
                             fontFamily: 'Space Grotesk, sans-serif',
                             background: isVotedFor
-                              ? 'rgba(78,222,163,0.15)'
+                              ? 'linear-gradient(135deg, rgba(78,222,163,0.2), rgba(78,222,163,0.05))'
                               : isSelected
-                              ? 'rgba(242,202,80,0.15)'
+                              ? 'linear-gradient(135deg, rgba(242,202,80,0.2), rgba(242,202,80,0.05))'
                               : 'rgba(45,52,73,0.8)',
                             border: isVotedFor
                               ? '1px solid rgba(78,222,163,0.3)'
@@ -399,23 +409,19 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                         </div>
                       )}
 
-                      <div className="min-w-0 pr-6">
+                      <div className="min-w-0">
                         <h3
-                          className="truncate"
-                          style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '16px', fontWeight: 700, lineHeight: 1.3, color: '#dae2fd' }}
+                          style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: '#dae2fd' }}
                         >
                           {candidate.name}
                         </h3>
                         {notOnChain ? (
-                          <p
-                            className="mt-0.5"
-                            style={{ fontSize: 10, fontFamily: 'Inter, sans-serif', color: '#facc15', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}
-                          >
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                             Chưa lên chain
-                          </p>
+                          </span>
                         ) : (
-                          <p className="mt-0.5" style={{ ...LABEL_STYLE }}>
-                            Ứng viên
+                          <p className="mt-0.5 opacity-40" style={{ ...LABEL_STYLE }}>
+                            Ứng cử viên
                           </p>
                         )}
                       </div>
@@ -423,8 +429,8 @@ export function VotePage({ wallet, vote, onToast }: Props) {
 
                     {candidate.description && (
                       <p
-                        className="text-xs leading-relaxed line-clamp-3 mb-3"
-                        style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
+                        className="text-xs leading-relaxed line-clamp-3 mb-4 text-center px-2"
+                        style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.6)' }}
                       >
                         {candidate.description}
                       </p>

@@ -94,8 +94,8 @@ export interface VoteRecord {
 export interface Candidate {
   id: number
   name: string
-  description: string
-  image: string
+  description: string | null
+  image: string | null
   electionId: number
   onChainId: number | null
   isRemoved: boolean

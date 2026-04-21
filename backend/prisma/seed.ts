@@ -110,7 +110,12 @@ async function getContract(): Promise<ethers.Contract> {
 
   const abi = loadArtifactAbi();
   const baseProvider = new ethers.JsonRpcProvider(RPC_URL);
-  const signer = wrapEthersSigner(new ethers.Wallet(PRIVATE_KEY).connect(baseProvider));
+  
+  // Only wrap with Sapphire if not on localhost
+  const isSapphire = !RPC_URL.includes('localhost') && !RPC_URL.includes('127.0.0.1');
+  const baseWallet = new ethers.Wallet(PRIVATE_KEY).connect(baseProvider);
+  const signer = isSapphire ? wrapEthersSigner(baseWallet) : (baseWallet as any);
+
   return new ethers.Contract(CONTRACT_ADDR, abi, signer);
 }
 
@@ -121,14 +126,24 @@ function getEventId(
 ): number | null {
   if (!receipt?.logs) return null;
 
+  const iface = contract.interface;
   for (const log of receipt.logs) {
     try {
-      const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data });
+      const parsed = iface.parseLog(log as any);
       if (parsed?.name === eventName) {
         return Number(parsed.args[eventName === 'ElectionCreated' ? 0 : 1]);
       }
     } catch {
-      // ignore unrelated logs
+      // Manual fallback for standard nodes and indexed parameters
+      const eventHash = iface.getEvent(eventName)?.topicHash;
+      if (log.topics[0] === eventHash) {
+        if (eventName === 'ElectionCreated' && log.topics.length > 1) {
+          return Number(ethers.toBigInt(log.topics[1]));
+        } else if (eventName === 'CandidateAdded' && log.topics.length > 2) {
+          // CandidateAdded(uint256 indexed electionId, uint256 indexed candidateId)
+          return Number(ethers.toBigInt(log.topics[2]));
+        }
+      }
     }
   }
 

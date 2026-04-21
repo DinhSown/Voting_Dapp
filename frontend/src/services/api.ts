@@ -186,6 +186,11 @@ export async function pushElectionToChain(id: number): Promise<Election> {
   return res.data
 }
 
+export async function syncCandidates(id: number): Promise<{ synced: number }> {
+  const res = await api.post<{ synced: number }>(`/api/admin/elections/${id}/sync-candidates`)
+  return res.data
+}
+
 export async function endElection(id: number): Promise<Election> {
   const res = await api.post<Election>(`/api/admin/elections/${id}/end`)
   return res.data
@@ -197,6 +202,15 @@ export async function addCandidate(
   data: { name: string; description?: string; image?: string }
 ) {
   const res = await api.post(`/api/admin/elections/${electionId}/candidates`, data)
+  return res.data
+}
+
+export async function updateCandidate(
+  electionId: number,
+  candidateId: number,
+  data: { name?: string; description?: string; image?: string }
+) {
+  const res = await api.patch(`/api/admin/elections/${electionId}/candidates/${candidateId}`, data)
   return res.data
 }
 
