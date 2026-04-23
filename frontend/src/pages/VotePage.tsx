@@ -338,22 +338,22 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                       border: cardBorder, 
                       background: cardBg, 
                       boxShadow: cardShadow,
-                      minHeight: '480px'
+                      minHeight: '320px'
                     }}
                   >
                     {/* Header: Title & Desc (Top) */}
-                    <div className="p-7 pb-4 space-y-4 flex-grow-0">
-                      <div className="flex gap-4">
+                    <div className="p-5 pb-2 space-y-2 flex-grow-0">
+                      <div className="flex gap-2.5">
                         <div className="w-0.5 h-auto bg-primary shrink-0" style={{ background: isVotedFor ? '#4edea3' : isSelected ? '#f2ca50' : 'rgba(255,255,255,0.2)' }} />
                         <div className="min-w-0">
                           <h3
                             className="uppercase tracking-wide"
-                            style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: '#dae2fd', lineHeight: 1.2 }}
+                            style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '14px', fontWeight: 700, color: '#dae2fd', lineHeight: 1.2 }}
                           >
                             {candidate.name}
                           </h3>
                           {notOnChain && (
-                            <span className="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                            <span className="inline-block mt-1 px-2 py-0.5 rounded text-[7px] font-bold tracking-widest uppercase bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                               Chưa lên chain
                             </span>
                           )}
@@ -362,7 +362,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                       
                       {candidate.description && (
                         <p
-                          className="text-sm leading-relaxed line-clamp-3 text-outline"
+                          className="text-[11px] leading-relaxed line-clamp-2 text-outline"
                           style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.5)' }}
                         >
                           {candidate.description}
@@ -371,7 +371,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
                     </div>
 
                     {/* Image Area (Bottom) */}
-                    <div className="relative flex-1 min-h-[300px] overflow-hidden">
+                    <div className="relative flex-1 min-h-[180px] overflow-hidden">
                       {candidate.image ? (
                         <img
                           src={candidate.image}
@@ -469,7 +469,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
           )}
 
           {/* Unified vote action panel */}
-          <div className="p-7 space-y-md" style={CARD_STYLE}>
+          <div className="p-7 space-y-7" style={CARD_STYLE}>
             <div className="flex items-center justify-between">
               <h4
                 className="text-sm font-bold"
@@ -496,7 +496,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
             </div>
 
             {/* Eligibility checklist */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <CheckRow ok={!!wallet.address} label="Ví kết nối" />
               <CheckRow ok={isAuthenticated} label="Đã xác thực JWT" />
               <CheckRow ok={wallet.isCorrectNetwork} label="Đúng mạng (Sapphire)" />
@@ -504,7 +504,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
 
             {/* Transaction fee */}
             <div
-              className="p-3 space-y-2"
+              className="p-5 space-y-3.5"
               style={{
                 background: 'rgba(255,255,255,0.02)',
                 border: '1px solid rgba(255,255,255,0.05)',
@@ -552,7 +552,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
 
             {/* Confirmation + submit */}
             {isEligible && !hasVoted && (
-              <div className="space-y-3">
+              <div className="space-y-5">
                 <label className="flex items-start gap-2.5 cursor-pointer group">
                   <input
                     id="confirm"

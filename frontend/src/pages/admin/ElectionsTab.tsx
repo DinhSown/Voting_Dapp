@@ -70,18 +70,49 @@ function ElectionCard({
 
   const activeCands = (election.candidates || []).filter((c) => !c.isRemoved)
 
+  const processImage = (file: File, isEdit: boolean) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const TARGET_W = 400
+        const TARGET_H = 500
+        
+        const sourceRatio = img.width / img.height
+        const targetRatio = TARGET_W / TARGET_H
+        
+        let sx = 0, sy = 0, sw = img.width, sh = img.height
+        
+        if (sourceRatio > targetRatio) {
+          sw = img.height * targetRatio
+          sx = (img.width - sw) / 2
+        } else {
+          sh = img.width / targetRatio
+          sy = (img.height - sh) / 2
+        }
+        
+        canvas.width = TARGET_W
+        canvas.height = TARGET_H
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true
+          ctx.imageSmoothingQuality = 'high'
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H)
+          const processedBase64 = canvas.toDataURL('image/jpeg', 0.85)
+          if (isEdit) setEditImage(processedBase64)
+          else setCandImage(processedBase64)
+        }
+      }
+      img.src = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 2 * 1024 * 1024) { alert('Ảnh quá lớn (vui lòng chọn ảnh < 2MB)'); return; }
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64 = reader.result as string
-      if (isEdit) setEditImage(base64)
-      else setCandImage(base64)
-    }
-    reader.readAsDataURL(file)
+    processImage(file, isEdit)
   }
 
   const startEdit = (cand: Candidate) => {
