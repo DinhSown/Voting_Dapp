@@ -66,7 +66,7 @@ function ElectionCard({
   onAddCandidate: (electionId: number, name: string, desc: string, image: string) => Promise<void>
   onRemoveCandidate: (electionId: number, cand: Candidate) => void
   onUpdateCandidate: (electionId: number, candidateId: number, data: { name: string; description: string; image: string }) => Promise<void>
-  onUpdateElection: (id: number, data: { title: string; description: string }) => Promise<void>
+  onUpdateElection: (id: number, data: { title: string; description: string; startTime?: string; endTime?: string }) => Promise<void>
   onSyncCandidates: (id: number) => void
   processing: Record<string, boolean>
 }) {
@@ -80,10 +80,18 @@ function ElectionCard({
   const [editElectionTitle, setEditElectionTitle] = useState(election.title)
   const [editElectionDesc, setEditElectionDesc] = useState(election.description ?? '')
   const [savingElection, setSavingElection] = useState(false)
+  const [editStartTime, setEditStartTime] = useState(
+    election.startTime ? new Date(election.startTime).toISOString().slice(0, 16) : ''
+  )
+  const [editEndTime, setEditEndTime] = useState(
+    election.endTime ? new Date(election.endTime).toISOString().slice(0, 16) : ''
+  )
 
   const startEditElection = () => {
     setEditElectionTitle(election.title)
     setEditElectionDesc(election.description ?? '')
+    setEditStartTime(election.startTime ? new Date(election.startTime).toISOString().slice(0, 16) : '')
+    setEditEndTime(election.endTime ? new Date(election.endTime).toISOString().slice(0, 16) : '')
     setEditingElection(true)
   }
 
@@ -93,7 +101,12 @@ function ElectionCard({
     if (!editElectionTitle.trim()) return
     setSavingElection(true)
     try {
-      await onUpdateElection(election.id, { title: editElectionTitle.trim(), description: editElectionDesc.trim() })
+      await onUpdateElection(election.id, {
+        title: editElectionTitle.trim(),
+        description: editElectionDesc.trim(),
+        startTime: editStartTime || undefined,
+        endTime: editEndTime || undefined,
+      })
       setEditingElection(false)
     } finally {
       setSavingElection(false)
@@ -190,6 +203,22 @@ function ElectionCard({
                   className="w-full px-2 py-1 bg-surface-container border border-white/10 rounded text-xs text-outline focus:outline-none"
                   placeholder="Mô tả"
                 />
+                <div className="grid grid-cols-2 gap-1.5">
+                  <input
+                    type="datetime-local"
+                    value={editStartTime}
+                    onChange={(e) => setEditStartTime(e.target.value)}
+                    className="w-full px-2 py-1 bg-surface-container border border-white/10 rounded text-[10px] text-outline focus:outline-none"
+                    placeholder="Bắt đầu"
+                  />
+                  <input
+                    type="datetime-local"
+                    value={editEndTime}
+                    onChange={(e) => setEditEndTime(e.target.value)}
+                    className="w-full px-2 py-1 bg-surface-container border border-white/10 rounded text-[10px] text-outline focus:outline-none"
+                    placeholder="Kết thúc"
+                  />
+                </div>
                 <div className="flex gap-1.5">
                   <button
                     onClick={saveEditElection}
@@ -493,6 +522,8 @@ export function ElectionsTab() {
   const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
+  const [newStartTime, setNewStartTime] = useState('')
+  const [newEndTime, setNewEndTime] = useState('')
   const [creating, setCreating] = useState(false)
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -516,9 +547,16 @@ export function ElectionsTab() {
     if (!newTitle.trim()) return
     setCreating(true)
     try {
-      await createElection({ title: newTitle, description: newDesc })
+      await createElection({
+        title: newTitle,
+        description: newDesc,
+        startTime: newStartTime || undefined,
+        endTime: newEndTime || undefined,
+      })
       setNewTitle('')
       setNewDesc('')
+      setNewStartTime('')
+      setNewEndTime('')
       setShowCreate(false)
       load()
     } catch (err) {
@@ -594,7 +632,7 @@ export function ElectionsTab() {
     catch (err) { setError(getApiErrorMessage(err, 'Xóa ứng viên thất bại')) }
   }
 
-  const handleUpdateElection = async (id: number, data: { title: string; description: string }) => {
+  const handleUpdateElection = async (id: number, data: { title: string; description: string; startTime?: string; endTime?: string }) => {
     try {
       await updateElection(id, data)
       load()
@@ -661,6 +699,26 @@ export function ElectionsTab() {
                   placeholder="Mô tả ngắn gọn về mục đích..."
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-container border border-white/10 text-sm text-on-surface focus:outline-none focus:border-primary/40"
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-outline ml-1">Bắt đầu</label>
+                  <input
+                    type="datetime-local"
+                    value={newStartTime}
+                    onChange={(e) => setNewStartTime(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-surface-container border border-white/10 text-xs text-on-surface focus:outline-none focus:border-primary/40"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-outline ml-1">Kết thúc</label>
+                  <input
+                    type="datetime-local"
+                    value={newEndTime}
+                    onChange={(e) => setNewEndTime(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-surface-container border border-white/10 text-xs text-on-surface focus:outline-none focus:border-primary/40"
+                  />
+                </div>
               </div>
               <div className="pt-2 flex gap-3">
                 <button
