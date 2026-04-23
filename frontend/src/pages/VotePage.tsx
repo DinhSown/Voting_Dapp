@@ -122,13 +122,9 @@ export function VotePage({ wallet, vote, onToast }: Props) {
       onToast(`Bỏ phiếu thành công! TX: ${txHash.slice(0, 10)}...`, 'success')
       setSelectedCandidateId(null)
       setConfirmed(false)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      if (msg.includes('-32002') || msg.includes('could not coalesce') || msg.includes('UNKNOWN_ERROR')) {
-        onToast('Giao dịch đã gửi nhưng mạng chưa xác nhận. Kiểm tra lại ví của bạn.', 'info')
-      } else {
-        onToast(msg || 'Bỏ phiếu thất bại', 'error')
-      }
+    } catch {
+      onToast('Có lỗi xảy ra, vui lòng thử lại', 'error')
+      return
     }
   }
 

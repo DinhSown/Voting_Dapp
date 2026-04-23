@@ -56,15 +56,16 @@ export async function castVoteOnChain(candidateId: number, electionId: number): 
   const provider = new ethers.BrowserProvider(wrapEthereumProvider(window.ethereum))
   const signer = await provider.getSigner()
   const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-  const tx = await contract.vote(electionId, candidateId, {
-    value: ethers.parseEther(VOTE_FEE_NATIVE),
+  const voteFee = await contract.VOTE_FEE().catch(() => ethers.parseEther(VOTE_FEE_NATIVE))
+  await contract.vote.staticCall(electionId, candidateId, {
+    value: voteFee,
   })
-  // tx.wait() polls eth_blockNumber — if the RPC throttles, skip waiting
-  // The transaction is already submitted at this point; hash is valid
-  try {
-    await tx.wait()
-  } catch {
-    // RPC rate-limit or polling error — tx was submitted, return hash anyway
+  const tx = await contract.vote(electionId, candidateId, {
+    value: voteFee,
+  })
+  const receipt = await tx.wait()
+  if (!receipt || receipt.status !== 1) {
+    throw new Error('Giao dịch vote thất bại trên blockchain')
   }
   return tx.hash as string
 }

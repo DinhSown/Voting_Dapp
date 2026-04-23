@@ -55,6 +55,7 @@ export function useVote(): VoteState {
       setVotingFor(candidate.id)
       try {
         const txHash = await castVoteOnChain(candidate.onChainId, election.onChainId)
+        await recordVote(txHash)
         setVoted((prev) => new Set([...prev, election.id]))
         setVotedCandidates((prev) =>
           new Map(prev).set(election.id, {
@@ -63,13 +64,6 @@ export function useVote(): VoteState {
             categoryTitle: election.title,
           })
         )
-        recordVote({
-          categoryId: election.id,
-          candidateId: candidate.id,
-          candidateName: candidate.name,
-          categoryTitle: election.title,
-          txHash,
-        }).catch(() => undefined)
         return txHash
       } finally {
         setVotingFor(null)
