@@ -26,6 +26,14 @@ function formatTime(iso: string | null): string {
   })
 }
 
+type ElectionTab = 'upcoming' | 'active' | 'ended'
+
+function classifyElection(election: Election): ElectionTab {
+  if (election.isActive) return 'active'
+  if (election.endTime && new Date(election.endTime) <= new Date()) return 'ended'
+  return 'upcoming'
+}
+
 function ElectionStatus({ election }: { election: Election }) {
   if (election.isActive) {
     return (
@@ -527,6 +535,14 @@ export function ElectionsTab() {
   const [creating, setCreating] = useState(false)
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState<ElectionTab>('upcoming')
+
+  const tabElections: Record<ElectionTab, Election[]> = {
+    upcoming: (elections || []).filter((e) => classifyElection(e) === 'upcoming'),
+    active: (elections || []).filter((e) => classifyElection(e) === 'active'),
+    ended: (elections || []).filter((e) => classifyElection(e) === 'ended'),
+  }
+  const visibleElections = tabElections[activeTab]
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -669,6 +685,39 @@ export function ElectionsTab() {
         </div>
       )}
 
+      <div className="flex items-center gap-1 border-b border-white/5 pb-0 -mb-2">
+        {(
+          [
+            { key: 'upcoming', label: 'Sắp diễn ra', icon: 'schedule' },
+            { key: 'active',   label: 'Đang diễn ra', icon: 'radio_button_checked' },
+            { key: 'ended',    label: 'Đã kết thúc',  icon: 'check_circle' },
+          ] as { key: ElectionTab; label: string; icon: string }[]
+        ).map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${
+              activeTab === key
+                ? 'border-primary text-primary'
+                : 'border-transparent text-outline hover:text-on-surface-variant'
+            }`}
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            <span className="material-symbols-outlined text-[14px]">{icon}</span>
+            {label}
+            <span
+              className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${
+                activeTab === key
+                  ? 'bg-primary/15 text-primary'
+                  : 'bg-white/5 text-outline'
+              }`}
+            >
+              {tabElections[key].length}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-card w-full max-w-md rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -753,9 +802,23 @@ export function ElectionsTab() {
           <h3 className="text-lg font-bold text-on-surface">Chưa có dữ liệu</h3>
           <p className="text-sm text-outline max-w-xs mt-2">Hãy bắt đầu bằng cách tạo cuộc bầu cử đầu tiên của bạn.</p>
         </div>
+      ) : visibleElections.length === 0 ? (
+        <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-outline text-[32px]">
+              {activeTab === 'upcoming' ? 'schedule' : activeTab === 'active' ? 'radio_button_checked' : 'check_circle'}
+            </span>
+          </div>
+          <h3 className="text-lg font-bold text-on-surface">Không có cuộc bầu cử</h3>
+          <p className="text-sm text-outline max-w-xs mt-2">
+            {activeTab === 'upcoming' && 'Chưa có cuộc bầu cử nào sắp diễn ra.'}
+            {activeTab === 'active' && 'Chưa có cuộc bầu cử nào đang diễn ra.'}
+            {activeTab === 'ended' && 'Chưa có cuộc bầu cử nào đã kết thúc.'}
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(elections || []).map((el) => (
+          {visibleElections.map((el) => (
             <ElectionCard
               key={el.id}
               election={el}
