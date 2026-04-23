@@ -3,13 +3,14 @@ import { Loader } from 'lucide-react'
 import { Pagination } from '../components/Pagination'
 import { fetchAdminLogs } from '../services/api'
 import { useAuthContext } from '../context/AuthContext'
+import { ChainTab } from './admin/ChainTab'
 import { ElectionsTab } from './admin/ElectionsTab'
 import { UsersTab } from './admin/UsersTab'
 import type { AdminLog, PaginatedResponse } from '../types'
 
 const PAGE_SIZE = 8
 
-type AdminTab = 'elections' | 'users' | 'logs'
+type AdminTab = 'elections' | 'users' | 'chain' | 'logs'
 
 export function AdminPage() {
   const { isAdmin, loading: authLoading } = useAuthContext()
@@ -59,6 +60,7 @@ export function AdminPage() {
   const tabs: { id: AdminTab; label: string; icon: string }[] = [
     { id: 'elections', label: 'Bầu cử', icon: 'how_to_vote' },
     { id: 'users', label: 'Người dùng', icon: 'group' },
+    { id: 'chain', label: 'On-chain', icon: 'hub' },
     { id: 'logs', label: 'Nhật ký', icon: 'receipt_long' },
   ]
 
@@ -99,6 +101,7 @@ export function AdminPage() {
       {/* ── Tab content ── */}
       {tab === 'elections' && <ElectionsTab />}
       {tab === 'users' && <UsersTab />}
+      {tab === 'chain' && <ChainTab />}
 
       {tab === 'logs' && (
         <div>

@@ -9,6 +9,89 @@ export function createAdminRouter(
 ) {
   const router = Router();
 
+  router.get('/on-chain/status', async (_req: AuthRequest, res: Response) => {
+    try {
+      const contract = getContract();
+      const address = await contract.getAddress();
+      const runner = contract.runner as ethers.ContractRunner & {
+        getAddress?: () => Promise<string>;
+        provider?: ethers.Provider | null;
+      };
+
+      const [owner, electionCount, dbElections, dbVerifiedUsers, dbEligibleUsers] = await Promise.all([
+        contract.owner() as Promise<string>,
+        contract.electionCount() as Promise<bigint>,
+        prisma.election.count({ where: { onChainId: { not: null } } }),
+        prisma.user.count({ where: { emailVerified: true, walletAddress: { not: null } } }),
+        prisma.user.count({ where: { emailVerified: true, isBanned: false, walletAddress: { not: null } } }),
+      ]);
+
+      const signerAddress = runner.getAddress ? await runner.getAddress() : null;
+      const code = runner.provider ? await runner.provider.getCode(address) : '0x';
+
+      res.json({
+        address,
+        owner,
+        signerAddress,
+        signerIsOwner: signerAddress ? signerAddress.toLowerCase() === owner.toLowerCase() : false,
+        codeExists: code !== '0x',
+        electionCount: Number(electionCount),
+        dbElections,
+        dbVerifiedUsers,
+        dbEligibleUsers,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: 'Failed to fetch on-chain status', details: message });
+    }
+  });
+
+  router.post('/sync-eligible-users', async (_req: AuthRequest, res: Response) => {
+    try {
+      const contract = getContract();
+      const users = await prisma.user.findMany({
+        where: { emailVerified: true, walletAddress: { not: null } },
+        select: { id: true, walletAddress: true, isBanned: true },
+        orderBy: { id: 'asc' },
+      });
+
+      let eligibleSynced = 0;
+      let bannedSynced = 0;
+      const errors: Array<{ userId: number; walletAddress: string; error: string }> = [];
+
+      for (const user of users) {
+        if (!user.walletAddress) continue;
+
+        try {
+          const eligibleTx = await contract.setVoterEligible(user.walletAddress, !user.isBanned) as ethers.TransactionResponse;
+          await eligibleTx.wait();
+          eligibleSynced += 1;
+
+          const bannedTx = await contract.setVoterBanned(user.walletAddress, user.isBanned) as ethers.TransactionResponse;
+          await bannedTx.wait();
+          if (user.isBanned) bannedSynced += 1;
+        } catch (err) {
+          errors.push({
+            userId: user.id,
+            walletAddress: user.walletAddress,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+
+      res.json({
+        total: users.length,
+        eligibleSynced,
+        bannedSynced,
+        failed: errors.length,
+        errors,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: 'Failed to sync eligible users', details: message });
+    }
+  });
+
   // ─── Elections ───────────────────────────────────────────────────
 
   // GET /api/admin/elections
@@ -569,7 +652,6 @@ export function createAdminRouter(
             name: true,
             walletAddress: true,
             email: true,
-            phone: true,
             role: true,
             isBanned: true,
             emailVerified: true,
@@ -610,6 +692,17 @@ export function createAdminRouter(
         data: { isBanned },
         select: { id: true, name: true, walletAddress: true, isBanned: true },
       });
+      if (user.walletAddress) {
+        try {
+          const tx = await getContract().setVoterBanned(user.walletAddress, isBanned);
+          await tx.wait();
+        } catch (chainErr) {
+          console.warn(
+            '[admin] Could not sync voter ban on-chain:',
+            chainErr instanceof Error ? chainErr.message : String(chainErr)
+          );
+        }
+      }
 
       await prisma.log.create({
         data: {
