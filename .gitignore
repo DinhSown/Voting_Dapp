@@ -24,3 +24,6 @@
 
 /.claude
 /docs
+
+# Database files
+backend/dev.db
