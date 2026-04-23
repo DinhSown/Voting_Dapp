@@ -68,6 +68,14 @@ export function createUserRouter(prisma: PrismaClient, provider: ethers.JsonRpcP
         update: { candidateId, candidateName: candidateName ?? '', categoryTitle: categoryTitle ?? '', txHash: txHash ?? null },
         create: { userId: req.user.userId, categoryId, candidateId, candidateName: candidateName ?? '', categoryTitle: categoryTitle ?? '', txHash: txHash ?? null },
       });
+
+      await prisma.log.create({
+        data: {
+          action: 'USER_VOTED',
+          description: `User ${req.user.userId} voted in election "${categoryTitle ?? categoryId}"${txHash ? ` (tx: ${txHash})` : ''}`,
+        },
+      });
+
       res.json(vote);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
