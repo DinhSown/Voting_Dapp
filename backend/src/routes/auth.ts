@@ -178,7 +178,7 @@ export function createAuthRouter(
               })
             : existingUser;
         try {
-          const tx = await getContract?.().setVoterEligible(walletAddress.toLowerCase(), true);
+          const tx = await getContract?.().setVoterStatus(walletAddress.toLowerCase(), true, false);
           await tx?.wait();
         } catch (chainErr) {
           console.warn(
@@ -371,7 +371,7 @@ export function createAuthRouter(
         },
       });
       try {
-        const tx = await getContract?.().setVoterEligible(walletAddress, true);
+        const tx = await getContract?.().setVoterStatus(walletAddress, true, false);
         await tx?.wait();
       } catch (chainErr) {
         console.warn(

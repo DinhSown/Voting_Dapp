@@ -69,7 +69,7 @@ export function ChainTab() {
     try {
       const result = await syncEligibleUsers()
       setSyncResult(result)
-      setMessage(`Đã sync ${result.eligibleSynced}/${result.total} ví đủ điều kiện, lỗi ${result.failed}.`)
+      setMessage(`Đã sync ${result.eligibleSynced}/${result.total} ví đủ điều kiện qua ${result.batchesSynced ?? 0} batch, lỗi ${result.failed}.`)
       await loadStatus()
     } catch (err) {
       setError(getApiErrorMessage(err, 'Không thể sync danh sách eligible'))
@@ -165,6 +165,21 @@ export function ChainTab() {
               <MetricCard label="Election trong DB" value={status.dbElections} icon="database" />
               <MetricCard label="Ví đã xác minh" value={status.dbVerifiedUsers} icon="person_check" />
               <MetricCard label="Ví eligible" value={status.dbEligibleUsers} icon="verified" />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-surface-container px-4 py-3">
+                <span className="text-xs text-outline">Last synced block</span>
+                <p className="mt-2 font-mono text-xs text-on-surface">
+                  {status.lastVoteSyncBlock ?? 'Chưa có'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-surface-container px-4 py-3">
+                <span className="text-xs text-outline">Vote sync time</span>
+                <p className="mt-2 text-xs text-on-surface">
+                  {status.lastVoteSyncAt ? new Date(status.lastVoteSyncAt).toLocaleString('vi-VN') : 'Chưa có'}
+                </p>
+              </div>
             </div>
           </div>
         ) : null}

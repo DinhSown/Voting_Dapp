@@ -93,15 +93,13 @@ export function createUserRouter(
 
       let updated = false;
 
-      if (onChainEligible !== eligible) {
-        const eligibleTx = await contract.setVoterEligible(user.walletAddress, eligible) as ethers.TransactionResponse;
-        await eligibleTx.wait();
-        updated = true;
-      }
-
-      if (onChainBanned !== user.isBanned) {
-        const bannedTx = await contract.setVoterBanned(user.walletAddress, user.isBanned) as ethers.TransactionResponse;
-        await bannedTx.wait();
+      if (onChainEligible !== eligible || onChainBanned !== user.isBanned) {
+        const tx = await contract.setVoterStatus(
+          user.walletAddress,
+          eligible,
+          user.isBanned
+        ) as ethers.TransactionResponse;
+        await tx.wait();
         updated = true;
       }
 

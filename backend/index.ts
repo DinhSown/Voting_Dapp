@@ -43,6 +43,13 @@ const LOG_SYNC_BLOCK_RANGE = Math.min(
   100,
   Math.max(1, parseInt(process.env['LOG_SYNC_BLOCK_RANGE'] || '100', 10))
 );
+const REQUEST_BODY_LIMIT = process.env['REQUEST_BODY_LIMIT'] || '10mb';
+const SYNC_STATE_PATH = path.resolve(__dirname, './runtime/vote-sync-state.json');
+
+type VoteSyncState = {
+  lastSyncedBlock: number;
+  updatedAt: string;
+};
 
 // ─── Prisma ────────────────────────────────────────────────────────
 const adapter = new PrismaLibSql({ url: DATABASE_URL });
@@ -85,12 +92,47 @@ const getReadContract = () => {
   return new ethers.Contract(CONTRACT_ADDR, contractABI as ethers.InterfaceAbi, baseProvider);
 };
 
+function loadVoteSyncState(): VoteSyncState | null {
+  if (!fs.existsSync(SYNC_STATE_PATH)) return null;
+  try {
+    const raw = JSON.parse(fs.readFileSync(SYNC_STATE_PATH, 'utf8')) as Partial<VoteSyncState>;
+    if (typeof raw.lastSyncedBlock !== 'number' || Number.isNaN(raw.lastSyncedBlock)) return null;
+    return {
+      lastSyncedBlock: raw.lastSyncedBlock,
+      updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date(0).toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveVoteSyncState(lastSyncedBlock: number): VoteSyncState {
+  const state: VoteSyncState = {
+    lastSyncedBlock,
+    updatedAt: new Date().toISOString(),
+  };
+  fs.mkdirSync(path.dirname(SYNC_STATE_PATH), { recursive: true });
+  fs.writeFileSync(SYNC_STATE_PATH, JSON.stringify(state, null, 2));
+  return state;
+}
+
 async function syncVoteEvents(fromBlock?: number, toBlock?: number) {
   if (!CONTRACT_ADDR || !contractABI.length) return { synced: 0 };
 
   const contract = getReadContract();
   const latestBlock = toBlock ?? await baseProvider.getBlockNumber();
-  const startBlock = fromBlock ?? Math.max(0, latestBlock - 5_000);
+  const persistedState = loadVoteSyncState();
+  const startBlock = fromBlock ?? (
+    persistedState ? persistedState.lastSyncedBlock + 1 : Math.max(0, latestBlock - 5_000)
+  );
+  if (startBlock > latestBlock) {
+    return {
+      synced: 0,
+      fromBlock: startBlock,
+      toBlock: latestBlock,
+      lastSyncedBlock: persistedState?.lastSyncedBlock ?? latestBlock,
+    };
+  }
   const filter = contract.filters['Voted']();
   let synced = 0;
 
@@ -145,7 +187,8 @@ async function syncVoteEvents(fromBlock?: number, toBlock?: number) {
     }
   }
 
-  return { synced, fromBlock: startBlock, toBlock: latestBlock };
+  const state = saveVoteSyncState(latestBlock);
+  return { synced, fromBlock: startBlock, toBlock: latestBlock, lastSyncedBlock: state.lastSyncedBlock };
 }
 
 // ─── Express ───────────────────────────────────────────────────────
@@ -157,7 +200,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: REQUEST_BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: REQUEST_BODY_LIMIT }));
 
 // ─── Middleware factories ──────────────────────────────────────────
 const auth = createAuthMiddleware(prisma);
@@ -176,7 +220,7 @@ app.use(
 );
 
 app.use('/api/user', auth, createUserRouter(prisma, provider, CONTRACT_ADDR, contractABI as ethers.InterfaceAbi, getContract));
-app.use('/api/admin', auth, requireAdmin, createAdminRouter(prisma, getContract));
+app.use('/api/admin', auth, requireAdmin, createAdminRouter(prisma, getContract, loadVoteSyncState));
 
 // ─── Elections (public) ───────────────────────────────────────────
 app.get('/api/elections', async (req: Request, res: Response) => {
@@ -254,6 +298,23 @@ app.get('/health', async (_req: Request, res: Response) => {
   }
 });
 
+app.use((err: unknown, _req: Request, res: Response, next: (err?: unknown) => void) => {
+  if (
+    err &&
+    typeof err === 'object' &&
+    'type' in err &&
+    err.type === 'entity.too.large'
+  ) {
+    res.status(413).json({
+      error: 'Payload too large',
+      details: `Request body exceeds the configured limit of ${REQUEST_BODY_LIMIT}`,
+    });
+    return;
+  }
+
+  next(err);
+});
+
 // ─── Start ─────────────────────────────────────────────────────────
 const PORT = parseInt(process.env['PORT'] || '3001', 10);
 app.listen(PORT, () => {
@@ -264,13 +325,12 @@ app.listen(PORT, () => {
   console.log(`Frontend CORS: ${FRONTEND_URL}`);
   console.log(`Mailer mode: ${SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock'}\n`);
 
-  let lastSyncedBlock: number | undefined;
   setInterval(() => {
     baseProvider.getBlockNumber()
       .then(async (latestBlock) => {
-        const fromBlock = lastSyncedBlock === undefined ? Math.max(0, latestBlock - 5_000) : lastSyncedBlock + 1;
+        const persistedState = loadVoteSyncState();
+        const fromBlock = persistedState === null ? Math.max(0, latestBlock - 5_000) : persistedState.lastSyncedBlock + 1;
         await syncVoteEvents(fromBlock, latestBlock);
-        lastSyncedBlock = latestBlock;
       })
       .catch((err) => console.warn('[sync] vote event sync failed:', err instanceof Error ? err.message : String(err)));
   }, 60_000);

@@ -74,12 +74,15 @@ export interface OnChainStatus {
   dbElections: number
   dbVerifiedUsers: number
   dbEligibleUsers: number
+  lastVoteSyncBlock: number | null
+  lastVoteSyncAt: string | null
 }
 
 export interface SyncEligibleResult {
   total: number
   eligibleSynced: number
   bannedSynced: number
+  batchesSynced?: number
   failed: number
   errors: Array<{ userId: number; walletAddress: string; error: string }>
 }

@@ -27,3 +27,6 @@
 
 # Database files
 backend/dev.db
+
+# Runtime sync state
+backend/runtime/
