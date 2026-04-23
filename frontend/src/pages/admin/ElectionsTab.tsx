@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   fetchAdminElections,
   createElection,
+  updateElection,
   deleteElection,
   startElection,
   endElection,
@@ -13,6 +14,17 @@ import {
   getApiErrorMessage,
 } from '../../services/api'
 import type { Election, Candidate } from '../../types'
+
+function formatTime(iso: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 function ElectionStatus({ election }: { election: Election }) {
   if (election.isActive) {
@@ -40,6 +52,7 @@ function ElectionCard({
   onAddCandidate,
   onRemoveCandidate,
   onUpdateCandidate,
+  onUpdateElection,
   onSyncCandidates,
   processing,
 }: {
@@ -53,6 +66,7 @@ function ElectionCard({
   onAddCandidate: (electionId: number, name: string, desc: string, image: string) => Promise<void>
   onRemoveCandidate: (electionId: number, cand: Candidate) => void
   onUpdateCandidate: (electionId: number, candidateId: number, data: { name: string; description: string; image: string }) => Promise<void>
+  onUpdateElection: (id: number, data: { title: string; description: string }) => Promise<void>
   onSyncCandidates: (id: number) => void
   processing: Record<string, boolean>
 }) {
@@ -60,6 +74,31 @@ function ElectionCard({
   const [candDesc, setCandDesc] = useState('')
   const [candImage, setCandImage] = useState('')
   const [adding, setAdding] = useState(false)
+
+  // Election title/desc editing state
+  const [editingElection, setEditingElection] = useState(false)
+  const [editElectionTitle, setEditElectionTitle] = useState(election.title)
+  const [editElectionDesc, setEditElectionDesc] = useState(election.description ?? '')
+  const [savingElection, setSavingElection] = useState(false)
+
+  const startEditElection = () => {
+    setEditElectionTitle(election.title)
+    setEditElectionDesc(election.description ?? '')
+    setEditingElection(true)
+  }
+
+  const cancelEditElection = () => setEditingElection(false)
+
+  const saveEditElection = async () => {
+    if (!editElectionTitle.trim()) return
+    setSavingElection(true)
+    try {
+      await onUpdateElection(election.id, { title: editElectionTitle.trim(), description: editElectionDesc.trim() })
+      setEditingElection(false)
+    } finally {
+      setSavingElection(false)
+    }
+  }
 
   // Editing state
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -134,16 +173,66 @@ function ElectionCard({
       <div className="px-4 py-4 flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-on-surface leading-snug truncate"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-              {election.title}
-            </p>
-            <p className="text-xs text-outline mt-0.5">#{election.id}</p>
+            {editingElection ? (
+              <div className="space-y-1.5">
+                <input
+                  type="text"
+                  value={editElectionTitle}
+                  onChange={(e) => setEditElectionTitle(e.target.value)}
+                  className="w-full px-2 py-1 bg-surface-container border border-primary/30 rounded text-sm font-semibold text-on-surface focus:outline-none"
+                  placeholder="Tiêu đề *"
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  value={editElectionDesc}
+                  onChange={(e) => setEditElectionDesc(e.target.value)}
+                  className="w-full px-2 py-1 bg-surface-container border border-white/10 rounded text-xs text-outline focus:outline-none"
+                  placeholder="Mô tả"
+                />
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={saveEditElection}
+                    disabled={savingElection || !editElectionTitle.trim()}
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-primary/15 hover:bg-primary/25 disabled:opacity-40 text-xs text-primary border border-primary/20 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">check</span>
+                    {savingElection ? '...' : 'Lưu'}
+                  </button>
+                  <button
+                    onClick={cancelEditElection}
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-xs text-outline border border-white/10 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">close</span>
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="group/title flex items-start gap-1">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-on-surface leading-snug truncate"
+                    style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    {election.title}
+                  </p>
+                  <p className="text-xs text-outline mt-0.5">#{election.id}</p>
+                </div>
+                {!election.isActive && (
+                  <button
+                    onClick={startEditElection}
+                    className="opacity-0 group-hover/title:opacity-100 shrink-0 text-outline hover:text-primary transition-all p-0.5"
+                    title="Đổi tên"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          <ElectionStatus election={election} />
+          {!editingElection && <ElectionStatus election={election} />}
         </div>
 
-        {election.description && (
+        {!editingElection && election.description && (
           <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2 mb-3">
             {election.description}
           </p>
@@ -153,6 +242,23 @@ function ElectionCard({
           <span className="material-symbols-outlined text-[14px]">person</span>
           <span>{activeCands.length} ứng viên</span>
         </div>
+
+        {(election.startTime || election.endTime) && (
+          <div className="flex flex-col gap-0.5 mt-2">
+            {election.startTime && (
+              <div className="flex items-center gap-1 text-[11px] text-outline">
+                <span className="material-symbols-outlined text-[12px]">play_circle</span>
+                <span>Bắt đầu: {formatTime(election.startTime)}</span>
+              </div>
+            )}
+            {election.endTime && (
+              <div className="flex items-center gap-1 text-[11px] text-outline">
+                <span className="material-symbols-outlined text-[12px]">stop_circle</span>
+                <span>Kết thúc: {formatTime(election.endTime)}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="px-4 py-3 border-t border-white/5 flex items-center gap-1.5 flex-wrap bg-surface-container/40">
@@ -488,6 +594,15 @@ export function ElectionsTab() {
     catch (err) { setError(getApiErrorMessage(err, 'Xóa ứng viên thất bại')) }
   }
 
+  const handleUpdateElection = async (id: number, data: { title: string; description: string }) => {
+    try {
+      await updateElection(id, data)
+      load()
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Cập nhật cuộc bầu cử thất bại'))
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -595,6 +710,7 @@ export function ElectionsTab() {
               onAddCandidate={handleAddCandidate}
               onRemoveCandidate={handleRemoveCandidate}
               onUpdateCandidate={handleUpdateCandidate}
+              onUpdateElection={handleUpdateElection}
               onSyncCandidates={handleSyncCandidates}
               processing={processing}
             />
