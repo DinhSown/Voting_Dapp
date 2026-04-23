@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from './hooks/useWallet'
-import { useAuth } from './hooks/useAuth'
 import { useVote } from './hooks/useVote'
 import { fetchHealth } from './services/api'
 import { Toast } from './components/Toast'
@@ -86,7 +85,6 @@ function AppInner() {
   const [health, setHealth] = useState<HealthStatus | null>(null)
 
   const wallet = useWallet()
-  const auth = useAuth()
   const vote = useVote()
   const { isAuthenticated } = useAuthContext()
 
@@ -221,7 +219,7 @@ function AppInner() {
       {/* Main Content */}
       <main className="md:ml-56 p-6 lg:p-8 max-w-7xl mx-auto pb-24 md:pb-8">
         {route === 'home' && (
-          <HomePage wallet={wallet} auth={auth} health={health} onNavigate={navigate} />
+          <HomePage wallet={wallet} health={health} onNavigate={navigate} />
         )}
         {route === 'vote' && (
           <VotePage wallet={wallet} vote={vote} onToast={showToast} />

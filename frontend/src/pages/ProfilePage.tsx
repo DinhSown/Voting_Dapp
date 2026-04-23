@@ -246,10 +246,10 @@ export function ProfilePage() {
       </div>
 
       {/* ── MAIN GRID ── */}
-      <div className="grid grid-cols-12 gap-gutter">
+      <div className="grid grid-cols-12 gap-8">
 
         {/* Left: Info + Vote history (8 cols) */}
-        <div className="col-span-12 lg:col-span-8 space-y-6">
+        <div className="col-span-12 lg:col-span-8 space-y-8">
 
           {/* Account info panel */}
           <div style={{ ...CARD_STYLE, padding: 24 }}>
@@ -411,7 +411,7 @@ export function ProfilePage() {
         </div>
 
         {/* Right sidebar (4 cols) */}
-        <div className="col-span-12 lg:col-span-4 space-y-6">
+        <div className="col-span-12 lg:col-span-4 space-y-8">
 
           {/* Participation stats */}
           <div style={{ ...CARD_STYLE, padding: 24 }}>

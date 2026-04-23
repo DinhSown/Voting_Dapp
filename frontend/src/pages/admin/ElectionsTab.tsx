@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   fetchAdminElections,
   createElection,
+  updateElection,
   deleteElection,
   startElection,
   endElection,
@@ -14,19 +15,45 @@ import {
 } from '../../services/api'
 import type { Election, Candidate } from '../../types'
 
+type ElectionTab = 'upcoming' | 'active' | 'ended'
+
+function classifyElection(e: Election): ElectionTab {
+  if (e.isEnded) return 'ended'
+  if (e.isActive) return 'active'
+  return 'upcoming'
+}
+
 function ElectionStatus({ election }: { election: Election }) {
+  if (election.isEnded) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-outline">
+        <span className="material-symbols-outlined text-[14px]">check_circle</span>
+        Đã kết thúc
+      </span>
+    )
+  }
   if (election.isActive) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-tertiary">
+      <span className="inline-flex items-center gap-1.5 text-xs text-tertiary font-bold">
         <span className="live-dot" />
         Đang diễn ra
       </span>
     )
   }
   if (election.onChainId !== null) {
-    return <span className="text-xs text-primary">On-chain</span>
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-primary font-medium">
+        <span className="material-symbols-outlined text-[14px]">link</span>
+        On-chain
+      </span>
+    )
   }
-  return <span className="text-xs text-outline">Nháp</span>
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-outline italic">
+      <span className="material-symbols-outlined text-[14px]">drafts</span>
+      Nháp
+    </span>
+  )
 }
 
 function ElectionCard({
@@ -40,6 +67,7 @@ function ElectionCard({
   onAddCandidate,
   onRemoveCandidate,
   onUpdateCandidate,
+  onUpdateElection,
   onSyncCandidates,
   processing,
 }: {
@@ -53,6 +81,7 @@ function ElectionCard({
   onAddCandidate: (electionId: number, name: string, desc: string, image: string) => Promise<void>
   onRemoveCandidate: (electionId: number, cand: Candidate) => void
   onUpdateCandidate: (electionId: number, candidateId: number, data: { name: string; description: string; image: string }) => Promise<void>
+  onUpdateElection: (election: Election) => void
   onSyncCandidates: (id: number) => void
   processing: Record<string, boolean>
 }) {
@@ -67,6 +96,8 @@ function ElectionCard({
   const [editDesc, setEditDesc] = useState('')
   const [editImage, setEditImage] = useState('')
   const [updating, setUpdating] = useState(false)
+
+
 
   const activeCands = (election.candidates || []).filter((c) => !c.isRemoved)
 
@@ -154,21 +185,45 @@ function ElectionCard({
     }
   }
 
-  const accentColor = election.isActive
+  const accentColor = election.isEnded
+    ? 'border-t-outline-variant/30'
+    : election.isActive
     ? 'border-t-tertiary'
     : election.onChainId !== null
     ? 'border-t-primary'
     : 'border-t-outline-variant'
 
+  const formatDate = (d: string | null | undefined) => {
+    if (!d) return 'N/A'
+    return new Date(d).toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
   return (
-    <div className={`glass-card rounded-xl overflow-hidden flex flex-col border-t-2 ${accentColor}`}>
+    <div className={`glass-card rounded-xl overflow-hidden flex flex-col border-t-2 ${accentColor} transition-all duration-300 hover:shadow-xl hover:shadow-black/20`}>
+
       <div className="px-4 py-4 flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-on-surface leading-snug truncate"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-              {election.title}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-on-surface leading-snug truncate"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                {election.title}
+              </p>
+              {!election.isEnded && !election.isActive && (
+                <button
+                  onClick={() => onUpdateElection(election)}
+                  className="text-outline hover:text-on-surface-variant transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">edit</span>
+                </button>
+              )}
+            </div>
             <p className="text-xs text-outline mt-0.5">#{election.id}</p>
           </div>
           <ElectionStatus election={election} />
@@ -180,6 +235,17 @@ function ElectionCard({
           </p>
         )}
 
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="flex items-center gap-1.5 text-[10px] text-outline">
+            <span className="material-symbols-outlined text-[14px]">schedule</span>
+            <span className="truncate">{formatDate(election.startTime)}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-outline">
+            <span className="material-symbols-outlined text-[14px]">event_busy</span>
+            <span className="truncate">{formatDate(election.endTime)}</span>
+          </div>
+        </div>
+
         <div className="flex items-center gap-1 text-xs text-outline">
           <span className="material-symbols-outlined text-[14px]">person</span>
           <span>{activeCands.length} ứng viên</span>
@@ -187,7 +253,7 @@ function ElectionCard({
       </div>
 
       <div className="px-4 py-3 border-t border-white/5 flex items-center gap-1.5 flex-wrap bg-surface-container/40">
-        {election.onChainId === null && !election.isActive && activeCands.length >= 2 && (
+        {election.onChainId === null && !election.isActive && !election.isEnded && activeCands.length >= 2 && (
           <button
             onClick={() => onPushToChain(election.id)}
             disabled={processing[`push-${election.id}`]}
@@ -199,7 +265,7 @@ function ElectionCard({
             {processing[`push-${election.id}`] ? 'Đang đẩy...' : 'Đẩy lên chain'}
           </button>
         )}
-        {election.onChainId !== null && !election.isActive && (
+        {election.onChainId !== null && !election.isActive && !election.isEnded && (
           <button
             onClick={() => onStart(election.id)}
             disabled={processing[`start-${election.id}`]}
@@ -211,7 +277,7 @@ function ElectionCard({
             {processing[`start-${election.id}`] ? 'Đang chạy...' : 'Bắt đầu'}
           </button>
         )}
-        {election.onChainId !== null && activeCands.some(c => c.onChainId === null) && (
+        {election.onChainId !== null && activeCands.some(c => c.onChainId === null) && !election.isEnded && (
           <button
             onClick={() => onSyncCandidates(election.id)}
             disabled={processing[`sync-${election.id}`]}
@@ -220,7 +286,7 @@ function ElectionCard({
             <span className={`material-symbols-outlined text-[13px] ${processing[`sync-${election.id}`] ? 'animate-spin' : ''}`}>
               {processing[`sync-${election.id}`] ? 'autorenew' : 'sync'}
             </span>
-            {processing[`sync-${election.id}`] ? 'Đang đồng bộ...' : 'Đồng bộ ứng viên'}
+            {processing[`sync-${election.id}`] ? 'Đồng bộ' : 'Đồng bộ'}
           </button>
         )}
         {election.isActive && (
@@ -246,7 +312,7 @@ function ElectionCard({
           {isExpanded ? 'Thu gọn' : 'Ứng viên'}
         </button>
 
-        {!election.isActive && (
+        {!election.isActive && !election.isEnded && (
           <button
             onClick={() => onDelete(election.id)}
             className="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error/10 transition-all"
@@ -258,7 +324,7 @@ function ElectionCard({
       </div>
 
       {isExpanded && (
-        <div className="border-t border-white/5 bg-surface-container/30 px-4 py-4 space-y-3">
+        <div className="border-t border-white/5 bg-surface-container/30 px-4 py-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
           <p className="text-[11px] font-semibold text-outline uppercase tracking-widest"
             style={{ fontFamily: 'Inter, sans-serif' }}>
             Ứng viên ({activeCands.length})
@@ -328,7 +394,7 @@ function ElectionCard({
                           </>
                         ) : (
                           <>
-                            {!election.isActive && (
+                            {!election.isActive && !election.isEnded && (
                               <button
                                 onClick={() => startEdit(c)}
                                 className="opacity-0 group-hover:opacity-100 text-outline hover:text-primary transition-all p-1"
@@ -336,7 +402,7 @@ function ElectionCard({
                                 <span className="material-symbols-outlined text-[16px]">edit</span>
                               </button>
                             )}
-                            {!election.isActive && (
+                            {!election.isActive && !election.isEnded && (
                               <button
                                 onClick={() => onRemoveCandidate(election.id, c)}
                                 className="opacity-0 group-hover:opacity-100 text-outline hover:text-error transition-all p-1"
@@ -354,7 +420,7 @@ function ElectionCard({
             </div>
           )}
 
-          {!election.isActive && (
+          {!election.isActive && !election.isEnded && (
             <div className="pt-2 border-t border-white/5 space-y-2">
               <p className="text-[11px] text-outline">Thêm ứng viên</p>
               <div className="flex gap-1.5">
@@ -418,9 +484,36 @@ export function ElectionsTab() {
   const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
+  const [newStartTime, setNewStartTime] = useState('')
+  const [newEndTime, setNewEndTime] = useState('')
   const [creating, setCreating] = useState(false)
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState<ElectionTab>('upcoming')
+
+  // Global Election Edit State
+  const [editingElection, setEditingElection] = useState<Election | null>(null)
+  const [editElTitle, setEditElTitle] = useState('')
+  const [editElDesc, setEditElDesc] = useState('')
+  const [editElStart, setEditElStart] = useState('')
+  const [editElEnd, setEditElEnd] = useState('')
+  const [savingElection, setSavingElection] = useState(false)
+
+  const openEditModal = (e: Election) => {
+    setEditingElection(e)
+    setEditElTitle(e.title)
+    setEditElDesc(e.description || '')
+    setEditElStart(e.startTime ? new Date(e.startTime).toISOString().slice(0, 16) : '')
+    setEditElEnd(e.endTime ? new Date(e.endTime).toISOString().slice(0, 16) : '')
+  }
+
+  const tabElections = useMemo<Record<ElectionTab, Election[]>>(() => ({
+    upcoming: (elections || []).filter((e) => classifyElection(e) === 'upcoming'),
+    active: (elections || []).filter((e) => classifyElection(e) === 'active'),
+    ended: (elections || []).filter((e) => classifyElection(e) === 'ended'),
+  }), [elections])
+
+  const visibleElections = tabElections[activeTab]
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -441,9 +534,16 @@ export function ElectionsTab() {
     if (!newTitle.trim()) return
     setCreating(true)
     try {
-      await createElection({ title: newTitle, description: newDesc })
+      await createElection({ 
+        title: newTitle, 
+        description: newDesc,
+        startTime: newStartTime || undefined,
+        endTime: newEndTime || undefined,
+      })
       setNewTitle('')
       setNewDesc('')
+      setNewStartTime('')
+      setNewEndTime('')
       setShowCreate(false)
       load()
     } catch (err) {
@@ -513,6 +613,25 @@ export function ElectionsTab() {
     }
   }
 
+  const handleUpdateElection = async () => {
+    if (!editingElection || !editElTitle.trim()) return
+    setSavingElection(true)
+    try {
+      await updateElection(editingElection.id, {
+        title: editElTitle.trim(),
+        description: editElDesc.trim(),
+        startTime: editElStart || undefined,
+        endTime: editElEnd || undefined,
+      })
+      setEditingElection(null)
+      load()
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Cập nhật cuộc bầu cử thất bại'))
+    } finally {
+      setSavingElection(false)
+    }
+  }
+
   const handleRemoveCandidate = async (electionId: number, cand: Candidate) => {
     if (!confirm(`Xóa ứng viên "${cand.name}"?`)) return
     try { await removeCandidate(electionId, cand.id); load() }
@@ -537,8 +656,41 @@ export function ElectionsTab() {
         </button>
       </div>
 
+      <div className="flex items-center gap-1 border-b border-white/5 pb-0 -mb-2">
+        {(
+          [
+            { key: 'upcoming', label: 'Sắp diễn ra', icon: 'schedule' },
+            { key: 'active',   label: 'Đang diễn ra', icon: 'radio_button_checked' },
+            { key: 'ended',    label: 'Đã kết thúc',  icon: 'check_circle' },
+          ] as { key: ElectionTab; label: string; icon: string }[]
+        ).map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${
+              activeTab === key
+                ? 'border-primary text-primary'
+                : 'border-transparent text-outline hover:text-on-surface-variant'
+            }`}
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            <span className="material-symbols-outlined text-[14px]">{icon}</span>
+            {label}
+            <span
+              className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ml-1 ${
+                activeTab === key
+                  ? 'bg-primary/15 text-primary'
+                  : 'bg-white/5 text-outline'
+              }`}
+            >
+              {tabElections[key].length}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {error && (
-        <div className="p-3 rounded-xl bg-error/10 border border-error/20 flex items-start gap-3">
+        <div className="p-3 rounded-xl bg-error/10 border border-error/20 flex items-start gap-3 animate-in fade-in slide-in-from-top-1">
           <span className="material-symbols-outlined text-error text-[20px]">error</span>
           <p className="text-xs text-error font-medium leading-relaxed flex-1">{error}</p>
           <button onClick={() => setError('')} className="text-error/60 hover:text-error">
@@ -549,7 +701,7 @@ export function ElectionsTab() {
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-md rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="glass-card w-full max-w-md rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200 shadow-2xl shadow-black/50">
             <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-lg font-bold text-on-surface">Tạo cuộc bầu cử mới</h3>
               <button onClick={() => setShowCreate(false)} className="text-outline hover:text-on-surface">
@@ -578,6 +730,26 @@ export function ElectionsTab() {
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-container border border-white/10 text-sm text-on-surface focus:outline-none focus:border-primary/40"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-outline ml-1">Bắt đầu</label>
+                  <input
+                    type="datetime-local"
+                    value={newStartTime}
+                    onChange={(e) => setNewStartTime(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-surface-container border border-white/10 text-xs text-on-surface focus:outline-none focus:border-primary/40"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-outline ml-1">Kết thúc</label>
+                  <input
+                    type="datetime-local"
+                    value={newEndTime}
+                    onChange={(e) => setNewEndTime(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-surface-container border border-white/10 text-xs text-on-surface focus:outline-none focus:border-primary/40"
+                  />
+                </div>
+              </div>
               <div className="pt-2 flex gap-3">
                 <button
                   onClick={() => setShowCreate(false)}
@@ -588,7 +760,7 @@ export function ElectionsTab() {
                 <button
                   onClick={handleCreate}
                   disabled={creating || !newTitle.trim()}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold disabled:opacity-50 transition-all"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-sm font-bold text-primary hover:bg-white/5 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   {creating ? 'Đang tạo...' : 'Xác nhận tạo'}
                 </button>
@@ -611,9 +783,23 @@ export function ElectionsTab() {
           <h3 className="text-lg font-bold text-on-surface">Chưa có dữ liệu</h3>
           <p className="text-sm text-outline max-w-xs mt-2">Hãy bắt đầu bằng cách tạo cuộc bầu cử đầu tiên của bạn.</p>
         </div>
+      ) : visibleElections.length === 0 ? (
+        <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center mt-6 animate-in fade-in slide-in-from-bottom-2">
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-outline text-[32px]">
+              {activeTab === 'upcoming' ? 'schedule' : activeTab === 'active' ? 'radio_button_checked' : 'check_circle'}
+            </span>
+          </div>
+          <h3 className="text-lg font-bold text-on-surface">Không có cuộc bầu cử</h3>
+          <p className="text-sm text-outline max-w-xs mb-4 mt-2">
+            {activeTab === 'upcoming' && 'Chưa có cuộc bầu cử nào sắp diễn ra.'}
+            {activeTab === 'active' && 'Chưa có cuộc bầu cử nào đang diễn ra.'}
+            {activeTab === 'ended' && 'Chưa có cuộc bầu cử nào đã kết thúc.'}
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(elections || []).map((el) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 animate-in fade-in duration-500">
+          {visibleElections.map((el) => (
             <ElectionCard
               key={el.id}
               election={el}
@@ -626,10 +812,80 @@ export function ElectionsTab() {
               onAddCandidate={handleAddCandidate}
               onRemoveCandidate={handleRemoveCandidate}
               onUpdateCandidate={handleUpdateCandidate}
+              onUpdateElection={openEditModal}
               onSyncCandidates={handleSyncCandidates}
               processing={processing}
             />
           ))}
+        </div>
+      )}
+
+      {/* ── GLOBAL EDIT ELECTION MODAL ── */}
+      {editingElection && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="glass-card w-full max-w-md rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200 shadow-2xl">
+            <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-on-surface">Sửa cuộc bầu cử</h3>
+              <button onClick={() => setEditingElection(null)} className="text-outline hover:text-on-surface">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-outline ml-1">Tiêu đề *</label>
+                <input
+                  type="text"
+                  value={editElTitle}
+                  onChange={(e) => setEditElTitle(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-container border border-white/10 text-sm text-on-surface focus:outline-none focus:border-primary/40"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-outline ml-1">Mô tả</label>
+                <textarea
+                  rows={3}
+                  value={editElDesc}
+                  onChange={(e) => setEditElDesc(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-container border border-white/10 text-sm text-on-surface focus:outline-none focus:border-primary/40"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-outline ml-1">Bắt đầu</label>
+                  <input
+                    type="datetime-local"
+                    value={editElStart}
+                    onChange={(e) => setEditElStart(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-surface-container border border-white/10 text-xs text-on-surface focus:outline-none focus:border-primary/40"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-outline ml-1">Kết thúc</label>
+                  <input
+                    type="datetime-local"
+                    value={editElEnd}
+                    onChange={(e) => setEditElEnd(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-surface-container border border-white/10 text-xs text-on-surface focus:outline-none focus:border-primary/40"
+                  />
+                </div>
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button
+                  onClick={() => setEditingElection(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-outline hover:bg-white/5 transition-all"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleUpdateElection}
+                  disabled={savingElection || !editElTitle.trim()}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-sm font-bold text-primary hover:bg-white/5 transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {savingElection ? 'Đang lưu...' : 'Lưu thay đổi'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

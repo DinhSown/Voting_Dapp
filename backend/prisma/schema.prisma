@@ -12,7 +12,6 @@ datasource db {
 model User {
   id            Int       @id @default(autoincrement())
   email         String?   @unique
-  phone         String?   @unique
   walletAddress String?   @unique
   isVerified    Boolean   @default(false)
   emailVerified Boolean   @default(false)
@@ -44,15 +43,8 @@ model Session {
 model OtpSession {
   id        Int      @id @default(autoincrement())
   email     String
-  otpCode   String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model PhoneOtpSession {
-  id        Int      @id @default(autoincrement())
-  phone     String
-  otpCode   String
+  otpHash   String
+  attempts  Int      @default(0)
   expiresAt DateTime
   createdAt DateTime @default(now())
 }

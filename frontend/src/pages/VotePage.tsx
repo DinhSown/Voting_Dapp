@@ -40,6 +40,17 @@ const TAB_INACTIVE_STYLE: React.CSSProperties = {
   color: 'rgba(218,226,253,0.4)',
 }
 
+function formatTime(iso: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 function CheckRow({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div className="flex items-center gap-2.5">
@@ -174,7 +185,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
 
       {/* ── ELECTION HEADER ── */}
       {election && (
-        <div>
+        <div className="mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <div
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"
@@ -218,6 +229,23 @@ export function VotePage({ wallet, vote, onToast }: Props) {
             >
               {election.description}
             </p>
+          )}
+
+          {(election.startTime || election.endTime) && (
+            <div className="mt-3 flex flex-wrap gap-4">
+              {election.startTime && (
+                <div className="flex items-center gap-1.5" style={LABEL_STYLE}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 12 }}>play_circle</span>
+                  <span>Bắt đầu: {formatTime(election.startTime)}</span>
+                </div>
+              )}
+              {election.endTime && (
+                <div className="flex items-center gap-1.5" style={LABEL_STYLE}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 12 }}>stop_circle</span>
+                  <span>Kết thúc: {formatTime(election.endTime)}</span>
+                </div>
+              )}
+            </div>
           )}
 
           <p className="mt-4" style={{ ...LABEL_STYLE }}>

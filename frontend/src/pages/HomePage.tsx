@@ -2,12 +2,10 @@ import { WalletConnect } from '../components/WalletConnect'
 import { LoginFlow } from '../components/LoginFlow'
 import { useAuthContext } from '../context/AuthContext'
 import type { WalletState } from '../hooks/useWallet'
-import type { AuthState } from '../hooks/useAuth'
 import type { HealthStatus } from '../types'
 
 interface Props {
   wallet: WalletState
-  auth: AuthState
   health: HealthStatus | null
   onNavigate: (route: string) => void
 }
@@ -18,14 +16,14 @@ const CARD: React.CSSProperties = {
   borderRadius: 16,
 }
 
-export function HomePage({ wallet, auth, health, onNavigate }: Props) {
+export function HomePage({ wallet, health, onNavigate }: Props) {
   const { isAuthenticated, user } = useAuthContext()
 
   const readiness = isAuthenticated ? 100 : wallet.address ? 50 : 8
 
   const steps = [
     { n: '01', label: 'Kết nối ví MetaMask', done: !!wallet.address },
-    { n: '02', label: 'Xác thực chữ ký', done: auth.step === 'VERIFIED' },
+    { n: '02', label: 'Xác thực chữ ký', done: isAuthenticated },
     { n: '03', label: 'Chọn ứng viên & bỏ phiếu', done: false },
     { n: '04', label: 'Phiếu ghi lên blockchain', done: false },
   ]

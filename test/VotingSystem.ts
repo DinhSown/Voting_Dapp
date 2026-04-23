@@ -5,121 +5,137 @@ describe("VotingSystem", function () {
   async function deployVotingSystem() {
     const { ethers } = await network.connect();
 
-    const [owner, voter1, voter2] = await ethers.getSigners();
+    const [owner, voter1, voter2, voter3] = await ethers.getSigners();
     const VotingSystem = await ethers.getContractFactory("VotingSystem");
     const votingSystem = await VotingSystem.deploy();
     await votingSystem.waitForDeployment();
 
-    return { votingSystem, owner, voter1, voter2 };
+    return { votingSystem, owner, voter1, voter2, voter3 };
+  }
+
+  async function createElectionWithCandidates(votingSystem: any) {
+    await votingSystem.createElectionWithCandidates(2, false);
   }
 
   async function createActiveElection(votingSystem: any) {
-    await votingSystem.createElection("President Election");
-    await votingSystem.addCandidate(1, "Alice");
-    await votingSystem.addCandidate(1, "Bob");
-    await votingSystem.startElection(1);
+    await votingSystem.createElectionWithCandidates(2, true);
   }
 
   it("should create election", async function () {
     const { votingSystem } = await deployVotingSystem();
 
-    await votingSystem.createElection("President Election");
+    await votingSystem.createElection();
 
     const election = await votingSystem.getElection(1);
     expect(election[0]).to.equal(1n);
-    expect(election[1]).to.equal("President Election");
-    expect(election[2]).to.equal(false);
+    expect(election[1]).to.equal(false);
+    expect(election[2]).to.equal(0n);
+    expect(election[3]).to.equal(0n);
   });
 
-  it("should add candidates", async function () {
+  it("should batch create election with candidates", async function () {
     const { votingSystem } = await deployVotingSystem();
 
-    await votingSystem.createElection("President Election");
-    await votingSystem.addCandidate(1, "Alice");
-    await votingSystem.addCandidate(1, "Bob");
+    await votingSystem.createElectionWithCandidates(3, false);
 
-    const candidate1 = await votingSystem.getCandidate(1, 1);
-    const candidate2 = await votingSystem.getCandidate(1, 2);
+    const election = await votingSystem.getElection(1);
+    expect(election[2]).to.equal(3n);
+    expect((await votingSystem.getCandidate(1, 3))[0]).to.equal(3n);
+  });
 
-    expect(candidate1[1]).to.equal("Alice");
-    expect(candidate2[1]).to.equal("Bob");
+  it("should batch add candidates to an existing election", async function () {
+    const { votingSystem } = await deployVotingSystem();
+
+    await votingSystem.createElection();
+    await votingSystem.addCandidates(1, 3);
+
+    const election = await votingSystem.getElection(1);
+    expect(election[2]).to.equal(3n);
   });
 
   it("should start election", async function () {
     const { votingSystem } = await deployVotingSystem();
 
-    await votingSystem.createElection("President Election");
-    await votingSystem.addCandidate(1, "Alice");
-    await votingSystem.addCandidate(1, "Bob");
-    await votingSystem.startElection(1);
+    await createActiveElection(votingSystem);
 
     const election = await votingSystem.getElection(1);
-    expect(election[2]).to.equal(true);
+    expect(election[1]).to.equal(true);
   });
 
-  it("should reject non-whitelisted voter", async function () {
+  it("should reject non-eligible voter", async function () {
     const { votingSystem, voter1 } = await deployVotingSystem();
 
     await createActiveElection(votingSystem);
 
-    await expect(votingSystem.connect(voter1).vote(1, 1)).to.be.revertedWith(
-      "Not authorized to vote in this election"
-    );
+    await expect(
+      votingSystem.connect(voter1).vote(1, 1, { value: await votingSystem.VOTE_FEE() })
+    ).to.be.revertedWithCustomError(votingSystem, "UserNotEligible");
   });
 
-  it("should allow one wallet to vote only once after whitelisting", async function () {
+  it("should allow one wallet to vote only once after eligibility is granted", async function () {
     const { votingSystem, voter1 } = await deployVotingSystem();
 
     await createActiveElection(votingSystem);
-    await votingSystem.whitelistEligibleWallet(1, voter1.address);
+    await votingSystem.setVoterEligible(voter1.address, true);
 
-    await votingSystem.connect(voter1).vote(1, 1);
+    await votingSystem.connect(voter1).vote(1, 1, { value: await votingSystem.VOTE_FEE() });
 
     const candidate1 = await votingSystem.getCandidate(1, 1);
-    expect(candidate1[2]).to.equal(1n);
+    expect(candidate1[1]).to.equal(1n);
 
     const voterStatus = await votingSystem.getVoterStatus(1, voter1.address);
     expect(voterStatus[0]).to.equal(true);
-    expect(voterStatus[1]).to.equal(true);
-    expect(voterStatus[2]).to.equal(1n);
+    expect(voterStatus[1]).to.equal(1n);
 
-    await expect(votingSystem.connect(voter1).vote(1, 2)).to.be.revertedWith("You already voted");
+    await expect(
+      votingSystem.connect(voter1).vote(1, 2, { value: await votingSystem.VOTE_FEE() })
+    ).to.be.revertedWithCustomError(votingSystem, "AlreadyVoted");
   });
 
-  it("should support batch whitelisting", async function () {
-    const { votingSystem, voter1, voter2 } = await deployVotingSystem();
+  it("should reject banned voter even when eligible", async function () {
+    const { votingSystem, voter1 } = await deployVotingSystem();
 
     await createActiveElection(votingSystem);
-    await votingSystem.whitelistEligibleWallets(1, [voter1.address, voter2.address]);
+    await votingSystem.setVoterStatus(voter1.address, true, true);
 
-    const voter1Status = await votingSystem.getVoterStatus(1, voter1.address);
-    const voter2Status = await votingSystem.getVoterStatus(1, voter2.address);
-
-    expect(voter1Status[0]).to.equal(true);
-    expect(voter2Status[0]).to.equal(true);
+    await expect(
+      votingSystem.connect(voter1).vote(1, 1, { value: await votingSystem.VOTE_FEE() })
+    ).to.be.revertedWithCustomError(votingSystem, "UserBanned");
   });
 
   it("should reject voting when election is inactive", async function () {
     const { votingSystem, voter1 } = await deployVotingSystem();
 
-    await votingSystem.createElection("President Election");
-    await votingSystem.addCandidate(1, "Alice");
-    await votingSystem.addCandidate(1, "Bob");
-    await votingSystem.whitelistEligibleWallet(1, voter1.address);
+    await createElectionWithCandidates(votingSystem);
+    await votingSystem.setVoterEligible(voter1.address, true);
 
-    await expect(votingSystem.connect(voter1).vote(1, 1)).to.be.revertedWith("Election is not active");
+    await expect(
+      votingSystem.connect(voter1).vote(1, 1, { value: await votingSystem.VOTE_FEE() })
+    ).to.be.revertedWithCustomError(votingSystem, "ElectionAlreadyEnded");
+  });
+
+  it("should batch sync many voter statuses", async function () {
+    const { votingSystem, voter1, voter2, voter3 } = await deployVotingSystem();
+
+    await votingSystem.setManyVoterStatus(
+      [voter1.address, voter2.address, voter3.address],
+      [true, true, false],
+      [false, true, false]
+    );
+
+    expect(await votingSystem.isEligible(voter1.address)).to.equal(true);
+    expect(await votingSystem.isEligible(voter2.address)).to.equal(true);
+    expect(await votingSystem.isEligible(voter3.address)).to.equal(false);
+    expect(await votingSystem.isBanned(voter2.address)).to.equal(true);
   });
 
   it("should end election", async function () {
     const { votingSystem } = await deployVotingSystem();
 
-    await votingSystem.createElection("President Election");
-    await votingSystem.addCandidate(1, "Alice");
-    await votingSystem.addCandidate(1, "Bob");
-    await votingSystem.startElection(1);
+    await createActiveElection(votingSystem);
     await votingSystem.endElection(1);
 
     const election = await votingSystem.getElection(1);
-    expect(election[2]).to.equal(false);
+    expect(election[1]).to.equal(false);
   });
 });
