@@ -185,7 +185,7 @@ export function VotePage({ wallet, vote, onToast }: Props) {
 
       {/* ── ELECTION HEADER ── */}
       {election && (
-        <div>
+        <div className="mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <div
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"

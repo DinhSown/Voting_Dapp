@@ -795,7 +795,7 @@ export function ElectionsTab() {
           <p className="text-sm text-outline font-medium">Đang tải dữ liệu...</p>
         </div>
       ) : (elections || []).length === 0 ? (
-        <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+        <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center mt-10">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
             <span className="material-symbols-outlined text-outline text-[32px]">folder_open</span>
           </div>
@@ -803,21 +803,21 @@ export function ElectionsTab() {
           <p className="text-sm text-outline max-w-xs mt-2">Hãy bắt đầu bằng cách tạo cuộc bầu cử đầu tiên của bạn.</p>
         </div>
       ) : visibleElections.length === 0 ? (
-        <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+        <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center mt-10">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
             <span className="material-symbols-outlined text-outline text-[32px]">
               {activeTab === 'upcoming' ? 'schedule' : activeTab === 'active' ? 'radio_button_checked' : 'check_circle'}
             </span>
           </div>
           <h3 className="text-lg font-bold text-on-surface">Không có cuộc bầu cử</h3>
-          <p className="text-sm text-outline max-w-xs mt-2">
+          <p className="text-sm text-outline max-w-xs mb-4 mt-2">
             {activeTab === 'upcoming' && 'Chưa có cuộc bầu cử nào sắp diễn ra.'}
             {activeTab === 'active' && 'Chưa có cuộc bầu cử nào đang diễn ra.'}
             {activeTab === 'ended' && 'Chưa có cuộc bầu cử nào đã kết thúc.'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
           {visibleElections.map((el) => (
             <ElectionCard
               key={el.id}

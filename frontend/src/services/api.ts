@@ -166,7 +166,7 @@ export async function createElection(data: {
 
 export async function updateElection(
   id: number,
-  data: { description?: string; startTime?: string; endTime?: string }
+  data: { title?: string; description?: string; startTime?: string; endTime?: string }
 ): Promise<Election> {
   const res = await api.patch<Election>(`/api/admin/elections/${id}`, data)
   return res.data

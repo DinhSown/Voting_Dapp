@@ -193,13 +193,22 @@ export function createAuthRouter(
     }
 
     // If tempToken provided, validate it (first-time wallet flow)
+    let walletAddress: string | undefined;
     if (tempToken) {
       try {
-        verifyTempToken(tempToken);
+        const payload = verifyTempToken(tempToken);
+        walletAddress = payload.walletAddress;
       } catch {
         res.status(401).json({ error: 'Invalid or expired session' });
         return;
       }
+    }
+
+    // Block if email is already verified by a different wallet
+    const existingEmailOwner = await prisma.user.findUnique({ where: { email } });
+    if (existingEmailOwner && existingEmailOwner.emailVerified && existingEmailOwner.walletAddress !== walletAddress) {
+      res.status(409).json({ error: 'Email này đã được xác thực bởi một ví khác' });
+      return;
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -260,14 +269,11 @@ export function createAuthRouter(
 
       await prisma.otpSession.delete({ where: { id: session.id } });
 
-      // Update user: mark email verified
-      // If this email is already owned by a different wallet, clear it from that record first
+      // Block if email is already verified by a different wallet
       const existingEmailOwner = await prisma.user.findUnique({ where: { email } });
-      if (existingEmailOwner && existingEmailOwner.walletAddress !== walletAddress) {
-        await prisma.user.update({
-          where: { id: existingEmailOwner.id },
-          data: { email: null },
-        });
+      if (existingEmailOwner && existingEmailOwner.walletAddress !== walletAddress && existingEmailOwner.emailVerified) {
+        res.status(409).json({ error: 'Email này đã được xác thực bởi một ví khác' });
+        return;
       }
 
       const role = isAdminWallet(walletAddress) ? 'admin' : 'user';

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
-import { ethers } from 'ethers';
+import { Block, ethers } from 'ethers';
 import { wrapEthersSigner } from '@oasisprotocol/sapphire-ethers-v6';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -26,23 +26,24 @@ type DemoElection = {
 
 const DEMO_ELECTIONS: DemoElection[] = [
   {
-    title: 'Nhan vat truyen cam hung 2026',
-    description: 'Ca nhan co dong gop tich cuc nhat cho cong dong blockchain Viet Nam.',
+    title: 'Nhân vật truyền cảm hứng 2026',
+    description: 'Cá nhân có đóng góp tích cực nhất cho cộng đồng Blockchain Việt Nam.',
+
     startOnChain: true,
     candidates: [
       {
-        name: 'Nguyen Van An',
-        description: 'Founder BlockchainVN, 10 nam kinh nghiem xay dung cong dong.',
+        name: 'Nguyễn Văn An',
+        description: 'Founder BlockchainVN, 10 năm kinh nghiệm xây dựng cộng đồng.',
         image: 'https://i.pravatar.cc/150?img=11',
       },
       {
-        name: 'Tran Thi Binh',
-        description: 'Lead Developer DeFi Protocol, dong gop nhieu du an open-source.',
+        name: 'Trần Thị Bình',
+        description: 'Lead Developer DeFi Protocol, đóng góp nhiều dự án open-source.',
         image: 'https://i.pravatar.cc/150?img=12',
       },
       {
-        name: 'Pham Minh Duc',
-        description: 'Web3 educator, mentor cho nhieu nhom sinh vien blockchain.',
+        name: 'Phạm Minh Đức',
+        description: 'Web3 educator, mentor cho nhiều nhóm sinh viên blockchain.',
         image: 'https://i.pravatar.cc/150?img=13',
       },
     ],

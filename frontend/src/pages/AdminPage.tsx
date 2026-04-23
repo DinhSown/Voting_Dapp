@@ -39,10 +39,6 @@ export function AdminPage() {
     })
   }
 
-  function sanitiseLogDescription(description: string): string {
-    return description.replace(/ voted for "[^"]*"/, ' voted')
-  }
-
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -151,9 +147,7 @@ export function AdminPage() {
                             {log.action}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-xs text-on-surface-variant">
-                          {sanitiseLogDescription(log.description)}
-                        </td>
+                        <td className="px-5 py-3 text-xs text-on-surface-variant">{log.description}</td>
                       </tr>
                     ))}
                   </tbody>
