@@ -99,6 +99,16 @@ export async function updateProfile(name: string): Promise<AuthUser> {
   return res.data
 }
 
+export async function syncMyEligibility(): Promise<{
+  walletAddress: string
+  eligible: boolean
+  isBanned: boolean
+  updated: boolean
+}> {
+  const res = await api.post('/api/user/sync-eligibility')
+  return res.data
+}
+
 // ─── User Votes ──────────────────────────────────────────────────
 export async function recordVote(txHash: string): Promise<void> {
   await api.post('/api/user/vote', { txHash })

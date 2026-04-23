@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { castVoteOnChain } from '../services/wallet'
-import { recordVote, fetchMyVotes } from '../services/api'
+import { recordVote, fetchMyVotes, syncMyEligibility } from '../services/api'
 
 const TOKEN_KEY = 'mechoice_token'
 
@@ -44,6 +44,11 @@ export function useVote(): VoteState {
       .finally(() => setHistoryLoaded(true))
   }, [])
 
+  const isUserNotEligibleError = (error: unknown): boolean => {
+    if (!(error instanceof Error)) return false
+    return error.message.toLowerCase().includes('user not eligible')
+  }
+
   const castVote = useCallback(
     async (
       election: { id: number; onChainId: number | null; title: string },
@@ -54,7 +59,20 @@ export function useVote(): VoteState {
 
       setVotingFor(candidate.id)
       try {
-        const txHash = await castVoteOnChain(candidate.onChainId, election.onChainId)
+        let txHash: string
+        try {
+          txHash = await castVoteOnChain(candidate.onChainId, election.onChainId)
+        } catch (error) {
+          if (!isUserNotEligibleError(error)) throw error
+
+          const syncResult = await syncMyEligibility()
+          if (!syncResult.eligible || syncResult.isBanned) {
+            throw new Error('Tài khoản của bạn hiện chưa đủ điều kiện để vote')
+          }
+
+          txHash = await castVoteOnChain(candidate.onChainId, election.onChainId)
+        }
+
         await recordVote(txHash)
         setVoted((prev) => new Set([...prev, election.id]))
         setVotedCandidates((prev) =>

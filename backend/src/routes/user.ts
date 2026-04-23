@@ -19,7 +19,8 @@ export function createUserRouter(
   prisma: PrismaClient,
   provider: ethers.Provider,
   contractAddress: string,
-  contractABI: ethers.InterfaceAbi
+  contractABI: ethers.InterfaceAbi,
+  getContract?: () => ethers.Contract
 ) {
   const router = Router();
   const contractInterface = new ethers.Interface(contractABI);
@@ -64,6 +65,58 @@ export function createUserRouter(
   });
 
   // POST /api/user/vote — record a vote after on-chain submission
+  router.post('/sync-eligibility', async (req: AuthRequest, res: Response) => {
+    if (!req.user) { res.status(401).json({ error: 'Unauthorized' }); return; }
+    if (!getContract) { res.status(500).json({ error: 'Contract sync is not configured' }); return; }
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        select: {
+          walletAddress: true,
+          emailVerified: true,
+          isBanned: true,
+        },
+      });
+
+      if (!user?.walletAddress) {
+        res.status(400).json({ error: 'User wallet is not linked' });
+        return;
+      }
+
+      const eligible = user.emailVerified && !user.isBanned;
+      const contract = getContract();
+      const [onChainEligible, onChainBanned] = await Promise.all([
+        contract.isEligible(user.walletAddress) as Promise<boolean>,
+        contract.isBanned(user.walletAddress) as Promise<boolean>,
+      ]);
+
+      let updated = false;
+
+      if (onChainEligible !== eligible) {
+        const eligibleTx = await contract.setVoterEligible(user.walletAddress, eligible) as ethers.TransactionResponse;
+        await eligibleTx.wait();
+        updated = true;
+      }
+
+      if (onChainBanned !== user.isBanned) {
+        const bannedTx = await contract.setVoterBanned(user.walletAddress, user.isBanned) as ethers.TransactionResponse;
+        await bannedTx.wait();
+        updated = true;
+      }
+
+      res.json({
+        walletAddress: user.walletAddress,
+        eligible,
+        isBanned: user.isBanned,
+        updated,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: 'Failed to sync user eligibility', details: message });
+    }
+  });
+
   router.post('/vote', async (req: AuthRequest, res: Response) => {
     if (!req.user) { res.status(401).json({ error: 'Unauthorized' }); return; }
 

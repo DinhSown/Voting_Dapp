@@ -175,7 +175,7 @@ app.use(
   }, getContract)
 );
 
-app.use('/api/user', auth, createUserRouter(prisma, provider, CONTRACT_ADDR, contractABI as ethers.InterfaceAbi));
+app.use('/api/user', auth, createUserRouter(prisma, provider, CONTRACT_ADDR, contractABI as ethers.InterfaceAbi, getContract));
 app.use('/api/admin', auth, requireAdmin, createAdminRouter(prisma, getContract));
 
 // ─── Elections (public) ───────────────────────────────────────────

@@ -57,9 +57,6 @@ export async function castVoteOnChain(candidateId: number, electionId: number): 
   const signer = await provider.getSigner()
   const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
   const voteFee = await contract.VOTE_FEE().catch(() => ethers.parseEther(VOTE_FEE_NATIVE))
-  await contract.vote.staticCall(electionId, candidateId, {
-    value: voteFee,
-  })
   const tx = await contract.vote(electionId, candidateId, {
     value: voteFee,
   })
