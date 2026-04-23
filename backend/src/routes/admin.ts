@@ -104,7 +104,8 @@ export function createAdminRouter(
     const id = parseInt(String(req.params['id'] ?? ''), 10);
     if (isNaN(id)) { res.status(400).json({ error: 'Invalid election id' }); return; }
 
-    const { description, startTime, endTime } = req.body as {
+    const { title, description, startTime, endTime } = req.body as {
+      title?: string;
       description?: string;
       startTime?: string;
       endTime?: string;
@@ -114,6 +115,7 @@ export function createAdminRouter(
       const election = await prisma.election.update({
         where: { id },
         data: {
+          ...(title !== undefined && title.trim() && { title: title.trim() }),
           ...(description !== undefined && { description: description.trim() }),
           ...(startTime !== undefined && { startTime: startTime ? new Date(startTime) : null }),
           ...(endTime !== undefined && { endTime: endTime ? new Date(endTime) : null }),
@@ -289,7 +291,10 @@ export function createAdminRouter(
 
       const updated = await prisma.election.update({
         where: { id },
-        data: { isActive: true },
+        data: {
+          isActive: true,
+          startTime: election.startTime ?? new Date(),
+        },
         include: { candidates: { where: { isRemoved: false } } },
       });
 
@@ -319,7 +324,10 @@ export function createAdminRouter(
 
       const updated = await prisma.election.update({
         where: { id },
-        data: { isActive: true },
+        data: {
+          isActive: true,
+          startTime: election.startTime ?? new Date(),
+        },
       });
 
       res.json(updated);
@@ -350,7 +358,10 @@ export function createAdminRouter(
 
       const updated = await prisma.election.update({
         where: { id },
-        data: { isActive: false },
+        data: {
+          isActive: false,
+          endTime: election.endTime ?? new Date(),
+        },
       });
 
       res.json(updated);
