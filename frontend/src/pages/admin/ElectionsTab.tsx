@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   fetchAdminElections,
   createElection,
@@ -30,7 +30,7 @@ type ElectionTab = 'upcoming' | 'active' | 'ended'
 
 function classifyElection(election: Election): ElectionTab {
   if (election.isActive) return 'active'
-  if (election.endTime && new Date(election.endTime) <= new Date()) return 'ended'
+  if (election.startTime && new Date(election.startTime) <= new Date()) return 'ended'
   return 'upcoming'
 }
 
@@ -537,11 +537,11 @@ export function ElectionsTab() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<ElectionTab>('upcoming')
 
-  const tabElections: Record<ElectionTab, Election[]> = {
+  const tabElections = useMemo<Record<ElectionTab, Election[]>>(() => ({
     upcoming: (elections || []).filter((e) => classifyElection(e) === 'upcoming'),
     active: (elections || []).filter((e) => classifyElection(e) === 'active'),
     ended: (elections || []).filter((e) => classifyElection(e) === 'ended'),
-  }
+  }), [elections])
   const visibleElections = tabElections[activeTab]
 
   const load = useCallback(async () => {
