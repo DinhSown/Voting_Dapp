@@ -366,7 +366,7 @@ export function ProfilePage() {
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-mono text-[10px] text-outline mt-0.5">
+                        <p className="font-mono text-[10px] text-outline">
                           {record.categoryTitle || `Danh mục #${record.categoryId}`}
                           {' · '}
                           {new Date(record.votedAt).toLocaleString('vi-VN', {
