@@ -30,7 +30,7 @@ type ElectionTab = 'upcoming' | 'active' | 'ended'
 
 function classifyElection(election: Election): ElectionTab {
   if (election.isActive) return 'active'
-  if (election.startTime && new Date(election.startTime) <= new Date()) return 'ended'
+  if (election.endTime !== null) return 'ended'
   return 'upcoming'
 }
 

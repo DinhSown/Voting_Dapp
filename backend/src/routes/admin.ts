@@ -360,7 +360,7 @@ export function createAdminRouter(
         where: { id },
         data: {
           isActive: false,
-          endTime: election.endTime ?? new Date(),
+          endTime: new Date(),
         },
       });
 
