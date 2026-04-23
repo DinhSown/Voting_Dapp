@@ -7,7 +7,6 @@ import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
-import twilio from 'twilio';
 
 import { createAuthRouter } from './src/routes/auth';
 import { createAdminRouter } from './src/routes/admin';
@@ -39,9 +38,6 @@ const SMTP_SECURE = process.env['SMTP_SECURE'] === 'true';
 const SMTP_USER = process.env['SMTP_USER'];
 const SMTP_PASS = process.env['SMTP_PASS'];
 const MAIL_FROM = process.env['MAIL_FROM'] || SMTP_USER || 'no-reply@meChoice.local';
-const TWILIO_ACCOUNT_SID = process.env['TWILIO_ACCOUNT_SID'];
-const TWILIO_AUTH_TOKEN = process.env['TWILIO_AUTH_TOKEN'];
-const TWILIO_PHONE_NUMBER = process.env['TWILIO_PHONE_NUMBER'];
 const FRONTEND_URL = process.env['FRONTEND_URL'] || 'http://localhost:5173';
 
 // ─── Prisma ────────────────────────────────────────────────────────
@@ -79,6 +75,70 @@ const getContract = () => {
   return new ethers.Contract(CONTRACT_ADDR, contractABI as ethers.InterfaceAbi, signerWallet);
 };
 
+const getReadContract = () => {
+  if (!CONTRACT_ADDR) throw new Error('CONTRACT_ADDRESS is not set in .env');
+  if (!contractABI.length) throw new Error('ABI not loaded, run npx hardhat compile');
+  return new ethers.Contract(CONTRACT_ADDR, contractABI as ethers.InterfaceAbi, baseProvider);
+};
+
+async function syncVoteEvents(fromBlock?: number, toBlock?: number) {
+  if (!CONTRACT_ADDR || !contractABI.length) return { synced: 0 };
+
+  const contract = getReadContract();
+  const latestBlock = toBlock ?? await baseProvider.getBlockNumber();
+  const startBlock = fromBlock ?? Math.max(0, latestBlock - 5_000);
+  const events = await contract.queryFilter(contract.filters['Voted'](), startBlock, latestBlock);
+  let synced = 0;
+
+  for (const event of events) {
+    if (!('args' in event) || !event.args) continue;
+    const electionOnChainId = Number(event.args[0]);
+    const candidateOnChainId = Number(event.args[1]);
+    const voterWallet = String(event.args[2]).toLowerCase();
+    const txHash = event.transactionHash;
+
+    const [user, election] = await Promise.all([
+      prisma.user.findUnique({
+        where: { walletAddress: voterWallet },
+        select: { id: true, name: true, walletAddress: true },
+      }),
+      prisma.election.findFirst({
+        where: { onChainId: electionOnChainId },
+        include: {
+          candidates: {
+            where: { onChainId: candidateOnChainId, isRemoved: false },
+            take: 1,
+          },
+        },
+      }),
+    ]);
+
+    if (!user || !election || !election.candidates[0]) continue;
+    const candidate = election.candidates[0];
+
+    await prisma.vote.upsert({
+      where: { userId_categoryId: { userId: user.id, categoryId: election.id } },
+      update: {
+        candidateId: candidate.id,
+        candidateName: candidate.name,
+        categoryTitle: election.title,
+        txHash,
+      },
+      create: {
+        userId: user.id,
+        categoryId: election.id,
+        candidateId: candidate.id,
+        candidateName: candidate.name,
+        categoryTitle: election.title,
+        txHash,
+      },
+    });
+    synced++;
+  }
+
+  return { synced };
+}
+
 // ─── Express ───────────────────────────────────────────────────────
 const app = express();
 
@@ -103,76 +163,11 @@ app.use(
     user: SMTP_USER,
     pass: SMTP_PASS,
     from: MAIL_FROM,
-  })
+  }, getContract)
 );
 
-app.use('/api/user', auth, createUserRouter(prisma, provider));
+app.use('/api/user', auth, createUserRouter(prisma, provider, CONTRACT_ADDR, contractABI as ethers.InterfaceAbi));
 app.use('/api/admin', auth, requireAdmin, createAdminRouter(prisma, getContract));
-
-// ─── Legacy phone OTP (still used by existing frontend) ────────────
-const sendOtpSms = async (phone: string, otpCode: string) => {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-    console.log('\n==============================');
-    console.log('[MOCK SMS] TO:', phone);
-    console.log('[MOCK SMS] OTP CODE:', otpCode);
-    console.log('==============================\n');
-    return 'mock';
-  }
-  const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-  await client.messages.create({
-    body: `[meChoice] Mã OTP của bạn là: ${otpCode}. Có hiệu lực trong 5 phút.`,
-    from: TWILIO_PHONE_NUMBER,
-    to: phone,
-  });
-  return 'sms';
-};
-
-app.post('/api/auth/send-phone-otp', async (req: Request, res: Response) => {
-  const { phone } = req.body as { phone?: string };
-  if (!phone) { res.status(400).json({ error: 'Số điện thoại là bắt buộc' }); return; }
-  const normalized = phone.trim().replace(/\s+/g, '');
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = new Date(Date.now() + 5 * 60_000);
-  try {
-    await prisma.phoneOtpSession.create({ data: { phone: normalized, otpCode, expiresAt } });
-    const mode = await sendOtpSms(normalized, otpCode);
-    res.json({ message: mode === 'sms' ? 'OTP đã được gửi qua SMS' : 'OTP được tạo ở mock mode', deliveryMode: mode });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: 'Không thể tạo OTP', details: message });
-  }
-});
-
-app.post('/api/auth/verify-phone-otp', async (req: Request, res: Response) => {
-  const { phone, otpCode, walletAddress } = req.body as {
-    phone?: string; otpCode?: string; walletAddress?: string;
-  };
-  if (!phone || !otpCode || !walletAddress) {
-    res.status(400).json({ error: 'Thiếu trường bắt buộc: phone, otpCode, walletAddress' });
-    return;
-  }
-  const normalized = phone.trim().replace(/\s+/g, '');
-  try {
-    const session = await prisma.phoneOtpSession.findFirst({
-      where: { phone: normalized, otpCode, expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!session) { res.status(400).json({ error: 'OTP không hợp lệ hoặc đã hết hạn' }); return; }
-
-    await prisma.user.upsert({
-      where: { phone: normalized },
-      update: { walletAddress, isVerified: true },
-      create: { phone: normalized, walletAddress, isVerified: true },
-    });
-
-    await prisma.phoneOtpSession.delete({ where: { id: session.id } });
-    await prisma.log.create({ data: { action: 'VERIFY_PHONE_SUCCESS', description: `${walletAddress} verified phone ${normalized}` } });
-    res.json({ message: 'Xác minh thành công! Ví đã được xác thực.' });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: 'Lỗi server', details: message });
-  }
-});
 
 // ─── Elections (public) ───────────────────────────────────────────
 app.get('/api/elections', async (req: Request, res: Response) => {
@@ -223,6 +218,16 @@ app.get('/api/results', async (_req: Request, res: Response) => {
   }
 });
 
+app.post('/api/sync/votes', auth, requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const result = await syncVoteEvents();
+    res.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: 'Failed to sync vote events', details: message });
+  }
+});
+
 // ─── Health ────────────────────────────────────────────────────────
 app.get('/health', async (_req: Request, res: Response) => {
   try {
@@ -232,7 +237,6 @@ app.get('/health', async (_req: Request, res: Response) => {
       database: 'sqlite',
       contract: CONTRACT_ADDR || 'NOT SET',
       mailer: SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock',
-      sms: TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER ? 'twilio' : 'mock',
       adminWallet: ADMIN_WALLET ? `${ADMIN_WALLET.slice(0, 6)}...${ADMIN_WALLET.slice(-4)}` : 'NOT SET',
     });
   } catch (err) {
@@ -250,4 +254,15 @@ app.listen(PORT, () => {
   console.log(`Admin wallet: ${ADMIN_WALLET ? `${ADMIN_WALLET.slice(0, 6)}...` : 'NOT SET'}`);
   console.log(`Frontend CORS: ${FRONTEND_URL}`);
   console.log(`Mailer mode: ${SMTP_HOST && SMTP_USER && SMTP_PASS ? 'smtp' : 'mock'}\n`);
+
+  let lastSyncedBlock: number | undefined;
+  setInterval(() => {
+    baseProvider.getBlockNumber()
+      .then(async (latestBlock) => {
+        const fromBlock = lastSyncedBlock === undefined ? Math.max(0, latestBlock - 5_000) : lastSyncedBlock + 1;
+        await syncVoteEvents(fromBlock, latestBlock);
+        lastSyncedBlock = latestBlock;
+      })
+      .catch((err) => console.warn('[sync] vote event sync failed:', err instanceof Error ? err.message : String(err)));
+  }, 60_000);
 });

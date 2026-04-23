@@ -18,6 +18,8 @@ export const VOTE_FEE_SYMBOL = 'TEST'
 export const CONTRACT_ABI = [
   'function vote(uint256 electionId, uint256 candidateId) external payable',
   'function VOTE_FEE() external view returns (uint256)',
+  'function isBanned(address voter) external view returns (bool)',
+  'function isEligible(address voter) external view returns (bool)',
   'function getElection(uint256 electionId) external view returns (uint256 id, bool isActive, uint256 candidateCount, uint256 totalVotes)',
   'function getCandidate(uint256 electionId, uint256 candidateId) external view returns (uint256 id, uint256 voteCount)',
 ]

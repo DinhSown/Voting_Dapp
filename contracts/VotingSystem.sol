@@ -23,8 +23,12 @@ contract VotingSystem {
     mapping(uint256 => mapping(uint256 => Candidate)) public candidates;
     mapping(uint256 => mapping(address => bool)) public hasVoted;
     mapping(uint256 => mapping(address => uint256)) public voterChoice;
+    mapping(address => bool) public isBanned;
+    mapping(address => bool) public isEligible;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event VoterBanUpdated(address indexed voter, bool banned);
+    event VoterEligibilityUpdated(address indexed voter, bool eligible);
     event ElectionCreated(uint256 indexed electionId);
     event CandidateAdded(uint256 indexed electionId, uint256 indexed candidateId);
     event ElectionStarted(uint256 indexed electionId);
@@ -51,6 +55,18 @@ contract VotingSystem {
         require(newOwner != address(0), "Invalid owner");
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
+    }
+
+    function setVoterBanned(address voter, bool banned) external onlyOwner {
+        require(voter != address(0), "Invalid voter");
+        isBanned[voter] = banned;
+        emit VoterBanUpdated(voter, banned);
+    }
+
+    function setVoterEligible(address voter, bool eligible) external onlyOwner {
+        require(voter != address(0), "Invalid voter");
+        isEligible[voter] = eligible;
+        emit VoterEligibilityUpdated(voter, eligible);
     }
 
     function createElection() external onlyOwner {
@@ -99,6 +115,8 @@ contract VotingSystem {
     function vote(uint256 electionId, uint256 candidateId) external payable validElection(electionId) {
         Election storage election = elections[electionId];
 
+        require(!isBanned[msg.sender], "User banned");
+        require(isEligible[msg.sender], "User not eligible");
         require(election.isActive, "Election is not active");
         require(!hasVoted[electionId][msg.sender], "You already voted");
         require(candidateId > 0 && candidateId <= election.candidateCount, "Invalid candidate");
