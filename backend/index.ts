@@ -39,6 +39,10 @@ const SMTP_USER = process.env['SMTP_USER'];
 const SMTP_PASS = process.env['SMTP_PASS'];
 const MAIL_FROM = process.env['MAIL_FROM'] || SMTP_USER || 'no-reply@meChoice.local';
 const FRONTEND_URL = process.env['FRONTEND_URL'] || 'http://localhost:5173';
+const LOG_SYNC_BLOCK_RANGE = Math.min(
+  100,
+  Math.max(1, parseInt(process.env['LOG_SYNC_BLOCK_RANGE'] || '100', 10))
+);
 
 // ─── Prisma ────────────────────────────────────────────────────────
 const adapter = new PrismaLibSql({ url: DATABASE_URL });
@@ -87,56 +91,61 @@ async function syncVoteEvents(fromBlock?: number, toBlock?: number) {
   const contract = getReadContract();
   const latestBlock = toBlock ?? await baseProvider.getBlockNumber();
   const startBlock = fromBlock ?? Math.max(0, latestBlock - 5_000);
-  const events = await contract.queryFilter(contract.filters['Voted'](), startBlock, latestBlock);
+  const filter = contract.filters['Voted']();
   let synced = 0;
 
-  for (const event of events) {
-    if (!('args' in event) || !event.args) continue;
-    const electionOnChainId = Number(event.args[0]);
-    const candidateOnChainId = Number(event.args[1]);
-    const voterWallet = String(event.args[2]).toLowerCase();
-    const txHash = event.transactionHash;
+  for (let batchStart = startBlock; batchStart <= latestBlock; batchStart += LOG_SYNC_BLOCK_RANGE) {
+    const batchEnd = Math.min(batchStart + LOG_SYNC_BLOCK_RANGE - 1, latestBlock);
+    const events = await contract.queryFilter(filter, batchStart, batchEnd);
 
-    const [user, election] = await Promise.all([
-      prisma.user.findUnique({
-        where: { walletAddress: voterWallet },
-        select: { id: true, name: true, walletAddress: true },
-      }),
-      prisma.election.findFirst({
-        where: { onChainId: electionOnChainId },
-        include: {
-          candidates: {
-            where: { onChainId: candidateOnChainId, isRemoved: false },
-            take: 1,
+    for (const event of events) {
+      if (!('args' in event) || !event.args) continue;
+      const electionOnChainId = Number(event.args[0]);
+      const candidateOnChainId = Number(event.args[1]);
+      const voterWallet = String(event.args[2]).toLowerCase();
+      const txHash = event.transactionHash;
+
+      const [user, election] = await Promise.all([
+        prisma.user.findUnique({
+          where: { walletAddress: voterWallet },
+          select: { id: true, name: true, walletAddress: true },
+        }),
+        prisma.election.findFirst({
+          where: { onChainId: electionOnChainId },
+          include: {
+            candidates: {
+              where: { onChainId: candidateOnChainId, isRemoved: false },
+              take: 1,
+            },
           },
+        }),
+      ]);
+
+      if (!user || !election || !election.candidates[0]) continue;
+      const candidate = election.candidates[0];
+
+      await prisma.vote.upsert({
+        where: { userId_categoryId: { userId: user.id, categoryId: election.id } },
+        update: {
+          candidateId: candidate.id,
+          candidateName: candidate.name,
+          categoryTitle: election.title,
+          txHash,
         },
-      }),
-    ]);
-
-    if (!user || !election || !election.candidates[0]) continue;
-    const candidate = election.candidates[0];
-
-    await prisma.vote.upsert({
-      where: { userId_categoryId: { userId: user.id, categoryId: election.id } },
-      update: {
-        candidateId: candidate.id,
-        candidateName: candidate.name,
-        categoryTitle: election.title,
-        txHash,
-      },
-      create: {
-        userId: user.id,
-        categoryId: election.id,
-        candidateId: candidate.id,
-        candidateName: candidate.name,
-        categoryTitle: election.title,
-        txHash,
-      },
-    });
-    synced++;
+        create: {
+          userId: user.id,
+          categoryId: election.id,
+          candidateId: candidate.id,
+          candidateName: candidate.name,
+          categoryTitle: election.title,
+          txHash,
+        },
+      });
+      synced++;
+    }
   }
 
-  return { synced };
+  return { synced, fromBlock: startBlock, toBlock: latestBlock };
 }
 
 // ─── Express ───────────────────────────────────────────────────────
