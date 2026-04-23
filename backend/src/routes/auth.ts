@@ -1,9 +1,49 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import nodemailer from 'nodemailer';
+import { createHash, timingSafeEqual } from 'crypto';
+import { ethers } from 'ethers';
 import { createNonce, consumeNonce } from '../lib/nonce';
 import { verifyWalletSignature, isAdminWallet } from '../lib/wallet';
 import { signToken, signTempToken, verifyTempToken } from '../lib/jwt';
+
+const ACCOUNT_BANNED_RESPONSE = { code: 'ACCOUNT_BANNED', error: 'Account is banned' } as const;
+const OTP_MAX_ATTEMPTS = 5;
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function hashOtp(email: string, otpCode: string): string {
+  const secret = process.env['JWT_SECRET'] ?? 'dev-secret';
+  return createHash('sha256').update(`${normalizeEmail(email)}:${otpCode}:${secret}`).digest('hex');
+}
+
+function verifyOtpHash(email: string, otpCode: string, expectedHash: string): boolean {
+  const actual = Buffer.from(hashOtp(email, otpCode), 'hex');
+  const expected = Buffer.from(expectedHash, 'hex');
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+function rateLimit(maxRequests: number, windowMs: number) {
+  const buckets = new Map<string, { count: number; resetAt: number }>();
+  return (req: Request, res: Response, next: NextFunction) => {
+    const key = `${req.ip}:${req.path}`;
+    const now = Date.now();
+    const bucket = buckets.get(key);
+    if (!bucket || bucket.resetAt <= now) {
+      buckets.set(key, { count: 1, resetAt: now + windowMs });
+      next();
+      return;
+    }
+    if (bucket.count >= maxRequests) {
+      res.status(429).json({ error: 'Too many requests, please try again later' });
+      return;
+    }
+    bucket.count++;
+    next();
+  };
+}
 
 export function createAuthRouter(
   prisma: PrismaClient,
@@ -14,9 +54,12 @@ export function createAuthRouter(
     user?: string;
     pass?: string;
     from: string;
-  }
+  },
+  getContract?: () => ethers.Contract
 ) {
   const router = Router();
+  const strictAuthLimit = rateLimit(10, 60_000);
+  const otpLimit = rateLimit(5, 60_000);
 
   const createMailer = () => {
     if (!mailerConfig.host || !mailerConfig.user || !mailerConfig.pass) return null;
@@ -68,7 +111,7 @@ export function createAuthRouter(
   };
 
   // GET /api/auth/nonce?walletAddress=0x...
-  router.get('/nonce', async (req: Request, res: Response) => {
+  router.get('/nonce', strictAuthLimit, async (req: Request, res: Response) => {
     const walletAddress = String(req.query['walletAddress'] ?? '').trim();
     if (!walletAddress || !walletAddress.startsWith('0x')) {
       res.status(400).json({ error: 'Invalid wallet address' });
@@ -85,7 +128,7 @@ export function createAuthRouter(
   });
 
   // POST /api/auth/wallet
-  router.post('/wallet', async (req: Request, res: Response) => {
+  router.post('/wallet', strictAuthLimit, async (req: Request, res: Response) => {
     const { walletAddress, signature, nonce } = req.body as {
       walletAddress?: string;
       signature?: string;
@@ -119,6 +162,10 @@ export function createAuthRouter(
       const existingUser = await prisma.user.findUnique({
         where: { walletAddress: walletAddress.toLowerCase() },
       });
+      if (existingUser?.isBanned) {
+        res.status(403).json(ACCOUNT_BANNED_RESPONSE);
+        return;
+      }
 
       // 5. Returning verified wallet — issue full JWT immediately
       if (existingUser && existingUser.emailVerified) {
@@ -130,6 +177,15 @@ export function createAuthRouter(
                 data: { role },
               })
             : existingUser;
+        try {
+          const tx = await getContract?.().setVoterEligible(walletAddress.toLowerCase(), true);
+          await tx?.wait();
+        } catch (chainErr) {
+          console.warn(
+            '[auth] Could not sync voter eligibility on-chain:',
+            chainErr instanceof Error ? chainErr.message : String(chainErr)
+          );
+        }
 
         const token = signToken({
           userId: user.id,
@@ -184,28 +240,36 @@ export function createAuthRouter(
   });
 
   // POST /api/auth/send-otp  (new: uses tempToken instead of electionId)
-  router.post('/send-otp', async (req: Request, res: Response) => {
-    const { email, tempToken } = req.body as { email?: string; tempToken?: string };
+  router.post('/send-otp', otpLimit, async (req: Request, res: Response) => {
+    const { email: rawEmail, tempToken } = req.body as { email?: string; tempToken?: string };
 
-    if (!email) {
-      res.status(400).json({ error: 'Email is required' });
+    if (!rawEmail || !tempToken) {
+      res.status(400).json({ error: 'Missing email or tempToken' });
+      return;
+    }
+    const email = normalizeEmail(rawEmail);
+
+    let walletAddress: string;
+    try {
+      const payload = verifyTempToken(tempToken);
+      walletAddress = payload.walletAddress;
+    } catch {
+      res.status(401).json({ error: 'Invalid or expired session' });
       return;
     }
 
-    // If tempToken provided, validate it (first-time wallet flow)
-    let walletAddress: string | undefined;
-    if (tempToken) {
-      try {
-        const payload = verifyTempToken(tempToken);
-        walletAddress = payload.walletAddress;
-      } catch {
-        res.status(401).json({ error: 'Invalid or expired session' });
-        return;
-      }
+    const walletUser = await prisma.user.findUnique({ where: { walletAddress } });
+    if (walletUser?.isBanned) {
+      res.status(403).json(ACCOUNT_BANNED_RESPONSE);
+      return;
     }
 
     // Block if email is already verified by a different wallet
     const existingEmailOwner = await prisma.user.findUnique({ where: { email } });
+    if (existingEmailOwner?.isBanned) {
+      res.status(403).json(ACCOUNT_BANNED_RESPONSE);
+      return;
+    }
     if (existingEmailOwner && existingEmailOwner.emailVerified && existingEmailOwner.walletAddress !== walletAddress) {
       res.status(409).json({ error: 'Email này đã được xác thực bởi một ví khác' });
       return;
@@ -219,7 +283,7 @@ export function createAuthRouter(
       await prisma.otpSession.deleteMany({
         where: { email, expiresAt: { gt: new Date() } },
       });
-      await prisma.otpSession.create({ data: { email, otpCode, expiresAt } });
+      await prisma.otpSession.create({ data: { email, otpHash: hashOtp(email, otpCode), expiresAt } });
       // sendOtpEmail never throws — it falls back to mock mode on SMTP failure
       const mode = await sendOtpEmail(email, otpCode);
       res.json({
@@ -233,17 +297,18 @@ export function createAuthRouter(
   });
 
   // POST /api/auth/verify-otp  (new: wallet-based, issues JWT)
-  router.post('/verify-otp', async (req: Request, res: Response) => {
-    const { email, otpCode, tempToken } = req.body as {
+  router.post('/verify-otp', otpLimit, async (req: Request, res: Response) => {
+    const { email: rawEmail, otpCode, tempToken } = req.body as {
       email?: string;
       otpCode?: string;
       tempToken?: string;
     };
 
-    if (!email || !otpCode || !tempToken) {
+    if (!rawEmail || !otpCode || !tempToken) {
       res.status(400).json({ error: 'Missing email, otpCode, or tempToken' });
       return;
     }
+    const email = normalizeEmail(rawEmail);
 
     try {
       // Validate temp token
@@ -256,13 +321,25 @@ export function createAuthRouter(
         return;
       }
 
+      const walletUser = await prisma.user.findUnique({ where: { walletAddress } });
+      if (walletUser?.isBanned) {
+        res.status(403).json(ACCOUNT_BANNED_RESPONSE);
+        return;
+      }
+
       // Verify OTP
       const session = await prisma.otpSession.findFirst({
-        where: { email, otpCode, expiresAt: { gt: new Date() } },
+        where: { email, expiresAt: { gt: new Date() } },
         orderBy: { createdAt: 'desc' },
       });
 
-      if (!session) {
+      if (!session || session.attempts >= OTP_MAX_ATTEMPTS || !verifyOtpHash(email, otpCode, session.otpHash)) {
+        if (session) {
+          await prisma.otpSession.update({
+            where: { id: session.id },
+            data: { attempts: { increment: 1 } },
+          });
+        }
         res.status(400).json({ error: 'OTP không hợp lệ hoặc đã hết hạn' });
         return;
       }
@@ -271,6 +348,10 @@ export function createAuthRouter(
 
       // Block if email is already verified by a different wallet
       const existingEmailOwner = await prisma.user.findUnique({ where: { email } });
+      if (existingEmailOwner?.isBanned) {
+        res.status(403).json(ACCOUNT_BANNED_RESPONSE);
+        return;
+      }
       if (existingEmailOwner && existingEmailOwner.walletAddress !== walletAddress && existingEmailOwner.emailVerified) {
         res.status(409).json({ error: 'Email này đã được xác thực bởi một ví khác' });
         return;
@@ -289,6 +370,15 @@ export function createAuthRouter(
           name: 'Unknown User',
         },
       });
+      try {
+        const tx = await getContract?.().setVoterEligible(walletAddress, true);
+        await tx?.wait();
+      } catch (chainErr) {
+        console.warn(
+          '[auth] Could not sync voter eligibility on-chain:',
+          chainErr instanceof Error ? chainErr.message : String(chainErr)
+        );
+      }
 
       await prisma.log.create({
         data: {

@@ -25,7 +25,7 @@ export function createAuthMiddleware(prisma: PrismaClient) {
         return;
       }
       if (user.isBanned) {
-        res.status(403).json({ error: 'Account is banned' });
+        res.status(403).json({ code: 'ACCOUNT_BANNED', error: 'Account is banned' });
         return;
       }
 

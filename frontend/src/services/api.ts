@@ -7,6 +7,8 @@ import type {
   AdminLog,
   AuthUser,
   Election,
+  OnChainStatus,
+  SyncEligibleResult,
   VoteRecord,
   VoteResult,
 } from '../types'
@@ -30,6 +32,10 @@ api.interceptors.response.use(
   (err) => {
     if (err?.response?.status === 401) {
       localStorage.removeItem(TOKEN_KEY)
+    }
+    if (err?.response?.status === 403 && err?.response?.data?.code === 'ACCOUNT_BANNED') {
+      localStorage.removeItem(TOKEN_KEY)
+      window.dispatchEvent(new CustomEvent('mechoice:account-banned'))
     }
     return Promise.reject(err)
   }
@@ -80,33 +86,6 @@ export async function verifyEmailOtpNew(
   return res.data
 }
 
-// ─── Auth — Legacy (phone OTP for backward compat) ───────────────
-export async function sendEmailOtp(email: string): Promise<void> {
-  await api.post('/api/auth/send-otp', { email })
-}
-
-export async function verifyEmailOtp(
-  email: string,
-  otpCode: string,
-  walletAddress: string,
-  electionId: number
-): Promise<void> {
-  await api.post('/api/auth/verify-otp', { email, otpCode, walletAddress, electionId })
-}
-
-export async function sendPhoneOtp(phone: string): Promise<void> {
-  await api.post('/api/auth/send-phone-otp', { phone })
-}
-
-export async function verifyPhoneOtp(
-  phone: string,
-  otpCode: string,
-  walletAddress: string,
-  electionId: number
-): Promise<void> {
-  await api.post('/api/auth/verify-phone-otp', { phone, otpCode, walletAddress, electionId })
-}
-
 // ─── User Profile ────────────────────────────────────────────────
 export async function getProfile(token: string): Promise<AuthUser> {
   const res = await api.get<AuthUser>('/api/user/profile', {
@@ -121,14 +100,8 @@ export async function updateProfile(name: string): Promise<AuthUser> {
 }
 
 // ─── User Votes ──────────────────────────────────────────────────
-export async function recordVote(data: {
-  categoryId: number
-  candidateId: number
-  candidateName: string
-  categoryTitle: string
-  txHash: string
-}): Promise<void> {
-  await api.post('/api/user/vote', data)
+export async function recordVote(txHash: string): Promise<void> {
+  await api.post('/api/user/vote', { txHash })
 }
 
 export async function fetchMyVotes(): Promise<VoteRecord[]> {
@@ -193,6 +166,21 @@ export async function syncCandidates(id: number): Promise<{ synced: number }> {
 
 export async function endElection(id: number): Promise<Election> {
   const res = await api.post<Election>(`/api/admin/elections/${id}/end`)
+  return res.data
+}
+
+export async function fetchOnChainStatus(): Promise<OnChainStatus> {
+  const res = await api.get<OnChainStatus>('/api/admin/on-chain/status')
+  return res.data
+}
+
+export async function syncEligibleUsers(): Promise<SyncEligibleResult> {
+  const res = await api.post<SyncEligibleResult>('/api/admin/sync-eligible-users')
+  return res.data
+}
+
+export async function syncVoteEvents(): Promise<{ synced: number }> {
+  const res = await api.post<{ synced: number }>('/api/sync/votes')
   return res.data
 }
 

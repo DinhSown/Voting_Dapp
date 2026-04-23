@@ -9,7 +9,7 @@ export interface Toast {
 
 export type AuthStep = 'IDLE' | 'OTP_SENT' | 'VERIFIED'
 
-export type VerifyMode = 'email' | 'phone'
+export type VerifyMode = 'email'
 
 export interface Nominee {
   id: number
@@ -31,7 +31,6 @@ export interface HealthStatus {
   database: string
   contract: string
   mailer: string
-  sms: string
   adminWallet?: string
 }
 
@@ -50,7 +49,6 @@ export interface AdminUser {
   id: number
   name: string
   email: string | null
-  phone: string | null
   walletAddress: string | null
   role: string
   isVerified: boolean
@@ -64,6 +62,26 @@ export interface AdminLog {
   action: string
   description: string
   timestamp: string
+}
+
+export interface OnChainStatus {
+  address: string
+  owner: string
+  signerAddress: string | null
+  signerIsOwner: boolean
+  codeExists: boolean
+  electionCount: number
+  dbElections: number
+  dbVerifiedUsers: number
+  dbEligibleUsers: number
+}
+
+export interface SyncEligibleResult {
+  total: number
+  eligibleSynced: number
+  bannedSynced: number
+  failed: number
+  errors: Array<{ userId: number; walletAddress: string; error: string }>
 }
 
 export interface PaginatedResponse<T> {

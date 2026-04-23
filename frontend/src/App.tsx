@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from './hooks/useWallet'
-import { useAuth } from './hooks/useAuth'
 import { useVote } from './hooks/useVote'
 import { fetchHealth } from './services/api'
 import { Toast } from './components/Toast'
@@ -72,6 +71,49 @@ function NavUserMenu({ onNavigate }: { onNavigate: (r: string) => void }) {
   )
 }
 
+function BannedAccountGate({
+  walletAddress,
+  onLogout,
+  onSwitchWallet,
+}: {
+  walletAddress: string
+  onLogout: () => void
+  onSwitchWallet: () => void
+}) {
+  return (
+    <div className="min-h-screen bg-background text-on-background flex items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-2xl border border-error/25 bg-surface-container p-6 text-center shadow-xl">
+        <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-error/15 flex items-center justify-center">
+          <span className="material-symbols-outlined text-error">block</span>
+        </div>
+        <h1 className="text-lg font-bold text-on-surface mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          Tài khoản đã bị khóa
+        </h1>
+        <p className="text-sm text-on-surface-variant mb-2">
+          Ví này không thể tiếp tục sử dụng hệ thống.
+        </p>
+        <p className="text-xs font-mono text-outline mb-6">
+          {walletAddress.slice(0, 8)}...{walletAddress.slice(-6)}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={onLogout}
+            className="px-4 py-2.5 rounded-xl border border-white/10 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors"
+          >
+            Đăng xuất
+          </button>
+          <button
+            onClick={onSwitchWallet}
+            className="px-4 py-2.5 rounded-xl bg-primary text-black font-bold hover:brightness-110 transition-colors"
+          >
+            Kết nối ví khác
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const NAV_ITEMS: { route: Route; label: string; icon: string }[] = [
   { route: 'home', label: 'Dashboard', icon: 'dashboard' },
   { route: 'vote', label: 'Bỏ phiếu', icon: 'how_to_vote' },
@@ -86,9 +128,8 @@ function AppInner() {
   const [health, setHealth] = useState<HealthStatus | null>(null)
 
   const wallet = useWallet()
-  const auth = useAuth()
   const vote = useVote()
-  const { isAuthenticated } = useAuthContext()
+  const { isAuthenticated, bannedWallet, logout } = useAuthContext()
 
   useEffect(() => {
     const handler = () => setRoute(getRouteFromHash())
@@ -119,6 +160,19 @@ function AppInner() {
   const shortAddr = wallet.address
     ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
     : null
+
+  const isCurrentWalletBanned =
+    !!wallet.address && !!bannedWallet && wallet.address.toLowerCase() === bannedWallet
+
+  if (isCurrentWalletBanned) {
+    return (
+      <BannedAccountGate
+        walletAddress={wallet.address}
+        onLogout={() => { void logout() }}
+        onSwitchWallet={() => { void wallet.connect() }}
+      />
+    )
+  }
 
   return (
     <div className="bg-background text-on-background min-h-screen" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -221,7 +275,7 @@ function AppInner() {
       {/* Main Content */}
       <main className="md:ml-56 p-6 lg:p-8 max-w-7xl mx-auto pb-24 md:pb-8">
         {route === 'home' && (
-          <HomePage wallet={wallet} auth={auth} health={health} onNavigate={navigate} />
+          <HomePage wallet={wallet} health={health} onNavigate={navigate} />
         )}
         {route === 'vote' && (
           <VotePage wallet={wallet} vote={vote} onToast={showToast} />
