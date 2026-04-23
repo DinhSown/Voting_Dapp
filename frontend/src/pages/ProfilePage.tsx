@@ -366,12 +366,6 @@ export function ProfilePage() {
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p
-                          className="text-sm font-bold text-on-surface truncate"
-                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                        >
-                          {record.candidateName || `Ứng viên #${record.candidateId}`}
-                        </p>
                         <p className="font-mono text-[10px] text-outline mt-0.5">
                           {record.categoryTitle || `Danh mục #${record.categoryId}`}
                           {' · '}
