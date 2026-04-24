@@ -179,6 +179,11 @@ export async function endElection(id: number): Promise<Election> {
   return res.data
 }
 
+export async function pauseElection(id: number): Promise<Election> {
+  const res = await api.post<Election>(`/api/admin/elections/${id}/pause`)
+  return res.data
+}
+
 export async function fetchOnChainStatus(): Promise<OnChainStatus> {
   const res = await api.get<OnChainStatus>('/api/admin/on-chain/status')
   return res.data

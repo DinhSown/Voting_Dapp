@@ -13,6 +13,7 @@ function chunkArray<T>(items: T[], size: number): T[][] {
   return chunks;
 }
 
+
 function parseElectionCreatedId(contract: ethers.Contract, receipt: ethers.TransactionReceipt | null): number | null {
   if (!receipt?.logs) return null;
   const iface = contract.interface;
@@ -459,6 +460,7 @@ export function createAdminRouter(
         where: { id },
         data: {
           isActive: true,
+          isEnded: false,
           startTime: election.startTime ?? new Date(),
         },
       });
@@ -486,13 +488,20 @@ export function createAdminRouter(
       if (!election.isActive) { res.status(400).json({ error: 'Election is not active' }); return; }
 
       const contract = getContract();
-      const tx = await contract.endElection(election.onChainId) as ethers.TransactionResponse;
-      await tx.wait();
+      if (election.onChainId !== null) {
+        try {
+          const tx = await contract.endElection(election.onChainId) as ethers.TransactionResponse;
+          await tx.wait();
+        } catch (chainErr) {
+          console.warn('[admin] End on chain failed (continuing with DB update):', chainErr);
+        }
+      }
 
       const updated = await prisma.election.update({
         where: { id },
         data: {
           isActive: false,
+          isEnded: true,
           endTime: new Date(),
         },
       });
@@ -501,6 +510,41 @@ export function createAdminRouter(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: 'Failed to end election', details: message });
+    }
+  });
+
+  // POST /api/admin/elections/:id/pause
+  router.post('/elections/:id/pause', async (req: AuthRequest, res: Response) => {
+    const id = parseInt(String(req.params['id'] ?? ''), 10);
+    if (isNaN(id)) { res.status(400).json({ error: 'Invalid election id' }); return; }
+
+    try {
+      const election = await prisma.election.findUnique({ where: { id } });
+      if (!election) { res.status(404).json({ error: 'Election not found' }); return; }
+      if (!election.isActive) { res.status(400).json({ error: 'Election is not active' }); return; }
+
+      const contract = getContract();
+      if (election.onChainId !== null) {
+        try {
+          const tx = await contract.endElection(election.onChainId) as ethers.TransactionResponse;
+          await tx.wait();
+        } catch (chainErr) {
+          console.warn('[admin] Pause on chain failed (continuing with DB update):', chainErr);
+        }
+      }
+
+      const updated = await prisma.election.update({
+        where: { id },
+        data: {
+          isActive: false,
+          isEnded: false,
+        },
+      });
+
+      res.json(updated);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: 'Failed to pause election', details: message });
     }
   });
 

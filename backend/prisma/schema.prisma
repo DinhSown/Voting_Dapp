@@ -57,6 +57,7 @@ model Election {
   endTime     DateTime?
   onChainId   Int?
   isActive    Boolean     @default(false)
+  isEnded     Boolean     @default(false)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   candidates  Candidate[]

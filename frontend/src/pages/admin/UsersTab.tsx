@@ -16,6 +16,7 @@ export function UsersTab() {
   const [searchInput, setSearchInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [processing, setProcessing] = useState<Record<string, boolean>>({})
   const limit = 10
 
   const load = useCallback(async () => {
@@ -39,8 +40,17 @@ export function UsersTab() {
   const handleBan = async (user: AdminUser) => {
     const action = user.isBanned ? 'bỏ cấm' : 'cấm'
     if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} người dùng "${user.name || user.walletAddress}"?`)) return
-    try { await banUser(user.id, !user.isBanned); load() }
+    
+    setProcessing(prev => ({ ...prev, [user.id]: true }))
+    try { 
+      await banUser(user.id, !user.isBanned)
+      // Update local state immediately for better UX
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isBanned: !u.isBanned } : u))
+      // Optionally refresh everything
+      load()
+    }
     catch (err) { setError(getApiErrorMessage(err, 'Thao tác thất bại')) }
+    finally { setProcessing(prev => ({ ...prev, [user.id]: false })) }
   }
 
   const totalPages = Math.ceil(total / limit)
@@ -153,12 +163,12 @@ export function UsersTab() {
 
                   {/* Role cell */}
                   <td className="px-5 py-3 hidden sm:table-cell">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${
                       u.role === 'admin'
-                        ? 'bg-secondary/15 text-secondary border-secondary/20'
+                        ? 'bg-[#f59e0b]/15 text-[#f59e0b] border-[#f59e0b]/30'
                         : 'bg-primary/10 text-primary border-primary/15'
                     }`}>
-                      {u.role}
+                      {u.role === 'admin' ? 'Quản trị' : 'Thành viên'}
                     </span>
                   </td>
 
@@ -189,13 +199,21 @@ export function UsersTab() {
                   <td className="px-5 py-3 text-right">
                     <button
                       onClick={() => handleBan(u)}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all border ${
+                      disabled={processing[u.id]}
+                      className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all border disabled:opacity-50 ${
                         u.isBanned
                           ? 'bg-tertiary/10 hover:bg-tertiary/20 text-tertiary border-tertiary/20'
                           : 'bg-surface-container-high hover:bg-error/10 hover:text-error hover:border-error/20 text-on-surface-variant border-white/5'
                       }`}
                     >
-                      {u.isBanned ? 'Bỏ cấm' : 'Cấm'}
+                      {processing[u.id] ? (
+                        <>
+                          <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                          <span>Đang xử lý...</span>
+                        </>
+                      ) : (
+                        u.isBanned ? 'Bỏ cấm' : 'Cấm'
+                      )}
                     </button>
                   </td>
                 </tr>

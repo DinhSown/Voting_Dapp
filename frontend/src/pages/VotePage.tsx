@@ -97,6 +97,9 @@ export function VotePage({ wallet, vote, onToast }: Props) {
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null)
   const [confirmed, setConfirmed] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showAllCategories, setShowAllCategories] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended'>('all')
 
   const isEligible = !!wallet.address && wallet.isCorrectNetwork && isAuthenticated
 
@@ -108,6 +111,14 @@ export function VotePage({ wallet, vote, onToast }: Props) {
   }, [])
 
   const election = elections[selectedIdx]
+  const filteredElections = elections.filter(el => {
+    const matchesSearch = el.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      (statusFilter === 'active' && el.isActive) || 
+      (statusFilter === 'ended' && el.isEnded)
+    return matchesSearch && matchesStatus
+  })
   const hasVoted = election ? vote.voted.has(election.id) : false
   const votedFor = election ? vote.votedCandidates.get(election.id) : undefined
   const votedCandidate = votedFor ? election?.candidates.find((c) => c.id === votedFor.candidateId) : undefined
@@ -254,23 +265,190 @@ export function VotePage({ wallet, vote, onToast }: Props) {
         </div>
       )}
 
-      {/* ── ELECTION TABS ── */}
-      {elections.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {elections.map((el, idx) => (
+      {/* ── ELECTION TABS / SEE MORE ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <h3 style={{ ...LABEL_STYLE, color: 'rgba(218,226,253,0.3)' }}>
+              Danh mục ({elections.length})
+            </h3>
+          </div>
+          
+          <button 
+            onClick={() => setShowAllCategories(true)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] border border-white/10 text-outline hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-all shadow-lg"
+            title="Tìm kiếm danh mục"
+          >
+            <span className="material-symbols-outlined text-[20px]">search</span>
+          </button>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none custom-scrollbar flex-1 no-scrollbar">
+            {elections.slice(0, 5).map((el) => {
+              const elIdx = elections.findIndex(e => e.id === el.id)
+              const isActive = elIdx === selectedIdx
+              return (
+                <button
+                  key={el.id}
+                  onClick={() => { setSelectedIdx(elIdx); setSelectedCandidateId(null); setConfirmed(false) }}
+                  className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 active:scale-95"
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    ...(isActive ? TAB_ACTIVE_STYLE : TAB_INACTIVE_STYLE),
+                    boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
+                    height: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="truncate max-w-[140px]">{el.title}</span>
+                    {vote.voted.has(el.id) && <CheckCircle size={10} style={{ color: '#4edea3', flexShrink: 0 }} />}
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    {el.isEnded ? (
+                      <span className="text-[8px] uppercase tracking-tighter opacity-50">Hết hạn</span>
+                    ) : el.isActive ? (
+                      <div className="flex items-center gap-1">
+                        <div className="w-1 h-1 rounded-full bg-[#4edea3] animate-pulse" />
+                        <span className="text-[8px] uppercase tracking-tighter text-[#4edea3]">Live</span>
+                      </div>
+                    ) : (
+                      <span className="text-[8px] uppercase tracking-tighter opacity-30">Nháp</span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          
+          {elections.length > 5 && (
             <button
-              key={el.id}
-              onClick={() => { setSelectedIdx(idx); setSelectedCandidateId(null); setConfirmed(false) }}
-              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
-              style={{
-                fontFamily: 'Space Grotesk, sans-serif',
-                ...(idx === selectedIdx ? TAB_ACTIVE_STYLE : TAB_INACTIVE_STYLE),
-              }}
+              onClick={() => setShowAllCategories(true)}
+              className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-primary text-xs font-bold hover:bg-primary/10 hover:border-primary/20 transition-all mb-2"
             >
-              <span className="truncate max-w-[140px]">{el.title}</span>
-              {vote.voted.has(el.id) && <CheckCircle size={12} style={{ color: '#4edea3', flexShrink: 0 }} />}
+              <span className="material-symbols-outlined text-[18px]">expand_more</span>
+              Xem thêm
             </button>
-          ))}
+          )}
+        </div>
+      </div>
+
+      {/* ── ALL CATEGORIES MODAL ── */}
+      {showAllCategories && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="glass-card w-full max-w-2xl max-h-[80vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl border-white/10 animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between gap-4">
+              <div className="flex-1 relative group">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] group-focus-within:text-primary transition-colors">
+                  search
+                </span>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Tìm kiếm trong danh mục..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3 rounded-2xl bg-white/[0.05] border border-white/10 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/40 focus:bg-white/[0.08] transition-all"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                )}
+              </div>
+              <button 
+                onClick={() => { setShowAllCategories(false); setSearchQuery('') }}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-white/10 transition-all"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="px-6 py-2 border-b border-white/5 flex gap-4 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'all', label: 'Tất cả', icon: 'list' },
+                { id: 'active', label: 'Đang diễn ra', icon: 'play_circle' },
+                { id: 'ended', label: 'Đã kết thúc', icon: 'check_circle' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setStatusFilter(tab.id as any)}
+                  className={`flex items-center gap-1.5 py-2 px-1 border-b-2 transition-all whitespace-nowrap text-xs font-semibold ${
+                    statusFilter === tab.id 
+                      ? 'border-primary text-primary' 
+                      : 'border-transparent text-outline hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              {filteredElections.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {filteredElections.map((el) => {
+                    const elIdx = elections.findIndex(e => e.id === el.id)
+                    const isActive = elIdx === selectedIdx
+                    return (
+                      <button
+                        key={el.id}
+                        onClick={() => { setSelectedIdx(elIdx); setSelectedCandidateId(null); setConfirmed(false); setShowAllCategories(false); setSearchQuery('') }}
+                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border transition-all text-left group ${
+                          isActive 
+                            ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20' 
+                            : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.08] hover:border-white/20'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-sm font-bold truncate ${isActive ? 'text-primary' : 'text-on-surface'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                              {el.title}
+                            </p>
+                            {((el as any).isEnded || (el.endTime && new Date(el.endTime) <= new Date())) ? (
+                              <span className="text-[8px] bg-[#ff4d4d]/10 text-[#ff4d4d] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Đã kết thúc</span>
+                            ) : el.isActive ? (
+                              <span className="text-[8px] bg-tertiary/10 text-tertiary px-1.5 py-0.5 rounded uppercase font-bold tracking-wider flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-tertiary animate-pulse" />
+                                Đang diễn ra
+                              </span>
+                            ) : (
+                              <span className="text-[8px] bg-white/5 text-outline/50 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Nháp</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-outline">{el.candidates.length} ứng viên</p>
+                            {vote.voted.has(el.id) && <CheckCircle size={10} style={{ color: '#4edea3', flexShrink: 0 }} />}
+                          </div>
+                        </div>
+                        <span className={`material-symbols-outlined text-[18px] transition-all ${isActive ? 'text-primary' : 'text-outline opacity-0 group-hover:opacity-100'}`}>
+                          {isActive ? 'check_circle' : 'arrow_forward'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="py-20 text-center space-y-4">
+                  <span className="material-symbols-outlined text-5xl text-outline/20">search_off</span>
+                  <p className="text-outline italic">Không tìm thấy danh mục nào phù hợp với "{searchQuery}"</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-white/[0.02] border-t border-white/5 text-center">
+              <p className="text-[10px] text-outline uppercase tracking-widest font-semibold">
+                Hiển thị {filteredElections.length} trên tổng số {elections.length} danh mục
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -579,7 +757,19 @@ export function VotePage({ wallet, vote, onToast }: Props) {
             )}
 
             {/* Confirmation + submit */}
-            {isEligible && !hasVoted && (
+            {isEligible && !hasVoted && ((election as any).isEnded || (election.endTime && new Date(election.endTime) <= new Date())) && (
+              <div className="p-5 rounded-2xl bg-[#ff4d4d]/5 border border-[#ff4d4d]/10 flex flex-col items-center gap-3 text-center">
+                <span className="material-symbols-outlined text-[#ff4d4d] text-4xl">event_busy</span>
+                <p className="text-sm font-bold text-[#ff4d4d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                  Cuộc bầu cử này đã kết thúc
+                </p>
+                <p className="text-[11px] text-outline leading-relaxed">
+                  Thời gian bỏ phiếu đã hết theo quy định. <br/>
+                  Cảm ơn bạn đã quan tâm.
+                </p>
+              </div>
+            )}
+            {isEligible && !hasVoted && !((election as any).isEnded || (election.endTime && new Date(election.endTime) <= new Date())) && (
               <div className="space-y-5">
                 <label className="flex items-start gap-2.5 cursor-pointer group">
                   <input
@@ -624,27 +814,6 @@ export function VotePage({ wallet, vote, onToast }: Props) {
               </div>
             )}
           </div>
-
-          {/* Pending TX notice */}
-          {vote.votingFor !== null && (
-            <div
-              className="flex items-center gap-3 p-4"
-              style={{
-                background: 'rgba(76,215,246,0.04)',
-                border: '1px solid rgba(76,215,246,0.12)',
-                borderLeft: '2px solid rgba(76,215,246,0.5)',
-                borderRadius: 12,
-              }}
-            >
-              <Loader size={14} className="animate-spin shrink-0" style={{ color: '#4cd7f6' }} />
-              <p
-                className="text-xs"
-                style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(218,226,253,0.55)' }}
-              >
-                MetaMask đang yêu cầu xác nhận giao dịch...
-              </p>
-            </div>
-          )}
         </aside>
       </div>
     </div>

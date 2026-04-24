@@ -11,6 +11,7 @@ import {
   updateCandidate,
   pushElectionToChain,
   syncCandidates,
+  pauseElection,
   getApiErrorMessage,
 } from '../../services/api'
 import type { Election, Candidate } from '../../types'
@@ -18,25 +19,48 @@ import type { Election, Candidate } from '../../types'
 type ElectionTab = 'upcoming' | 'active' | 'ended'
 
 function classifyElection(e: Election): ElectionTab {
-  if (e.isEnded) return 'ended'
-  if (e.isActive) return 'active'
+  const now = new Date()
+  // Use explicit checks and handle potential string/number values from DB
+  const dbEnded = e.isEnded === true || (e as any).isEnded === 1 || (e as any).isEnded === 'true' || (e as any).isEnded === '1'
+  const timeEnded = e.endTime && new Date(e.endTime) <= now
+  
+  if (dbEnded || timeEnded) return 'ended'
+  
+  const isActive = e.isActive === true || (e as any).isActive === 1 || (e as any).isActive === 'true' || (e as any).isActive === '1'
+  if (isActive) return 'active'
   return 'upcoming'
 }
 
 function ElectionStatus({ election }: { election: Election }) {
-  if (election.isEnded) {
+  const now = new Date()
+  const dbEnded = election.isEnded === true || (election as any).isEnded === 1 || (election as any).isEnded === 'true' || (election as any).isEnded === '1'
+  const timeEnded = election.endTime && new Date(election.endTime) <= now
+  const isEnded = dbEnded || timeEnded
+  
+  const isActive = election.isActive === true || (election as any).isActive === 1 || (election as any).isActive === 'true' || (election as any).isActive === '1'
+
+  if (isEnded) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-outline">
+      <span className="inline-flex items-center gap-1.5 text-xs text-[#ff4d4d] font-bold">
         <span className="material-symbols-outlined text-[14px]">check_circle</span>
-        Đã kết thúc
+        {timeEnded && !dbEnded ? 'Hết hạn (Chưa đóng chain)' : 'Đã kết thúc'}
       </span>
     )
   }
-  if (election.isActive) {
+  if (isActive) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-tertiary font-bold">
         <span className="live-dot" />
         Đang diễn ra
+      </span>
+    )
+  }
+  // If pushed to chain but not active and not ended, it's paused or draft-started
+  if (election.onChainId !== null && !isActive && !isEnded) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-[#f2ca50] font-bold">
+        <span className="material-symbols-outlined text-[14px]">pause_circle</span>
+        Đang tạm dừng
       </span>
     )
   }
@@ -63,6 +87,7 @@ function ElectionCard({
   onPushToChain,
   onStart,
   onEnd,
+  onPause,
   onDelete,
   onAddCandidate,
   onRemoveCandidate,
@@ -77,6 +102,7 @@ function ElectionCard({
   onPushToChain: (id: number) => void
   onStart: (id: number) => void
   onEnd: (id: number) => void
+  onPause: (id: number) => void
   onDelete: (id: number) => void
   onAddCandidate: (electionId: number, name: string, desc: string, image: string) => Promise<void>
   onRemoveCandidate: (electionId: number, cand: Candidate) => void
@@ -87,8 +113,12 @@ function ElectionCard({
 }) {
   const [candName, setCandName] = useState('')
   const [candDesc, setCandDesc] = useState('')
-  const [candImage, setCandImage] = useState('')
-  const [adding, setAdding] = useState(false)
+  const now = new Date()
+  const dbEnded = election.isEnded === true || (election as any).isEnded === 1 || (election as any).isEnded === 'true' || (election as any).isEnded === '1'
+  const timeEnded = election.endTime && new Date(election.endTime) <= now
+  const isEnded = dbEnded || timeEnded
+
+  const isActive = election.isActive === true || (election as any).isActive === 1 || (election as any).isActive === 'true' || (election as any).isActive === '1'
 
   // Editing state
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -253,7 +283,7 @@ function ElectionCard({
       </div>
 
       <div className="px-4 py-3 border-t border-white/5 flex items-center gap-1.5 flex-wrap bg-surface-container/40">
-        {election.onChainId === null && !election.isActive && !election.isEnded && activeCands.length >= 2 && (
+        {election.onChainId === null && !isActive && !isEnded && activeCands.length >= 2 && (
           <button
             onClick={() => onPushToChain(election.id)}
             disabled={processing[`push-${election.id}`]}
@@ -265,7 +295,7 @@ function ElectionCard({
             {processing[`push-${election.id}`] ? 'Đang đẩy...' : 'Đẩy lên chain'}
           </button>
         )}
-        {election.onChainId !== null && !election.isActive && !election.isEnded && (
+        {election.onChainId !== null && !isActive && !isEnded && (
           <button
             onClick={() => onStart(election.id)}
             disabled={processing[`start-${election.id}`]}
@@ -277,7 +307,7 @@ function ElectionCard({
             {processing[`start-${election.id}`] ? 'Đang chạy...' : 'Bắt đầu'}
           </button>
         )}
-        {election.onChainId !== null && activeCands.some(c => c.onChainId === null) && !election.isEnded && (
+        {election.onChainId !== null && activeCands.some(c => c.onChainId === null) && !isEnded && (
           <button
             onClick={() => onSyncCandidates(election.id)}
             disabled={processing[`sync-${election.id}`]}
@@ -289,17 +319,29 @@ function ElectionCard({
             {processing[`sync-${election.id}`] ? 'Đồng bộ' : 'Đồng bộ'}
           </button>
         )}
-        {election.isActive && (
-          <button
-            onClick={() => onEnd(election.id)}
-            disabled={processing[`end-${election.id}`]}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 hover:bg-error/20 disabled:opacity-50 text-xs text-error border border-error/20 transition-all"
-          >
-            <span className={`material-symbols-outlined text-[13px] ${processing[`end-${election.id}`] ? 'animate-spin' : ''}`}>
-              {processing[`end-${election.id}`] ? 'autorenew' : 'stop'}
-            </span>
-            {processing[`end-${election.id}`] ? 'Đang dừng...' : 'Kết thúc'}
-          </button>
+        {isActive && (
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => onPause(election.id)}
+              disabled={processing[`pause-${election.id}`]}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#f2ca50]/10 hover:bg-[#f2ca50]/20 disabled:opacity-50 text-xs text-[#f2ca50] border border-[#f2ca50]/20 transition-all"
+            >
+              <span className={`material-symbols-outlined text-[13px] ${processing[`pause-${election.id}`] ? 'animate-spin' : ''}`}>
+                {processing[`pause-${election.id}`] ? 'autorenew' : 'pause'}
+              </span>
+              {processing[`pause-${election.id}`] ? 'Đang dừng...' : 'Tạm dừng'}
+            </button>
+            <button
+              onClick={() => onEnd(election.id)}
+              disabled={processing[`end-${election.id}`]}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#ff4d4d]/10 hover:bg-[#ff4d4d]/20 disabled:opacity-50 text-xs text-[#ff4d4d] border border-[#ff4d4d]/20 transition-all"
+            >
+              <span className={`material-symbols-outlined text-[13px] ${processing[`end-${election.id}`] ? 'animate-spin' : ''}`}>
+                {processing[`end-${election.id}`] ? 'autorenew' : 'stop'}
+              </span>
+              {processing[`end-${election.id}`] ? 'Đang kết thúc...' : 'Kết thúc'}
+            </button>
+          </div>
         )}
 
         <button
@@ -498,6 +540,8 @@ export function ElectionsTab() {
   const [editElStart, setEditElStart] = useState('')
   const [editElEnd, setEditElEnd] = useState('')
   const [savingElection, setSavingElection] = useState(false)
+  const [adminSearchQuery, setAdminSearchQuery] = useState('')
+  const [showElectionBrowser, setShowElectionBrowser] = useState(false)
 
   const openEditModal = (e: Election) => {
     setEditingElection(e)
@@ -507,13 +551,21 @@ export function ElectionsTab() {
     setEditElEnd(e.endTime ? new Date(e.endTime).toISOString().slice(0, 16) : '')
   }
 
-  const tabElections = useMemo<Record<ElectionTab, Election[]>>(() => ({
-    upcoming: (elections || []).filter((e) => classifyElection(e) === 'upcoming'),
-    active: (elections || []).filter((e) => classifyElection(e) === 'active'),
-    ended: (elections || []).filter((e) => classifyElection(e) === 'ended'),
-  }), [elections])
+  const tabElections = useMemo<Record<ElectionTab, Election[]>>(() => {
+    const filterBySearch = (list: Election[]) => 
+      list.filter(e => e.title.toLowerCase().includes(adminSearchQuery.toLowerCase()))
+      
+    return {
+      upcoming: filterBySearch((elections || []).filter((e) => classifyElection(e) === 'upcoming')),
+      active: filterBySearch((elections || []).filter((e) => classifyElection(e) === 'active')),
+      ended: filterBySearch((elections || []).filter((e) => classifyElection(e) === 'ended')),
+    }
+  }, [elections, adminSearchQuery])
 
   const visibleElections = tabElections[activeTab]
+  const allFilteredElections = useMemo(() => {
+    return (elections || []).filter(e => e.title.toLowerCase().includes(adminSearchQuery.toLowerCase()))
+  }, [elections, adminSearchQuery])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -588,6 +640,16 @@ export function ElectionsTab() {
     finally { setProcessing(prev => ({ ...prev, [`end-${id}`]: false })) }
   }
 
+  const handlePause = async (id: number) => {
+    setProcessing(prev => ({ ...prev, [`pause-${id}`]: true }))
+    try {
+      await pauseElection(id)
+      load()
+    }
+    catch (err) { setError(getApiErrorMessage(err, 'Không thể tạm dừng bầu cử')) }
+    finally { setProcessing(prev => ({ ...prev, [`pause-${id}`]: false })) }
+  }
+
   const handleSyncCandidates = async (id: number) => {
     setProcessing(prev => ({ ...prev, [`sync-${id}`]: true }))
     try { 
@@ -640,53 +702,75 @@ export function ElectionsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-on-surface" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             Quản lý bầu cử
           </h2>
           <p className="text-xs text-outline mt-1">Tạo và cấu hình các cuộc bầu cử on-chain</p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-semibold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-        >
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          Tạo mới
-        </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+            <input 
+              type="text"
+              placeholder="Tìm tên cuộc bầu cử..."
+              value={adminSearchQuery}
+              onChange={(e) => setAdminSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-on-surface focus:outline-none focus:border-primary/40 transition-all"
+            />
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-semibold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap"
+          >
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            Tạo mới
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-1 border-b border-white/5 pb-0 -mb-2">
-        {(
-          [
-            { key: 'upcoming', label: 'Sắp diễn ra', icon: 'schedule' },
-            { key: 'active',   label: 'Đang diễn ra', icon: 'radio_button_checked' },
-            { key: 'ended',    label: 'Đã kết thúc',  icon: 'check_circle' },
-          ] as { key: ElectionTab; label: string; icon: string }[]
-        ).map(({ key, label, icon }) => (
-          <button
-            key={key}
-            onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${
-              activeTab === key
-                ? 'border-primary text-primary'
-                : 'border-transparent text-outline hover:text-on-surface-variant'
-            }`}
-            style={{ fontFamily: 'Inter, sans-serif' }}
-          >
-            <span className="material-symbols-outlined text-[14px]">{icon}</span>
-            {label}
-            <span
-              className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ml-1 ${
+      <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-0 -mb-2">
+        <div className="flex items-center gap-1">
+          {(
+            [
+              { key: 'upcoming', label: 'Sắp diễn ra', icon: 'schedule' },
+              { key: 'active',   label: 'Đang diễn ra', icon: 'radio_button_checked' },
+              { key: 'ended',    label: 'Đã kết thúc',  icon: 'check_circle' },
+            ] as { key: ElectionTab; label: string; icon: string }[]
+          ).map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${
                 activeTab === key
-                  ? 'bg-primary/15 text-primary'
-                  : 'bg-white/5 text-outline'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-outline hover:text-on-surface-variant'
               }`}
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
-              {tabElections[key].length}
-            </span>
-          </button>
-        ))}
+              <span className="material-symbols-outlined text-[14px]">{icon}</span>
+              {label}
+              <span
+                className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ml-1 ${
+                  activeTab === key
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-white/5 text-outline'
+                }`}
+              >
+                {tabElections[key].length}
+              </span>
+            </button>
+          ))}
+        </div>
+        
+        <button
+          onClick={() => setShowElectionBrowser(true)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-primary text-[10px] font-bold uppercase tracking-widest hover:bg-primary/5 transition-all"
+        >
+          <span className="material-symbols-outlined text-[16px]">grid_view</span>
+          Duyệt nhanh
+        </button>
       </div>
 
       {error && (
@@ -808,6 +892,7 @@ export function ElectionsTab() {
               onPushToChain={handlePushToChain}
               onStart={handleStart}
               onEnd={handleEnd}
+              onPause={handlePause}
               onDelete={handleDelete}
               onAddCandidate={handleAddCandidate}
               onRemoveCandidate={handleRemoveCandidate}
@@ -888,6 +973,84 @@ export function ElectionsTab() {
           </div>
         </div>
       )}
+      {/* ── ELECTION BROWSER MODAL (Large Scale) ── */}
+      {showElectionBrowser && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="glass-card w-full max-w-3xl max-h-[85vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl border-white/10 animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between gap-4">
+              <div className="flex-1 relative group">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] group-focus-within:text-primary transition-colors">
+                  search
+                </span>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Tìm kiếm cuộc bầu cử để quản lý..."
+                  value={adminSearchQuery}
+                  onChange={(e) => setAdminSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3 rounded-2xl bg-white/[0.05] border border-white/10 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/40 focus:bg-white/[0.08] transition-all"
+                />
+              </div>
+              <button 
+                onClick={() => setShowElectionBrowser(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-white/10 transition-all"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allFilteredElections.map((el) => {
+                  const status = classifyElection(el)
+                  return (
+                    <button
+                      key={el.id}
+                      onClick={() => { 
+                        setActiveTab(status); 
+                        setExpandedId(el.id); 
+                        setShowElectionBrowser(false);
+                      }}
+                      className="flex flex-col gap-2 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/20 transition-all text-left group"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider ${
+                          status === 'active' ? 'bg-tertiary/10 text-tertiary' :
+                          status === 'ended' ? 'bg-white/5 text-outline' :
+                          'bg-primary/10 text-primary'
+                        }`}>
+                          {status === 'active' ? 'Live' : status === 'ended' ? 'Hết hạn' : 'Nháp'}
+                        </span>
+                        <span className="text-[9px] text-outline font-mono">#{el.id}</span>
+                      </div>
+                      <p className="text-sm font-bold text-on-surface line-clamp-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                        {el.title}
+                      </p>
+                      <div className="mt-auto pt-2 flex items-center justify-between text-outline">
+                        <span className="text-[10px]">{el.candidates.length} ứng viên</span>
+                        <span className="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">edit_note</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="p-4 bg-white/[0.02] border-t border-white/5 text-center flex justify-between items-center px-6">
+              <p className="text-[10px] text-outline uppercase tracking-widest font-semibold">
+                Tổng cộng {elections.length} cuộc bầu cử
+              </p>
+              <button 
+                onClick={() => { setAdminSearchQuery(''); setShowElectionBrowser(false) }}
+                className="text-[10px] text-primary hover:underline font-bold uppercase tracking-widest"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

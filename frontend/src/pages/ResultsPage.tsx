@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { Pagination } from '../components/Pagination'
 import { fetchPublicElections, fetchResults } from '../services/api'
@@ -65,6 +65,9 @@ export function ResultsPage({ onNavigate }: Props) {
   const [loading, setLoading] = useState(true)
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [page, setPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showAllCategories, setShowAllCategories] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended'>('all')
 
   const load = useCallback(() => {
     setLoading(true)
@@ -76,6 +79,18 @@ export function ResultsPage({ onNavigate }: Props) {
 
   useEffect(() => { load() }, [load])
 
+  const filteredElections = useMemo(() => {
+    return elections.filter(el => {
+      const matchesSearch = el.title.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesStatus = 
+        statusFilter === 'all' || 
+        (statusFilter === 'active' && el.isActive) || 
+        (statusFilter === 'ended' && el.isEnded)
+      return matchesSearch && matchesStatus
+    })
+  }, [elections, searchQuery, statusFilter])
+
+  // Map the selectedIdx back to the filteredElections if possible, or use the first one
   const election = elections[selectedIdx]
   const allResults = election ? buildResults(election, voteData) : []
   const totalVotes = election
@@ -284,47 +299,209 @@ export function ResultsPage({ onNavigate }: Props) {
         </div>
       </div>
 
-      {/* ── ELECTION TABS ── */}
-      {elections.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {elections.map((el, idx) => {
-            const elVotes = voteData.filter((v) => v.categoryId === el.id).reduce((s, v) => s + v.voteCount, 0)
-            const isActive = idx === selectedIdx
-            return (
-              <button
-                key={el.id}
-                onClick={() => handleElectionChange(idx)}
-                className="flex-shrink-0 flex items-center gap-2 transition-all"
-                style={
-                  isActive
-                    ? {
-                        background: 'rgba(242,202,80,0.1)',
-                        border: '1px solid rgba(242,202,80,0.2)',
-                        color: '#f2ca50',
-                        borderRadius: 10,
-                        padding: '6px 16px',
-                        fontSize: 13,
-                        fontWeight: 600,
-                        fontFamily: 'Space Grotesk, sans-serif',
-                      }
-                    : {
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.07)',
-                        color: 'rgba(218,226,253,0.4)',
-                        borderRadius: 10,
-                        padding: '6px 16px',
-                        fontSize: 13,
-                        fontFamily: 'Space Grotesk, sans-serif',
-                      }
-                }
-              >
-                <span className="truncate max-w-[140px]">{el.title}</span>
-                {elVotes > 0 && (
-                  <span className="text-[10px] opacity-50 shrink-0 font-mono">({elVotes})</span>
+      {/* ── ELECTION TABS / SEE MORE ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-outline uppercase tracking-widest" style={{ fontFamily: 'Inter, sans-serif' }}>
+              Danh mục ({elections.length})
+            </h3>
+          </div>
+          
+          <button 
+            onClick={() => setShowAllCategories(true)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] border border-white/10 text-outline hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-all shadow-lg"
+            title="Tìm kiếm danh mục"
+          >
+            <span className="material-symbols-outlined text-[20px]">search</span>
+          </button>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none custom-scrollbar flex-1 no-scrollbar">
+            {elections.slice(0, 5).map((el) => {
+              const elIdx = elections.findIndex(e => e.id === el.id)
+              const elVotes = voteData.filter((v) => v.categoryId === el.id).reduce((s, v) => s + v.voteCount, 0)
+              const isActive = elIdx === selectedIdx
+              return (
+                <button
+                  key={el.id}
+                  onClick={() => handleElectionChange(elIdx)}
+                  className="flex-shrink-0 flex items-center gap-2 transition-all active:scale-95 group relative"
+                  style={
+                    isActive
+                      ? {
+                          background: 'rgba(242,202,80,0.12)',
+                          border: '1px solid rgba(242,202,80,0.3)',
+                          color: '#f2ca50',
+                          borderRadius: 12,
+                          padding: '8px 18px',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        }
+                      : {
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid rgba(255,255,255,0.07)',
+                          color: 'rgba(218,226,253,0.4)',
+                          borderRadius: 12,
+                          padding: '8px 18px',
+                          fontSize: 13,
+                          fontFamily: 'Space Grotesk, sans-serif',
+                        }
+                  }
+                >
+                  <div className="flex flex-col items-start">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate max-w-[140px]">{el.title}</span>
+                      {elVotes > 0 && (
+                        <span className="text-[9px] opacity-60 shrink-0 font-mono bg-white/5 px-1 py-0.5 rounded">
+                          {elVotes}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {el.isEnded ? (
+                        <span className="text-[8px] uppercase tracking-tighter text-outline px-1 rounded bg-white/5">Hết hạn</span>
+                      ) : el.isActive ? (
+                        <div className="flex items-center gap-1">
+                          <div className="w-1 h-1 rounded-full bg-tertiary animate-pulse" />
+                          <span className="text-[8px] uppercase tracking-tighter text-tertiary">Live</span>
+                        </div>
+                      ) : (
+                        <span className="text-[8px] uppercase tracking-tighter text-outline/50">Sắp tới</span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          
+          {elections.length > 5 && (
+            <button
+              onClick={() => setShowAllCategories(true)}
+              className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-primary text-xs font-bold hover:bg-primary/10 hover:border-primary/20 transition-all mb-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">expand_more</span>
+              Xem thêm
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── ALL CATEGORIES MODAL ── */}
+      {showAllCategories && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="glass-card w-full max-w-2xl max-h-[80vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl border-white/10 animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between gap-4">
+              <div className="flex-1 relative group">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] group-focus-within:text-primary transition-colors">
+                  search
+                </span>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Tìm kiếm danh mục..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3 rounded-2xl bg-white/[0.05] border border-white/10 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/40 focus:bg-white/[0.08] transition-all"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
                 )}
+              </div>
+              <button 
+                onClick={() => { setShowAllCategories(false); setSearchQuery('') }}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-white/10 transition-all"
+              >
+                <span className="material-symbols-outlined">close</span>
               </button>
-            )
-          })}
+            </div>
+
+            <div className="px-6 py-2 border-b border-white/5 flex gap-4 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'all', label: 'Tất cả', icon: 'list' },
+                { id: 'active', label: 'Đang diễn ra', icon: 'play_circle' },
+                { id: 'ended', label: 'Đã kết thúc', icon: 'check_circle' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setStatusFilter(tab.id as any)}
+                  className={`flex items-center gap-1.5 py-2 px-1 border-b-2 transition-all whitespace-nowrap text-xs font-semibold ${
+                    statusFilter === tab.id 
+                      ? 'border-primary text-primary' 
+                      : 'border-transparent text-outline hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              {filteredElections.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {filteredElections.map((el) => {
+                    const elIdx = elections.findIndex(e => e.id === el.id)
+                    const elVotes = voteData.filter((v) => v.categoryId === el.id).reduce((s, v) => s + v.voteCount, 0)
+                    const isActive = elIdx === selectedIdx
+                    return (
+                      <button
+                        key={el.id}
+                        onClick={() => { handleElectionChange(elIdx); setShowAllCategories(false); setSearchQuery('') }}
+                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border transition-all text-left group ${
+                          isActive 
+                            ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20' 
+                            : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.08] hover:border-white/20'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-sm font-bold truncate ${isActive ? 'text-primary' : 'text-on-surface'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                              {el.title}
+                            </p>
+                            {el.isEnded ? (
+                              <span className="text-[8px] bg-white/5 text-outline px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Đã kết thúc</span>
+                            ) : el.isActive ? (
+                              <span className="text-[8px] bg-tertiary/10 text-tertiary px-1.5 py-0.5 rounded uppercase font-bold tracking-wider flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-tertiary animate-pulse" />
+                                Đang diễn ra
+                              </span>
+                            ) : (
+                              <span className="text-[8px] bg-white/5 text-outline/50 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Nháp</span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-outline mt-0.5">{elVotes} phiếu bầu</p>
+                        </div>
+                        <span className={`material-symbols-outlined text-[18px] transition-all ${isActive ? 'text-primary' : 'text-outline opacity-0 group-hover:opacity-100'}`}>
+                          {isActive ? 'check_circle' : 'arrow_forward'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="py-20 text-center space-y-4">
+                  <span className="material-symbols-outlined text-5xl text-outline/20">search_off</span>
+                  <p className="text-outline italic">Không tìm thấy danh mục nào phù hợp với "{searchQuery}"</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-white/[0.02] border-t border-white/5 text-center">
+              <p className="text-[10px] text-outline uppercase tracking-widest font-semibold">
+                Hiển thị {filteredElections.length} trên tổng số {elections.length} danh mục
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
