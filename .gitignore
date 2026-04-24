@@ -18,3 +18,15 @@
 
 # Hardhat coverage reports
 /coverage
+
+/.env
+/plan.md
+
+/.claude
+/docs
+
+# Database files
+backend/dev.db
+
+# Runtime sync state
+backend/runtime/

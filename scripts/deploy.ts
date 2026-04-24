@@ -1,19 +1,26 @@
 import { network } from "hardhat";
 
-async function main() {
-  const { ethers } = await network.connect();
+const { ethers } = await network.connect();
 
-  const VotingSystem = await ethers.getContractFactory("VotingSystem");
-  const votingSystem = await VotingSystem.deploy();
+console.log("Deploying VotingSystem contract...");
 
-  await votingSystem.waitForDeployment();
+const [deployer] = await ethers.getSigners();
+console.log("Deploying with account:", deployer.address);
 
-  const address = await votingSystem.getAddress();
+const balance = await ethers.provider.getBalance(deployer.address);
+console.log("Account balance:", ethers.formatEther(balance), "TEST");
 
-  console.log("VotingSystem deployed to:", address);
-}
+const VotingSystem = await ethers.getContractFactory("VotingSystem");
+const votingSystem = await VotingSystem.deploy();
+await votingSystem.waitForDeployment();
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+const address = await votingSystem.getAddress();
+const owner = await votingSystem.owner();
+
+console.log("");
+console.log("VotingSystem deployed to:", address);
+console.log("Owner:", owner);
+console.log("");
+console.log("Update these files:");
+console.log(`  backend/.env  -> CONTRACT_ADDRESS=${address}`);
+console.log(`  frontend/.env -> VITE_CONTRACT_ADDRESS=${address}`);
