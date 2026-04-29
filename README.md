@@ -239,7 +239,7 @@ npx hardhat run scripts/deploy.ts --network sapphireTestnet
 
 Output:
 ```
-✅ VotingSystem deployed to: 0x...
+VotingSystem deployed to: 0x...
 ```
 
 #### 6. Điền CONTRACT_ADDRESS vào .env
