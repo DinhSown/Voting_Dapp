@@ -45,8 +45,9 @@ export function useVote(): VoteState {
   }, [])
 
   const isUserNotEligibleError = (error: unknown): boolean => {
-    if (!(error instanceof Error)) return false
-    return error.message.toLowerCase().includes('user not eligible')
+    const message = error instanceof Error ? error.message : String(error)
+    const lower = message.toLowerCase()
+    return lower.includes('user not eligible') || lower.includes('0x99f05a9c') || message.includes('mfBanA==')
   }
 
   const castVote = useCallback(
@@ -54,24 +55,22 @@ export function useVote(): VoteState {
       election: { id: number; onChainId: number | null; title: string },
       candidate: { id: number; onChainId: number | null; name: string }
     ): Promise<string> => {
-      if (election.onChainId === null) throw new Error('Cuộc bầu cử chưa được đẩy lên blockchain')
-      if (candidate.onChainId === null) throw new Error('Ứng viên chưa được đăng ký trên blockchain')
+      if (election.onChainId === null) throw new Error('Cuoc bau cu chua duoc day len blockchain')
+      if (candidate.onChainId === null) throw new Error('Ung vien chua duoc dang ky tren blockchain')
 
       setVotingFor(candidate.id)
       try {
-        let txHash: string
-        try {
-          txHash = await castVoteOnChain(candidate.onChainId, election.onChainId)
-        } catch (error) {
-          if (!isUserNotEligibleError(error)) throw error
-
-          const syncResult = await syncMyEligibility()
-          if (!syncResult.eligible || syncResult.isBanned) {
-            throw new Error('Tài khoản của bạn hiện chưa đủ điều kiện để vote')
-          }
-
-          txHash = await castVoteOnChain(candidate.onChainId, election.onChainId)
+        const syncResult = await syncMyEligibility()
+        if (!syncResult.eligible || syncResult.isBanned) {
+          throw new Error('Tai khoan hien chua du dieu kien de vote')
         }
+
+        const txHash = await castVoteOnChain(candidate.onChainId, election.onChainId).catch((error) => {
+          if (isUserNotEligibleError(error)) {
+            throw new Error('Tai khoan chua duoc dong bo quyen vote len blockchain. Vui long thu lai sau.')
+          }
+          throw error
+        })
 
         await recordVote(txHash)
         setVoted((prev) => new Set([...prev, election.id]))

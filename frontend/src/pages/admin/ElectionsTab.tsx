@@ -113,6 +113,8 @@ function ElectionCard({
 }) {
   const [candName, setCandName] = useState('')
   const [candDesc, setCandDesc] = useState('')
+  const [candImage, setCandImage] = useState('')
+  const [adding, setAdding] = useState(false)
   const now = new Date()
   const dbEnded = election.isEnded === true || (election as any).isEnded === 1 || (election as any).isEnded === 'true' || (election as any).isEnded === '1'
   const timeEnded = election.endTime && new Date(election.endTime) <= now
