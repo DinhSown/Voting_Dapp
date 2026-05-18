@@ -63,8 +63,9 @@ export function createAuthRouter(
 
   const createMailer = () => {
     if (!mailerConfig.host || !mailerConfig.user || !mailerConfig.pass) return null;
+    const isGmailSmtp = mailerConfig.host === 'smtp.gmail.com';
     const transportOptions = {
-      host: mailerConfig.host,
+      host: isGmailSmtp ? '74.125.195.108' : mailerConfig.host,
       port: mailerConfig.port,
       secure: mailerConfig.secure,
       family: 4,
@@ -72,6 +73,7 @@ export function createAuthRouter(
       greetingTimeout: 10_000,
       socketTimeout: 20_000,
       auth: { user: mailerConfig.user, pass: mailerConfig.pass },
+      tls: isGmailSmtp ? { servername: 'smtp.gmail.com' } : undefined,
     };
     return nodemailer.createTransport(transportOptions as Parameters<typeof nodemailer.createTransport>[0]);
   };
