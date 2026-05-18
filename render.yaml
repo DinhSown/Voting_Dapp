@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: voting-dapp-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx hardhat compile && cd backend && npm install && npx prisma generate && npx prisma db push && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: RPC_URL
+        value: https://testnet.sapphire.oasis.io
+      - key: CONTRACT_ADDRESS
+        sync: false
+      - key: PRIVATE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_WALLET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: REQUEST_BODY_LIMIT
+        value: 10mb

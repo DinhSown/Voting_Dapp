@@ -65,10 +65,11 @@ const provider = isSapphire ? wrapEthersProvider(baseProvider) : baseProvider;
 const baseWallet = new ethers.Wallet(PRIVATE_KEY).connect(baseProvider);
 const signerWallet = isSapphire ? wrapEthersSigner(baseWallet) : baseWallet;
 
-const ARTIFACT_PATH = path.resolve(
-  __dirname,
-  '../artifacts/contracts/VotingSystem.sol/VotingSystem.json'
-);
+const ARTIFACT_PATHS = [
+  path.resolve(__dirname, '../artifacts/contracts/VotingSystem.sol/VotingSystem.json'),
+  path.resolve(__dirname, '../../artifacts/contracts/VotingSystem.sol/VotingSystem.json'),
+];
+const ARTIFACT_PATH = ARTIFACT_PATHS.find((candidate) => fs.existsSync(candidate)) ?? ARTIFACT_PATHS[0];
 
 let contractABI: unknown[] = [];
 if (fs.existsSync(ARTIFACT_PATH)) {

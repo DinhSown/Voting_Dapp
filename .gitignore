@@ -3,6 +3,7 @@
 
 # Compilation output
 /dist
+/backend/dist
 
 # pnpm deploy output
 /bundle
