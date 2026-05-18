@@ -63,15 +63,17 @@ export function createAuthRouter(
 
   const createMailer = () => {
     if (!mailerConfig.host || !mailerConfig.user || !mailerConfig.pass) return null;
-    return nodemailer.createTransport({
+    const transportOptions = {
       host: mailerConfig.host,
       port: mailerConfig.port,
       secure: mailerConfig.secure,
+      family: 4,
       connectionTimeout: 10_000,
       greetingTimeout: 10_000,
       socketTimeout: 20_000,
       auth: { user: mailerConfig.user, pass: mailerConfig.pass },
-    });
+    };
+    return nodemailer.createTransport(transportOptions as Parameters<typeof nodemailer.createTransport>[0]);
   };
 
   const printMockOtp = (email: string, otpCode: string) => {
