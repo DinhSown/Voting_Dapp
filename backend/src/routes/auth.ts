@@ -67,6 +67,9 @@ export function createAuthRouter(
       host: mailerConfig.host,
       port: mailerConfig.port,
       secure: mailerConfig.secure,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
       auth: { user: mailerConfig.user, pass: mailerConfig.pass },
     });
   };
