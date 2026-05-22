@@ -533,7 +533,7 @@ export function ElectionsTab() {
   const [creating, setCreating] = useState(false)
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState<ElectionTab>('upcoming')
+  const [activeTab, setActiveTab] = useState<ElectionTab>('active')
 
   // Global Election Edit State
   const [editingElection, setEditingElection] = useState<Election | null>(null)
@@ -736,7 +736,6 @@ export function ElectionsTab() {
         <div className="flex items-center gap-1">
           {(
             [
-              { key: 'upcoming', label: 'Sắp diễn ra', icon: 'schedule' },
               { key: 'active',   label: 'Đang diễn ra', icon: 'radio_button_checked' },
               { key: 'ended',    label: 'Đã kết thúc',  icon: 'check_circle' },
             ] as { key: ElectionTab; label: string; icon: string }[]
@@ -873,12 +872,11 @@ export function ElectionsTab() {
         <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center mt-6 animate-in fade-in slide-in-from-bottom-2">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
             <span className="material-symbols-outlined text-outline text-[32px]">
-              {activeTab === 'upcoming' ? 'schedule' : activeTab === 'active' ? 'radio_button_checked' : 'check_circle'}
+              {activeTab === 'active' ? 'radio_button_checked' : 'check_circle'}
             </span>
           </div>
           <h3 className="text-lg font-bold text-on-surface">Không có cuộc bầu cử</h3>
           <p className="text-sm text-outline max-w-xs mb-4 mt-2">
-            {activeTab === 'upcoming' && 'Chưa có cuộc bầu cử nào sắp diễn ra.'}
             {activeTab === 'active' && 'Chưa có cuộc bầu cử nào đang diễn ra.'}
             {activeTab === 'ended' && 'Chưa có cuộc bầu cử nào đã kết thúc.'}
           </p>
